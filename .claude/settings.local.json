@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p 'C:\\\\ws2\\\\HTL\\\\docs\\\\.vitepress')",
+      "Bash(mkdir -p 'C:\\\\ws2\\\\HTL\\\\docs\\\\lpic101\\\\images')",
+      "Bash(Copy-Item 'C:\\\\ws2\\\\HTL\\\\HTLfiles\\\\img\\\\*.png' 'C:\\\\ws2\\\\HTL\\\\docs\\\\lpic101\\\\images\\\\' -ErrorAction SilentlyContinue)"
+    ]
+  }
+}

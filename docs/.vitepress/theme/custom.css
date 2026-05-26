@@ -1,0 +1,17 @@
+.img-placeholder {
+  border: 2px dashed var(--vp-c-divider);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 16px 0;
+  text-align: center;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  font-size: 14px;
+}
+
+.img-placeholder em {
+  display: block;
+  margin-top: 4px;
+  font-style: normal;
+  font-weight: 500;
+}
