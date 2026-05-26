@@ -4,6 +4,7 @@ export default defineConfig({
   title: 'LPIC試験対策',
   description: 'LPIC-1 101試験 事前学習資料',
   lang: 'ja',
+  base: '/HTL/',
   themeConfig: {
     nav: [
       { text: 'ホーム', link: '/' },
