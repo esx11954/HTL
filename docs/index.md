@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "LPIC試験対策"
   text: "Hack × LPIC"
-  tagline: Linux Professional Institute Certification の合格を目指す学習サイト
+  tagline: Linux Professional Institute Certification
   actions:
     - theme: brand
       text: 学習を始める
