@@ -1,6 +1,12 @@
 import { defineConfig } from 'vitepress'
+import taskLists from 'markdown-it-task-lists'
 
 export default defineConfig({
+  markdown: {
+    config: (md) => {
+      md.use(taskLists, { enabled: true })
+    },
+  },
   title: 'LPIC試験対策',
   description: 'LPIC-1 101試験 事前学習資料',
   lang: 'ja',
