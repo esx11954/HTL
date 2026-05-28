@@ -22,7 +22,7 @@ export default defineConfig({
           text: 'LPIC-1 101編',
           items: [
             { text: '第1回：システムアーキテクチャ', link: '/lpic101/chapter1' },
-            { text: '第2章：インストールとパッケージ管理', link: '/lpic101/chapter2' },
+            { text: '第2回：インストールとパッケージ管理', link: '/lpic101/chapter2' },
           ],
         },
       ],
