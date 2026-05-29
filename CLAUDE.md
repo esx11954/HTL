@@ -83,9 +83,12 @@ HTL/
 
 ## コンテンツ追加の手順
 
-新しい資料（例: 第2回）を追加する場合：
+新しい資料（例: 第3回）を追加する場合：
 
-1. `HTLfiles/` に元資料を配置
-2. `docs/lpic101/chapter2.md` を作成（画像は `docs/lpic101/images/` へ）
-3. `docs/.vitepress/config.mts` のサイドバーにエントリを追加
-4. コミット → push → GitHub Actions が自動デプロイ
+1. 元資料（`HTLfiles/HTLFilesN/`）の Markdown と画像を確認する
+2. 元 Markdown を `cp` で `docs/lpic101/chapterN.md` にコピーする（**Markdown をゼロから書かない。このプロジェクトで Markdown を新規作成することは絶対にない**）
+3. h1 タイトルを `# 第N回：〜` 形式に修正する（サイドバーの `text` と完全一致させる）
+4. 目次セクション（`## 目次` ～リスト末尾）を HTML コメント `<!-- ... -->` でコメントアウトする
+5. 画像を `docs/lpic101/images/` にコピーする
+6. `docs/.vitepress/config.mts` のサイドバーにエントリを追加する
+7. コミット → push → GitHub Actions が自動デプロイ
