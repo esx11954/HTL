@@ -25,6 +25,7 @@ export default defineConfig({
             { text: '第2章：インストールとパッケージ管理', link: '/lpic101/chapter2' },
             { text: '第3章：GNUとUNIXコマンド', link: '/lpic101/chapter3' },
             { text: '第4章：ファイルとプロセスの管理', link: '/lpic101/chapter4' },
+            { text: '第5章：デバイスとLinuxファイルシステム', link: '/lpic101/chapter5' },
           ],
         },
       ],
