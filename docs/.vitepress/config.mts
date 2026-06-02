@@ -28,6 +28,12 @@ export default defineConfig({
             { text: '第5章：デバイスとLinuxファイルシステム', link: '/lpic101/chapter5' },
           ],
         },
+        {
+          text: 'LPIC-1 102編',
+          items: [
+            { text: '第7章：シェルとシェルスクリプト', link: '/lpic101/chapter7' },
+          ],
+        },
       ],
     },
     socialLinks: [],
