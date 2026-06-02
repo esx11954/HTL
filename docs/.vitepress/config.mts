@@ -32,6 +32,7 @@ export default defineConfig({
           text: 'LPIC-1 102編',
           items: [
             { text: '第7章：シェルとシェルスクリプト', link: '/lpic101/chapter7' },
+            { text: '第8章：ユーザーインターフェースとデスクトップ', link: '/lpic101/chapter8' },
           ],
         },
       ],
