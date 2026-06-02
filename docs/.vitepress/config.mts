@@ -34,6 +34,7 @@ export default defineConfig({
             { text: '第7章：シェルとシェルスクリプト', link: '/lpic101/chapter7' },
             { text: '第8章：ユーザーインターフェースとデスクトップ', link: '/lpic101/chapter8' },
             { text: '第9章：管理タスク', link: '/lpic101/chapter9' },
+            { text: '第10章：必須システムサービス', link: '/lpic101/chapter10' },
           ],
         },
       ],
