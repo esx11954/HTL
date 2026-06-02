@@ -35,6 +35,7 @@ export default defineConfig({
             { text: '第8章：ユーザーインターフェースとデスクトップ', link: '/lpic101/chapter8' },
             { text: '第9章：管理タスク', link: '/lpic101/chapter9' },
             { text: '第10章：必須システムサービス', link: '/lpic101/chapter10' },
+            { text: '第11章：ネットワークの基礎', link: '/lpic101/chapter11' },
           ],
         },
       ],
