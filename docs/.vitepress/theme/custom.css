@@ -106,6 +106,7 @@
 
 .VPSidebarItem a[target="_blank"]:hover {
   --vp-c-text-2: #0a635f;
+  --vp-c-brand-1: #0a635f;
   background: rgba(11, 138, 132, 0.16);
 }
 
@@ -116,6 +117,7 @@
 
 .dark .VPSidebarItem a[target="_blank"]:hover {
   --vp-c-text-2: #5dd5cf;
+  --vp-c-brand-1: #5dd5cf;
   background: rgba(59, 189, 183, 0.2);
 }
 
