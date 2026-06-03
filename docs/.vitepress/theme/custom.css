@@ -93,6 +93,15 @@
   accent-color: var(--vp-c-brand-1);
 }
 
+/* 新タブリンク（第6章）をティールで差別化 */
+.VPSidebarItem a[target="_blank"] {
+  color: #0b8a84;
+}
+
+.dark .VPSidebarItem a[target="_blank"] {
+  color: #3bbdb7;
+}
+
 .img-placeholder {
   border: 2px dashed var(--vp-c-divider);
   border-radius: 8px;
