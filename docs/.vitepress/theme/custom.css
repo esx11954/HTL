@@ -95,11 +95,11 @@
 
 /* 新タブリンク（第6章）をティールで差別化 */
 .VPSidebarItem a[target="_blank"] {
-  color: #0b8a84 !important;
+  --vp-c-text-2: #0b8a84;
 }
 
 .dark .VPSidebarItem a[target="_blank"] {
-  color: #3bbdb7 !important;
+  --vp-c-text-2: #3bbdb7;
 }
 
 .img-placeholder {
