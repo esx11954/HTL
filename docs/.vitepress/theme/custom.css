@@ -96,10 +96,27 @@
 /* 新タブリンク（第6章）をティールで差別化 */
 .VPSidebarItem a[target="_blank"] {
   --vp-c-text-2: #0b8a84;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: rgba(11, 138, 132, 0.08);
+  border-radius: 6px;
+  padding: 2px 6px;
+  transition: background 0.2s;
+}
+
+.VPSidebarItem a[target="_blank"]:hover {
+  --vp-c-text-2: #0a635f;
+  background: rgba(11, 138, 132, 0.16);
 }
 
 .dark .VPSidebarItem a[target="_blank"] {
   --vp-c-text-2: #3bbdb7;
+  background: rgba(59, 189, 183, 0.1);
+}
+
+.dark .VPSidebarItem a[target="_blank"]:hover {
+  --vp-c-text-2: #5dd5cf;
+  background: rgba(59, 189, 183, 0.2);
 }
 
 .img-placeholder {
