@@ -36,6 +36,7 @@ export default defineConfig({
             { text: '第9章：管理タスク', link: '/lpic101/chapter9' },
             { text: '第10章：必須システムサービス', link: '/lpic101/chapter10' },
             { text: '第11章：ネットワークの基礎', link: '/lpic101/chapter11' },
+            { text: '第12章：セキュリティ', link: '/lpic101/chapter12' },
           ],
         },
       ],
