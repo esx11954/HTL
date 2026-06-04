@@ -8,6 +8,7 @@ export default defineConfig({
     },
   },
   title: 'LPIC試験対策',
+  // head: [['link', { rel: 'icon', type: 'image/png', href: '/HTL/img/favicon.png' }]],
   description: 'LPIC-1 101試験 事前学習資料',
   lang: 'ja',
   base: '/HTL/',
