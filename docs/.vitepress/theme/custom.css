@@ -30,6 +30,12 @@
   --vp-c-brand-2: #f47920;
   --vp-c-brand-3: #e06810;
   --vp-c-brand-soft: rgba(244, 121, 32, 0.16);
+
+  /* 案C2：ペーパーダーク */
+  --vp-c-bg:      #28241e;
+  --vp-c-bg-soft: #322e26;
+  --vp-c-bg-alt:  #1f1c16;
+  --vp-c-text-1:  #ece6d8;
 }
 
 /* Hero ネイビーグラデーション */

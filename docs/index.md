@@ -5,19 +5,14 @@ hero:
   name: "LPIC試験対策"
   text: "Hack × LPIC"
   tagline: Linux Professional Institute Certification
-  actions:
-    - theme: brand
-      text: 学習を始める
-      link: /lpic101/chapter1
-    - theme: alt
-      text: LPIC-1 101編 第1回
-      link: /lpic101/chapter1
 
 features:
-  - title: LPIC-1 101編
-    details: システムアーキテクチャ、Linuxのインストールと管理、GNUとUnixのコマンド、デバイス・Linuxファイルシステム
-  - title: 試験ポイント集中
-    details: 各セクションの「🎯 試験ポイント」と「📝 まとめ」で効率よく重要事項を把握
-  - title: 事前チェックリスト
-    details: 研修当日に向けた理解度確認チェックリスト付き
+  - title: 教科書
+    details: LPIC-1 101編の事前学習資料。システムアーキテクチャ、パッケージ管理、コマンド操作など章ごとに学習できます。
+    link: /lpic101/chapter1
+    linkText: 教科書を開く
+  - title: 講義スライド
+    details: 各回の講義で使用したスライド一覧。クリックして確認してください。
+    link: /lpic_slide/
+    linkText: スライド一覧へ
 ---

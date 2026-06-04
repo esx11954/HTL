@@ -15,8 +15,17 @@ export default defineConfig({
     nav: [
       { text: 'ホーム', link: '/' },
       { text: 'LPIC-1 101', link: '/lpic101/chapter1' },
+      { text: '講義スライド', link: '/lpic_slide/' },
     ],
     sidebar: {
+      '/lpic_slide/': [
+        {
+          text: '講義スライド',
+          items: [
+            { text: 'スライド一覧', link: '/lpic_slide/' },
+          ],
+        },
+      ],
       '/lpic101/': [
         {
           text: 'LPIC-1 101編',
