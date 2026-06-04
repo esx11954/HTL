@@ -63,6 +63,10 @@
   margin-top: 48px;
 }
 
+.dark .vp-doc h2 {
+  background: linear-gradient(to right, rgba(244, 121, 32, 0.30), transparent);
+}
+
 .vp-doc h3::before {
   content: '◆';
   color: var(--vp-c-brand-1);
