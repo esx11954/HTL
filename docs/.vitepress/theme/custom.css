@@ -38,6 +38,12 @@
   --vp-c-text-1:  #ece6d8;
 }
 
+/* メインコンテンツ背景（ライトモード：ウォームホワイト） */
+:root:not(.dark) .VPContent,
+:root:not(.dark) .VPHome {
+  background-color: #fefdfb;
+}
+
 /* Hero ネイビーグラデーション */
 .VPHero .image-bg {
   background: radial-gradient(circle, #1d2951 0%, #0a1628 100%) !important;
