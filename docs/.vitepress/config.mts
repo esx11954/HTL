@@ -55,6 +55,7 @@ export default defineConfig({
     socialLinks: [],
     footer: {
       message: 'LPIC試験対策サイト',
+      copyright: 'Copyright © 2026 EIGHTBIT, Inc.',
     },
     outline: {
       label: '目次',
