@@ -36,7 +36,7 @@ export default defineConfig({
             { text: '第3章：GNUとUNIXコマンド', link: '/lpic101/chapter3' },
             { text: '第4章：ファイルとプロセスの管理', link: '/lpic101/chapter4' },
             { text: '第5章：デバイスとLinuxファイルシステム', link: '/lpic101/chapter5' },
-            { text: '第6章：想定問題演習', link: '/chapter6.html', target: '_blank' },
+            // { text: '第6章：想定問題演習', link: '/chapter6.html', target: '_blank' }, // practice.html に統合のため非表示（2026-07-10）
           ],
         },
         {
@@ -48,7 +48,13 @@ export default defineConfig({
             { text: '第10章：必須システムサービス', link: '/lpic101/chapter10' },
             { text: '第11章：ネットワークの基礎', link: '/lpic101/chapter11' },
             { text: '第12章：セキュリティ', link: '/lpic101/chapter12' },
-            { text: '第13章：想定問題演習', link: '/chapter13.html', target: '_blank' },
+            // { text: '第13章：想定問題演習', link: '/chapter13.html', target: '_blank' }, // practice.html に統合のため非表示（2026-07-10）
+          ],
+        },
+        {
+          text: 'LPIC学習ドリル',
+          items: [
+            { text: '想定問題演習ドリル', link: '/practice.html', target: '_blank' },
           ],
         },
       ],

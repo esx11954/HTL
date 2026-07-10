@@ -15,4 +15,9 @@ features:
     details: 各回の講義で使用したスライド一覧。クリックして確認してください。
     link: /lpic_slide/
     linkText: スライド一覧へ
+  - title: LPIC学習ドリル
+    details: 想定問題演習ドリル。理解度チェックにご活用ください。
+    link: /practice.html
+    linkText: ドリルを開く
+    target: _blank
 ---
