@@ -302,6 +302,7 @@ code,.mono{font-family:var(--mono)}
           <li>制限時間は50分です。時間切れになると自動的に採点されます。</li>
           <li>提出する前に、前の問題へ戻って見直し・修正ができます。</li>
           <li>複数選択の問題は、正解の選択肢をすべて選んで正解になります。</li>
+      <li>選択肢の表示順は毎回ランダムに並び替えられます（記号の丸暗記はできません）。</li>
           <li>記述式は、コマンド名やパスをキーボードで入力します（大文字小文字・全角半角は不問）。</li>
           <li>採点結果はダウンロードして講師に提出してください。氏名が記載されます。</li>
         </ul>
@@ -476,6 +477,9 @@ function show(v){ for(const k in V)V[k].classList.toggle("hidden",k!==v); cur=v;
 function esc(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function fmt(sec){const m=Math.floor(sec/60),s=sec%60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
 function normAns(t){t=String(t||"").normalize("NFKC").trim().toLowerCase();t=t.replace(/\s+/g," ").replace(/^['"`]+|['"`]+$/g,"");if(t.length>1)t=t.replace(/\/+$/,"");return t;}
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function dispOrder(q){ return q.ord || q.o.map((_,i)=>i); }
+function dispLetterOf(q,origLetter){ const oi=KEYS.indexOf(origLetter); if(oi<0)return origLetter; const p=dispOrder(q).indexOf(oi); return p<0?origLetter:KEYS[p]; }
 function toast(m){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t);}t.textContent=m;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(()=>t.style.display="none",2400);}
 
 /* ---- home ---- */
@@ -531,7 +535,7 @@ startBtn.onclick=()=>{
 };
 
 function beginExam(){
-  const qs=EXAMS[S.idx].map(q=>({...q}));
+  const qs=EXAMS[S.idx].map(q=>{const c={...q}; if(c.t!=="x"&&c.o&&c.o.length) c.ord=shuffleArr(c.o.map((_,i)=>i)); return c;});
   S.qs=qs; S.pos=0;
   S.answers=qs.map(()=>({sel:new Set(),text:""}));
   S.flags=qs.map(()=>false);
@@ -573,9 +577,9 @@ function renderQ(){
   }else{
     const multi=q.t==="m";
     if(multi){const need=q.a.length; h+=`<div class="qhint">${need}つ選択してください</div>`;}
-    h+='<div class="opts">'+q.o.map((o,k)=>{
-      const L=KEYS[k], seld=ans.sel.has(L);
-      return `<button class="opt ${multi?'multi':'single'}${seld?' sel':''}" data-k="${L}"><span class="box">${seld?(multi?'✓':L):L}</span><span>${esc(o)}</span></button>`;
+    h+='<div class="opts">'+dispOrder(q).map((oi,p)=>{
+      const L=KEYS[oi], DL=KEYS[p], seld=ans.sel.has(L);
+      return `<button class="opt ${multi?'multi':'single'}${seld?' sel':''}" data-k="${L}"><span class="box">${seld?(multi?'✓':DL):DL}</span><span>${esc(q.o[oi])}</span></button>`;
     }).join("")+'</div>';
   }
   h+='</div>';
@@ -717,11 +721,11 @@ function revHtml(d,i){
       <div class="ro correct"><span class="k">正解</span><span>${esc(q.ax)}${q.axa&&q.axa.length?`　（別解: ${q.axa.map(esc).join(" / ")}）`:""}</span></div>`;
   }else{
     const correct=q.t==="m"?new Set(q.a.split("")):new Set(q.acc);
-    inner='<div>'+q.o.map((o,k)=>{
-      const L=KEYS[k], isC=correct.has(L), chosen=ans.sel.has(L);
+    inner='<div>'+dispOrder(q).map((oi,p)=>{
+      const L=KEYS[oi], DL=KEYS[p], isC=correct.has(L), chosen=ans.sel.has(L);
       let cls=""; if(isC)cls="correct"; else if(chosen)cls="chosen-wrong";
-      const why=q.w&&q.w[k];
-      return `<div class="ro ${cls}"><span class="k">${L}${chosen?" ●":""}</span><span>${esc(o)}${why?`<div class="why">${esc(why)}</div>`:""}</span></div>`;
+      const why=q.w&&q.w[oi];
+      return `<div class="ro ${cls}"><span class="k">${DL}${chosen?" ●":""}</span><span>${esc(q.o[oi])}${why?`<div class="why">${esc(why)}</div>`:""}</span></div>`;
     }).join("")+'</div>';
   }
   if(q.e)inner+=`<div class="expl">${esc(q.e)}</div>`;
@@ -744,8 +748,8 @@ function questionRows(){
   return S.detail.map((d,i)=>{
     let your,correct;
     if(d.q.t==="x"){ your=d.ans.text.trim()||"—"; correct=d.q.ax; }
-    else if(d.q.t==="m"){ your=[...d.ans.sel].sort().join("")||"—"; correct=d.q.a; }
-    else{ your=[...d.ans.sel][0]||"—"; correct=d.q.a; }
+    else if(d.q.t==="m"){ your=[...d.ans.sel].map(L=>dispLetterOf(d.q,L)).sort().join("")||"—"; correct=d.q.a.split("").map(L=>dispLetterOf(d.q,L)).sort().join(""); }
+    else{ const s0=[...d.ans.sel][0]; your=s0?dispLetterOf(d.q,s0):"—"; correct=d.q.a.split("").map(L=>dispLetterOf(d.q,L)).join(""); }
     const typ=d.q.t==="x"?"記述":d.q.t==="m"?"複数":"単一";
     return `<tr class="${d.ok?'':'wrongrow'}"><td>${i+1}</td><td>第${d.q.c}章</td><td>${typ}</td>
       <td class="mono">${esc(your)}</td><td class="mono">${esc(correct)}</td>
@@ -849,9 +853,9 @@ retryWrongBtn.onclick=()=>{
         <div class="ro correct"><span class="k">正解</span><span>${esc(q.ax)}${q.axa&&q.axa.length?`　（別解: ${q.axa.map(esc).join(" / ")}）`:""}</span></div>`;
     }else{
       const correct=q.t==="m"?new Set(q.a.split("")):new Set(q.acc);
-      inner=q.o.map((o,k)=>{const L=KEYS[k],isC=correct.has(L),chosen=d.ans.sel.has(L);
-        let cls=isC?"correct":(chosen?"chosen-wrong":"");const why=q.w&&q.w[k];
-        return `<div class="ro ${cls}"><span class="k">${L}${chosen?" ●":""}</span><span>${esc(o)}${why?`<div class="why">${esc(why)}</div>`:""}</span></div>`;
+      inner=dispOrder(q).map((oi,p)=>{const L=KEYS[oi],DL=KEYS[p],isC=correct.has(L),chosen=d.ans.sel.has(L);
+        let cls=isC?"correct":(chosen?"chosen-wrong":"");const why=q.w&&q.w[oi];
+        return `<div class="ro ${cls}"><span class="k">${DL}${chosen?" ●":""}</span><span>${esc(q.o[oi])}${why?`<div class="why">${esc(why)}</div>`:""}</span></div>`;
       }).join("");
     }
     if(q.e)inner+=`<div class="expl">${esc(q.e)}</div>`;
