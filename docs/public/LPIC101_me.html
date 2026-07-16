@@ -236,6 +236,9 @@ code,.mono{font-family:var(--mono)}
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.85rem;font-weight:700;padding:11px 22px;border-radius:99px;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.28)}
 .foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--faint);font-size:.76rem;text-align:center}
+.hrev{background:var(--brand);color:#fff;border-radius:8px;padding:6px 12px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.hrev:hover{background:var(--brand2)}
+.hrev-none{color:var(--faint);font-size:.8rem;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -671,7 +674,9 @@ function doSubmit(timeUp){
     ts:new Date().toISOString(), timeUp, durationUsed:DURATION-Math.max(0,S.remain), bych };
   // 履歴保存（各回10件）
   HIST[S.round]=HIST[S.round]||[];
-  HIST[S.round].unshift({name:rec.name,score,ok,total:rec.total,ts:rec.ts,pass});
+  const wrongSave=detail.map((d,i)=>({d,i})).filter(x=>!x.d.ok)
+    .map(x=>({n:x.d.q.n,i:x.i,sel:[...x.d.ans.sel],text:x.d.ans.text||"",ord:x.d.q.ord||null}));
+  HIST[S.round].unshift({name:rec.name,score,ok,total:rec.total,ts:rec.ts,pass,wrong:wrongSave});
   HIST[S.round]=HIST[S.round].slice(0,10);
   lset("lpicExamHist",HIST);
   S.detail=detail; S.result=rec;
@@ -840,14 +845,9 @@ dlBtn.onclick=()=>{
 };
 
 /* ---- wrong-answer study ---- */
-retryWrongBtn.onclick=()=>{
-  const wrong=S.detail.filter(d=>!d.ok);
-  if(!wrong.length){ toast("全問正解です。復習は不要です"); return; }
-  studyTitle.textContent=`第${S.round}回 間違えた問題の復習`;
-  studyLead.textContent=`${wrong.length}問を間違えました。正解と解説を確認しましょう。`;
-  studyBody.innerHTML=wrong.map(d=>{
-    const q=d.q, i=S.detail.indexOf(d);
-    let inner="";
+function studyItemHtml(d,i){
+  const q=d.q;
+  let inner="";
     if(q.t==="x"){
       inner=`<div class="yourans">あなたの回答: <span class="ng">${esc(d.ans.text.trim()||"未回答")}</span></div>
         <div class="ro correct"><span class="k">正解</span><span>${esc(q.ax)}${q.axa&&q.axa.length?`　（別解: ${q.axa.map(esc).join(" / ")}）`:""}</span></div>`;
@@ -860,10 +860,23 @@ retryWrongBtn.onclick=()=>{
     }
     if(q.e)inner+=`<div class="expl">${esc(q.e)}</div>`;
     return `<div class="rev open"><div class="rvhd"><span class="mk ng">×</span><span class="qx">Q${i+1}. ${esc(q.q.split("\\n")[0]).slice(0,72)}</span><span class="ch">第${q.c}章</span></div><div class="rvbody">${inner}</div></div>`;
-  }).join("");
+}
+let studyReturn="result";
+function openStudy(title,lead,items,returnTo){
+  studyReturn=returnTo||"result";
+  studyBack.textContent=studyReturn==="history"?"← 受験履歴に戻る":"← 結果に戻る";
+  studyTitle.textContent=title;
+  studyLead.textContent=lead;
+  studyBody.innerHTML=items.map(x=>studyItemHtml(x,x.i)).join("");
   show("study");
+}
+retryWrongBtn.onclick=()=>{
+  const wrong=S.detail.map((d,i)=>({...d,i})).filter(d=>!d.ok);
+  if(!wrong.length){ toast("全問正解です。復習は不要です"); return; }
+  openStudy(`第${S.round}回 間違えた問題の復習`,
+    `${wrong.length}問を間違えました。正解と解説を確認しましょう。`, wrong, "result");
 };
-studyBack.onclick=()=>{ renderResult(); };
+studyBack.onclick=()=>{ if(studyReturn==="history"){ renderHistory(); show("history"); } else { renderResult(); } };
 resHomeBtn.onclick=()=>{ renderHome(); show("home"); };
 
 /* ---- history ---- */
@@ -872,14 +885,36 @@ function renderHistory(){
   for(let r=1;r<=EXAMS.length;r++){
     const h=HIST[r]||[]; if(!h.length)continue; any=true;
     html+=`<div class="rsec"><h3>第${r}回（過去${h.length}回）</h3>
-      <table class="htable"><thead><tr><th>#</th><th>氏名</th><th>スコア</th><th>正解数</th><th>判定</th><th>受験日時</th></tr></thead><tbody>`;
-    h.forEach((x,idx)=>{ html+=`<tr><td>${idx+1}</td><td class="name">${esc(x.name)}</td>
+      <table class="htable"><thead><tr><th>#</th><th>氏名</th><th>スコア</th><th>正解数</th><th>判定</th><th>受験日時</th><th>復習</th></tr></thead><tbody>`;
+    h.forEach((x,idx)=>{
+      let rv;
+      if(x.wrong&&x.wrong.length) rv=`<button class="hrev" data-r="${r}" data-i="${idx}">×${x.wrong.length}問を復習</button>`;
+      else if(x.wrong) rv='<span class="hrev-none">全問正解</span>';
+      else rv='<span class="hrev-none" title="この記録には復習データがありません">—</span>';
+      html+=`<tr><td>${idx+1}</td><td class="name">${esc(x.name)}</td>
       <td class="${x.pass?'pass':'fail'}">${x.score}%</td><td>${x.ok}/${x.total}</td>
       <td class="${x.pass?'pass':'fail'}">${x.pass?"合格":"不合格"}</td>
-      <td>${new Date(x.ts).toLocaleString("ja-JP")}</td></tr>`; });
+      <td>${new Date(x.ts).toLocaleString("ja-JP")}</td><td>${rv}</td></tr>`; });
     html+="</tbody></table></div>";
   }
   histBody.innerHTML=any?html:'<div class="empty">まだ受験履歴はありません。</div>';
+  histBody.querySelectorAll(".hrev").forEach(b=>{
+    b.onclick=()=>openHistoryStudy(+b.dataset.r,+b.dataset.i);
+  });
+}
+function openHistoryStudy(round,idx){
+  const rec=(HIST[round]||[])[idx];
+  if(!rec||!rec.wrong||!rec.wrong.length){ toast("この記録には復習データがありません"); return; }
+  const bank=EXAMS[round-1];
+  const items=rec.wrong.map(w=>{
+    const base=bank.find(q=>q.n===w.n);
+    if(!base)return null;
+    const q={...base}; if(w.ord)q.ord=w.ord;
+    return { q, ans:{sel:new Set(w.sel||[]),text:w.text||""}, i:(typeof w.i==="number"?w.i:0) };
+  }).filter(Boolean);
+  if(!items.length){ toast("この記録には復習データがありません"); return; }
+  openStudy(`第${round}回 間違えた問題の復習（${new Date(rec.ts).toLocaleString("ja-JP")} 受験分）`,
+    `この回では${items.length}問を間違えました。正解と解説を確認しましょう。`, items, "history");
 }
 
 /* ---- guard: leaving exam ---- */
