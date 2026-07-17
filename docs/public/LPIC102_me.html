@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LPIC-1 102 模擬試験 — Hack × The × LPIC</title>
+<style>
+:root{
+  --bg:#EEF1F4; --ink:#182430; --ink2:#3E4E5E; --mute:#6B7B8B; --faint:#9AA8B4;
+  --panel:#FFFFFF; --line:#D5DEE6; --line2:#C2CFDA;
+  --brand:#0B4F6C; --brand2:#0E6E93; --brand-soft:#E4EFF4;
+  --accent:#C25A1D; --accent-soft:#F7E8DC;
+  --ok:#1B7A4B; --ok-soft:#E1F1E8; --ok-line:#9BD4B4;
+  --ng:#C0392B; --ng-soft:#FBE6E4; --ng-line:#E8AEA8;
+  --warn:#B8860B; --flag:#D98324; --flag-soft:#FBEEDD;
+  --shadow:0 1px 2px rgba(24,36,48,.06),0 6px 20px rgba(24,36,48,.07);
+  --mono:"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;min-height:100vh}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;font-size:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2.5px solid var(--brand2);outline-offset:2px}
+input{font-family:inherit}
+code,.mono{font-family:var(--mono)}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px 120px}
+.hidden{display:none!important}
+
+/* ===== top bar ===== */
+.bar{position:sticky;top:0;z-index:30;background:var(--brand);color:#fff;box-shadow:var(--shadow)}
+.bar .in{max-width:920px;margin:0 auto;padding:11px 20px;display:flex;align-items:center;gap:14px}
+.bar .brand{font-weight:800;font-size:.95rem;letter-spacing:.02em;display:flex;align-items:center;gap:9px}
+.bar .brand .mk{font-family:var(--mono);background:rgba(255,255,255,.15);border-radius:5px;padding:2px 8px;font-size:.72rem;font-weight:700}
+.bar .spacer{margin-left:auto}
+.bar .exam-meta{font-size:.8rem;opacity:.9;font-variant-numeric:tabular-nums}
+
+/* live exam bar */
+.exambar{position:sticky;top:0;z-index:30;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.exambar .in{max-width:920px;margin:0 auto;padding:9px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.exambar .rd{font-weight:800;font-size:.9rem;color:var(--brand)}
+.exambar .qn{font-size:.82rem;color:var(--mute);font-variant-numeric:tabular-nums}
+.exambar .clock{margin-left:auto;display:flex;align-items:center;gap:9px;font-variant-numeric:tabular-nums}
+.exambar .clock .t{font-family:var(--mono);font-weight:800;font-size:1.15rem;letter-spacing:.02em}
+.exambar .clock .t.warn{color:var(--warn)} .exambar .clock .t.crit{color:var(--ng)}
+.exambar .clock .lb{font-size:.68rem;color:var(--faint);text-transform:uppercase;letter-spacing:.08em}
+.pbar{height:4px;background:var(--line);width:100%}
+.pbar>span{display:block;height:100%;background:var(--brand2);width:0;transition:width .3s}
+
+/* ===== home ===== */
+.home-hd{padding:44px 0 8px}
+.eyebrow{font-family:var(--mono);font-size:.74rem;font-weight:700;letter-spacing:.14em;color:var(--brand2);text-transform:uppercase}
+.home-hd h1{font-family:var(--serif);font-size:2.3rem;font-weight:700;line-height:1.2;margin-top:12px;letter-spacing:.01em}
+.home-hd .lead{color:var(--ink2);font-size:1rem;margin-top:14px;max-width:60ch}
+.namecard{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.namecard label{font-weight:700;font-size:.88rem;color:var(--ink2);white-space:nowrap}
+.namecard input{flex:1;min-width:200px;border:1.5px solid var(--line2);border-radius:9px;padding:11px 14px;font-size:1rem;background:#fff}
+.namecard input:focus{border-color:var(--brand2);outline:none}
+.namecard .saved{font-size:.78rem;color:var(--ok);font-weight:700}
+
+.sec{margin-top:34px}
+.sec-h{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.sec-h h2{font-size:1.12rem;font-weight:800}
+.sec-h .cap{font-size:.8rem;color:var(--mute)}
+.sec-h::after{content:"";flex:1;height:1px;background:var(--line);align-self:center}
+
+.rounds{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:720px){.rounds{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.rounds{grid-template-columns:1fr}}
+.round{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 16px 16px;text-align:left;box-shadow:var(--shadow);transition:transform .1s,border-color .15s;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+.round::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--brand2)}
+.round:hover{transform:translateY(-2px);border-color:var(--brand2)}
+.round .rnum{font-family:var(--serif);font-size:1.9rem;font-weight:700;color:var(--brand);line-height:1}
+.round .rnum small{font-family:var(--sans);font-size:.7rem;font-weight:700;color:var(--faint);letter-spacing:.1em;display:block;text-transform:uppercase;margin-bottom:2px}
+.round .rmeta{font-size:.78rem;color:var(--mute)}
+.round .rbest{margin-top:auto;font-size:.8rem;font-weight:700;color:var(--ink2);font-variant-numeric:tabular-nums;padding-top:8px;border-top:1px dashed var(--line)}
+.round .rbest .none{color:var(--faint);font-weight:400}
+.round .rbest .pass{color:var(--ok)} .round .rbest .fail{color:var(--ng)}
+.round .go{margin-top:4px;display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:.86rem;color:var(--brand2)}
+
+.info{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow);font-size:.9rem;color:var(--ink2)}
+.info b{color:var(--ink)}
+.info ul{margin:8px 0 0 0;padding:0;list-style:none}
+.info li{padding:6px 0 6px 26px;position:relative;border-top:1px solid var(--line)}
+.info li:first-child{border-top:none}
+.info li::before{content:"›";position:absolute;left:8px;color:var(--brand2);font-weight:800}
+
+.histbtn{margin-top:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--line2);border-radius:10px;padding:11px 20px;font-size:.9rem;font-weight:700;background:var(--panel);box-shadow:var(--shadow);transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--brand2)}
+.btn.pri{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.pri:hover{background:var(--brand2)}
+.btn.lg{padding:14px 30px;font-size:1rem}
+.btn.ghost{background:transparent}
+.btn.danger:hover{border-color:var(--ng);color:var(--ng)}
+
+/* ===== brief / countdown ===== */
+.brief{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin-top:24px;overflow:hidden}
+.brief .top{background:var(--brand);color:#fff;padding:22px 26px}
+.brief .top .k{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;opacity:.85;text-transform:uppercase}
+.brief .top h2{font-family:var(--serif);font-size:1.7rem;font-weight:700;margin-top:4px}
+.brief .body{padding:22px 26px}
+.spec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+@media(max-width:620px){.spec-grid{grid-template-columns:1fr 1fr}}
+.spec{background:var(--brand-soft);border-radius:11px;padding:13px 15px;text-align:center}
+.spec .v{font-family:var(--serif);font-size:1.5rem;font-weight:700;color:var(--brand)}
+.spec .l{font-size:.74rem;color:var(--ink2);font-weight:700;margin-top:2px}
+.rules{margin-top:18px;list-style:none}
+.rules li{padding:8px 0 8px 28px;position:relative;font-size:.9rem;color:var(--ink2);border-top:1px solid var(--line)}
+.rules li::before{content:"✓";position:absolute;left:6px;color:var(--ok);font-weight:800}
+.namewarn{margin-top:16px;background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 14px;font-size:.85rem;color:#7a3a12;font-weight:600}
+.brief .actions{padding:18px 26px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line)}
+
+.count{padding:60px 26px;text-align:center}
+.count .lead{font-size:1rem;color:var(--mute);font-weight:700}
+.count .n{font-family:var(--serif);font-size:6rem;font-weight:700;color:var(--brand);line-height:1.1}
+.count .n.go{color:var(--accent)}
+.count .who{margin-top:8px;font-size:.9rem;color:var(--ink2)}
+
+/* ===== question ===== */
+.qwrap{padding-top:24px;display:grid;grid-template-columns:1fr 210px;gap:24px;align-items:start}
+@media(max-width:820px){.qwrap{grid-template-columns:1fr}}
+.qmain{min-width:0}
+.qcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.qcard .qhd{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:#FAFCFD}
+.qcard .qhd .idx{font-family:var(--serif);font-weight:700;font-size:1.15rem;color:var(--brand)}
+.qcard .qhd .tag{font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand);letter-spacing:.02em}
+.qcard .qhd .tag.multi{background:var(--accent-soft);color:var(--accent)}
+.qcard .qhd .tag.text{background:var(--flag-soft);color:var(--flag)}
+.qcard .qhd .flag{margin-left:auto;font-size:.8rem;font-weight:700;color:var(--mute);display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid var(--line2);border-radius:8px}
+.qcard .qhd .flag.on{background:var(--flag-soft);border-color:var(--flag);color:var(--flag)}
+.qbody{padding:20px}
+.qtext{font-size:1.06rem;font-weight:600;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.qhint{font-size:.82rem;color:var(--accent);font-weight:700;margin-top:8px}
+.opts{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:13px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);border-radius:11px;padding:13px 15px;background:#fff;font-size:.96rem;line-height:1.65;transition:border-color .12s,background .12s;word-break:break-word}
+.opt:hover:not(.locked){border-color:var(--brand2);background:var(--brand-soft)}
+.opt .box{flex-shrink:0;width:24px;height:24px;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:.82rem;color:var(--mute);background:#fff}
+.opt.single .box{border-radius:50%}
+.opt.multi .box{border-radius:6px}
+.opt.sel{border-color:var(--brand2);background:var(--brand-soft)}
+.opt.sel .box{background:var(--brand2);border-color:var(--brand2);color:#fff}
+.opt.locked{cursor:default}
+.txtin{width:100%;border:1.5px solid var(--line2);border-radius:11px;padding:14px 16px;font-size:1.05rem;font-family:var(--mono);margin-top:18px;background:#fff}
+.txtin:focus{border-color:var(--brand2);outline:none}
+.qnav{display:flex;gap:10px;margin-top:20px;align-items:center;flex-wrap:wrap}
+.qnav .btn{min-width:104px}
+.qnav .mid{margin-left:auto;font-size:.8rem;color:var(--mute)}
+
+/* side palette */
+.palette{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px;position:sticky;top:80px}
+@media(max-width:820px){.palette{position:static}}
+.palette h3{font-size:.78rem;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.pgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+@media(max-width:820px){.pgrid{grid-template-columns:repeat(10,1fr)}}
+@media(max-width:480px){.pgrid{grid-template-columns:repeat(8,1fr)}}
+.pcell{aspect-ratio:1;border:1.5px solid var(--line2);border-radius:7px;font-size:.76rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink2);display:flex;align-items:center;justify-content:center;background:#fff;position:relative}
+.pcell:hover{border-color:var(--brand2)}
+.pcell.answered{background:var(--brand);color:#fff;border-color:var(--brand)}
+.pcell.flagged::after{content:"";position:absolute;top:-3px;right:-3px;width:9px;height:9px;background:var(--flag);border-radius:50%;border:1.5px solid #fff}
+.pcell.current{outline:2.5px solid var(--accent);outline-offset:1px}
+.plegend{margin-top:12px;font-size:.72rem;color:var(--mute);display:flex;flex-direction:column;gap:5px}
+.plegend span{display:inline-flex;align-items:center;gap:6px}
+.plegend .sw{width:12px;height:12px;border-radius:4px;border:1.5px solid var(--line2)}
+.plegend .sw.a{background:var(--brand);border-color:var(--brand)}
+.plegend .sw.f{background:#fff;position:relative}
+.plegend .sw.f::after{content:"";position:absolute;top:-2px;right:-2px;width:7px;height:7px;background:var(--flag);border-radius:50%}
+.palette .fin{margin-top:14px}
+.palette .fin .btn{width:100%}
+
+/* ===== review-before-submit ===== */
+.submitcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:24px;margin-top:24px}
+.submitcard h2{font-family:var(--serif);font-size:1.5rem;margin-bottom:6px}
+.sumrow{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}
+.sumstat{flex:1;min-width:130px;background:var(--brand-soft);border-radius:11px;padding:14px 16px;text-align:center}
+.sumstat .v{font-family:var(--serif);font-size:1.7rem;font-weight:700;color:var(--brand)}
+.sumstat .v.warn{color:var(--flag)}
+.sumstat .l{font-size:.76rem;color:var(--ink2);font-weight:700}
+.jumplist{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.jumplist button{border:1.5px solid var(--line2);border-radius:8px;padding:6px 11px;font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums}
+.jumplist button.flagged{border-color:var(--flag);background:var(--flag-soft);color:var(--flag)}
+.jumplist button.unanswered{border-color:var(--ng);background:var(--ng-soft);color:var(--ng)}
+
+/* ===== result ===== */
+.result-hero{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-top:24px}
+.result-hero .band{padding:26px;color:#fff;text-align:center}
+.result-hero .band.pass{background:linear-gradient(120deg,var(--ok),#15633c)}
+.result-hero .band.fail{background:linear-gradient(120deg,#8a2c22,var(--ng))}
+.result-hero .band .verdict{font-family:var(--serif);font-size:2rem;font-weight:700}
+.result-hero .band .score{font-family:var(--mono);font-size:3.2rem;font-weight:800;line-height:1.1;margin-top:4px}
+.result-hero .band .sub{opacity:.92;font-size:.9rem;margin-top:4px}
+.result-hero .meta{padding:16px 24px;display:flex;gap:20px;flex-wrap:wrap;font-size:.85rem;color:var(--ink2)}
+.result-hero .meta b{color:var(--ink)}
+.rsec{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px 22px;margin-top:18px}
+.rsec h3{font-size:1rem;font-weight:800;margin-bottom:12px}
+.chrow{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:.88rem}
+.chrow .cn{width:14em;color:var(--ink2);font-weight:600;flex-shrink:0}
+@media(max-width:520px){.chrow .cn{width:8em}}
+.chrow .cbar{flex:1;height:9px;background:var(--line);border-radius:99px;overflow:hidden}
+.chrow .cbar>span{display:block;height:100%;border-radius:99px}
+.chrow .cv{font-family:var(--mono);font-size:.8rem;color:var(--ink2);min-width:3.6em;text-align:right;font-variant-numeric:tabular-nums}
+.ractions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+
+/* review of answers */
+.rev{border:1px solid var(--line);border-radius:12px;margin-top:12px;overflow:hidden}
+.rev .rvhd{padding:12px 16px;display:flex;gap:10px;align-items:center;cursor:pointer;background:#FAFCFD;border-bottom:1px solid var(--line)}
+.rev .rvhd .mk{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:#fff}
+.rev .rvhd .mk.ok{background:var(--ok)} .rev .rvhd .mk.ng{background:var(--ng)}
+.rev .rvhd .qx{font-size:.9rem;font-weight:600;flex:1;min-width:0}
+.rev .rvhd .ch{font-size:.72rem;color:var(--mute);white-space:nowrap}
+.rev .rvbody{padding:14px 16px;display:none}
+.rev.open .rvbody{display:block}
+.rev .ro{padding:8px 12px;border-radius:8px;margin:5px 0;font-size:.9rem;border:1.5px solid var(--line);display:flex;gap:10px}
+.rev .ro .k{font-family:var(--mono);font-weight:700;color:var(--mute)}
+.rev .ro.correct{background:var(--ok-soft);border-color:var(--ok-line)}
+.rev .ro.correct .k{color:var(--ok)}
+.rev .ro.chosen-wrong{background:var(--ng-soft);border-color:var(--ng-line)}
+.rev .ro.chosen-wrong .k{color:var(--ng)}
+.rev .ro .why{font-size:.78rem;color:var(--mute);margin-top:2px}
+.rev .yourans{font-size:.86rem;margin:8px 0}
+.rev .yourans .ok{color:var(--ok);font-weight:700} .rev .yourans .ng{color:var(--ng);font-weight:700}
+.rev .expl{background:#F7F9FB;border-radius:9px;padding:10px 13px;font-size:.84rem;color:var(--ink2);margin-top:8px;white-space:pre-wrap}
+.rev-filter{display:flex;gap:8px;margin:6px 0 2px}
+.rev-filter button{border:1.5px solid var(--line2);border-radius:8px;padding:6px 14px;font-size:.82rem;font-weight:700;background:#fff}
+.rev-filter button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+/* history */
+.htable{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:6px}
+.htable th,.htable td{border:1px solid var(--line);padding:8px 10px;text-align:center;font-variant-numeric:tabular-nums}
+.htable th{background:var(--brand);color:#fff;font-weight:700;font-size:.8rem}
+.htable td.name{text-align:left}
+.htable .pass{color:var(--ok);font-weight:800} .htable .fail{color:var(--ng);font-weight:800}
+.htable tr:nth-child(even) td{background:#F7F9FB}
+.empty{text-align:center;color:var(--faint);padding:30px 0;font-size:.9rem}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.85rem;font-weight:700;padding:11px 22px;border-radius:99px;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.28)}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--faint);font-size:.76rem;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ===== HOME ===== -->
+<div id="vHome">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span>
+    <span class="exam-meta">LPIC-1 102 模擬試験</span>
+  </div></div>
+  <div class="wrap">
+    <div class="home-hd">
+      <div class="eyebrow">LPIC-1 · Exam 102 · Mock Test</div>
+      <h1>102試験 模擬試験プログラム</h1>
+      <p class="lead">本番と同じ50問・50分の形式で、全6回にわたり模試102の全118問を演習します。選択式・複数選択・記述式に対応。各回の結果は記録され、ダウンロードして講師に提出できます。</p>
+      <div class="namecard">
+        <label for="nameInput">受験者氏名</label>
+        <input id="nameInput" type="text" placeholder="氏名を入力（結果に記載されます）" autocomplete="name">
+        <span class="saved hidden" id="nameSaved">✓ 保存しました</span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>受験する回を選ぶ</h2><span class="cap">全6回 / 各50問・50分</span></div>
+      <div class="rounds" id="roundGrid"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>試験の概要</h2></div>
+      <div class="info">
+        <ul>
+          <li><b>出題範囲</b> ― LPIC-1 102試験（第7〜12章）。6回すべてを受験すると模試102の全118問を網羅します。</li>
+          <li><b>問題数と時間</b> ― 各回50問・制限時間50分。章の構成比は本番に準拠（毎回すべての章から出題）。</li>
+          <li><b>形式</b> ― 単一選択・複数選択（「2つ選択」等は全て選んで正解）・記述式（キーボード入力）。各回に記述式を必ず含みます。</li>
+          <li><b>見直し</b> ― 提出前に前の問題へ自由に戻れます。未回答・フラグ付き問題は一覧から確認できます。</li>
+          <li><b>結果</b> ― 採点後に分野別スコアを表示。結果ファイルをダウンロードして講師へ提出します。記録は各回ごとに過去10回分保存されます。</li>
+        </ul>
+        <div class="histbtn"><button class="btn" id="histBtn">これまでの受験履歴を見る</button>
+          <button class="btn ghost danger" id="resetBtn">記録をリセット</button></div>
+      </div>
+    </div>
+    <div class="foot" id="footInfo"></div>
+  </div>
+</div>
+
+<!-- ===== BRIEF + COUNTDOWN ===== -->
+<div id="vBrief" class="hidden">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span><span class="exam-meta" id="briefBarMeta"></span>
+  </div></div>
+  <div class="wrap">
+    <div class="brief" id="briefBody">
+      <div class="top"><div class="k">Before you begin</div><h2 id="briefTitle"></h2></div>
+      <div class="body">
+        <div class="spec-grid">
+          <div class="spec"><div class="v">50</div><div class="l">問題数</div></div>
+          <div class="spec"><div class="v">50<span style="font-size:1rem">分</span></div><div class="l">制限時間</div></div>
+          <div class="spec"><div class="v">65<span style="font-size:1rem">%</span></div><div class="l">合格ライン目安</div></div>
+          <div class="spec"><div class="v" id="briefRetake">—</div><div class="l">今回の最高</div></div>
+        </div>
+        <ul class="rules">
+          <li>制限時間は50分です。時間切れになると自動的に採点されます。</li>
+          <li>提出する前に、前の問題へ戻って見直し・修正ができます。</li>
+          <li>複数選択の問題は、正解の選択肢をすべて選んで正解になります。</li>
+          <li>記述式は、コマンド名やパスをキーボードで入力します（大文字小文字・全角半角は不問）。</li>
+          <li>採点結果はダウンロードして講師に提出してください。氏名が記載されます。</li>
+        </ul>
+        <div class="namewarn" id="briefNameWarn">⚠ 氏名が未入力です。ホームに戻って氏名を入力してください（結果ファイルに必要です）。</div>
+      </div>
+      <div class="actions">
+        <button class="btn pri lg" id="startBtn">試験を開始する</button>
+        <button class="btn ghost" id="briefBack">← 戻る</button>
+        <span style="font-size:.82rem;color:var(--mute)">開始を押すと5秒後にスタートします</span>
+      </div>
+    </div>
+    <div class="brief hidden" id="countBody">
+      <div class="count">
+        <div class="lead">まもなく開始します</div>
+        <div class="n" id="countNum">5</div>
+        <div class="who" id="countWho"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EXAM ===== -->
+<div id="vExam" class="hidden">
+  <div class="exambar">
+    <div class="in">
+      <span class="rd" id="exRound"></span>
+      <span class="qn" id="exQn"></span>
+      <div class="clock">
+        <span class="lb">残り時間</span>
+        <span class="t" id="exClock">50:00</span>
+      </div>
+    </div>
+    <div class="pbar"><span id="exPbar"></span></div>
+  </div>
+  <div class="wrap">
+    <div class="qwrap">
+      <div class="qmain">
+        <div class="qcard" id="qCard"></div>
+        <div class="qnav">
+          <button class="btn" id="prevBtn">← 前へ</button>
+          <button class="btn pri" id="nextBtn">次へ →</button>
+          <span class="mid" id="navMid"></span>
+        </div>
+      </div>
+      <aside class="palette">
+        <h3>問題一覧</h3>
+        <div class="pgrid" id="pGrid"></div>
+        <div class="plegend">
+          <span><i class="sw a"></i>回答済み</span>
+          <span><i class="sw f"></i>フラグ</span>
+        </div>
+        <div class="fin"><button class="btn pri" id="toReviewBtn">解答を終えて見直しへ</button></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REVIEW BEFORE SUBMIT ===== -->
+<div id="vSubmit" class="hidden">
+  <div class="exambar"><div class="in">
+    <span class="rd" id="subRound"></span>
+    <div class="clock"><span class="lb">残り時間</span><span class="t" id="subClock">50:00</span></div>
+  </div><div class="pbar"><span id="subPbar"></span></div></div>
+  <div class="wrap">
+    <div class="submitcard">
+      <h2>提出前の最終確認</h2>
+      <p style="color:var(--ink2);font-size:.9rem">提出すると採点され、後から解答は変更できません。未回答・フラグ付きの問題は下から戻って確認できます。</p>
+      <div class="sumrow">
+        <div class="sumstat"><div class="v" id="subAnswered">0</div><div class="l">回答済み</div></div>
+        <div class="sumstat"><div class="v warn" id="subUnanswered">0</div><div class="l">未回答</div></div>
+        <div class="sumstat"><div class="v" id="subFlagged">0</div><div class="l">フラグ</div></div>
+      </div>
+      <div id="subUnansweredWrap"><h3 style="font-size:.9rem;margin-bottom:6px">未回答の問題</h3><div class="jumplist" id="subUnansweredList"></div></div>
+      <div id="subFlaggedWrap" style="margin-top:14px"><h3 style="font-size:.9rem;margin-bottom:6px">フラグを付けた問題</h3><div class="jumplist" id="subFlaggedList"></div></div>
+      <div class="ractions">
+        <button class="btn pri lg" id="submitBtn">採点して結果を見る</button>
+        <button class="btn ghost" id="backToExamBtn">← 問題に戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div id="vResult" class="hidden">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span><span class="exam-meta" id="resBarMeta"></span>
+  </div></div>
+  <div class="wrap">
+    <div class="result-hero">
+      <div class="band" id="resBand">
+        <div class="verdict" id="resVerdict"></div>
+        <div class="score" id="resScore"></div>
+        <div class="sub" id="resSub"></div>
+      </div>
+      <div class="meta" id="resMeta"></div>
+    </div>
+    <div class="rsec">
+      <h3>分野別スコア</h3>
+      <div id="resChapters"></div>
+    </div>
+    <div class="ractions">
+      <button class="btn pri lg" id="dlBtn">スコアレポートをPDFで保存（講師提出用）</button>
+      <button class="btn" id="retryWrongBtn">間違えた問題を復習</button>
+      <button class="btn ghost" id="resHomeBtn">ホームへ</button>
+    </div>
+    <div class="rsec" style="margin-top:22px">
+      <h3>解答の見直し</h3>
+      <div class="rev-filter">
+        <button class="on" data-filter="all">すべて</button>
+        <button data-filter="wrong">間違いのみ</button>
+        <button data-filter="flag">フラグのみ</button>
+      </div>
+      <div id="resReview"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REVIEW MODE (wrong-answer re-study) ===== -->
+<div id="vStudy" class="hidden">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span><span class="exam-meta">復習モード</span>
+  </div></div>
+  <div class="wrap">
+    <div class="home-hd" style="padding:28px 0 8px">
+      <div class="eyebrow">Review</div>
+      <h1 style="font-size:1.7rem" id="studyTitle">間違えた問題の復習</h1>
+      <p class="lead" id="studyLead"></p>
+    </div>
+    <div id="studyBody"></div>
+    <div class="ractions"><button class="btn ghost" id="studyBack">← 結果に戻る</button></div>
+  </div>
+</div>
+
+<!-- ===== HISTORY ===== -->
+<div id="vHistory" class="hidden">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span><span class="exam-meta">受験履歴</span>
+  </div></div>
+  <div class="wrap">
+    <div class="home-hd" style="padding:28px 0 8px">
+      <div class="eyebrow">History</div>
+      <h1 style="font-size:1.7rem">受験履歴（各回 過去10回）</h1>
+    </div>
+    <div id="histBody"></div>
+    <div class="ractions"><button class="btn ghost" id="histBack">← ホームへ</button></div>
+  </div>
+</div>
+
+<script>
+const EXAMS=[[{"n":63,"c":10,"t":"m","q":"journalctl で出力の時間枠を制限するために使用されるパラメータは次のどれですか(2つ選択してください)。","o":["--since=","--from=","--until=","--upto=","--date="],"a":"AC","acc":["AC"],"w":["","存在しないオプション","","存在しない","存在しない"]},{"n":45,"c":10,"t":"m","q":"次のどれが syslog 機能(ファシリティ)ですか?(2つ選択してください。)","o":["local5","accounting","mail","postmaster","remote"],"a":"AC","acc":["AC"],"w":["","存在しないファシリティ","","存在しない","存在しない"]},{"n":114,"c":8,"t":"m","q":"次のタスクのうち、XDM や KDM などのディスプレイマネージャーによって処理されるのはどれですか(2つ選択してください)。","o":["新しいモニターやプロジェクターなどの追加デバイスが接続されたときに構成します。","ユーザーのデスクトップ環境を起動して準備します。","現在のグラフィックデバイスとモニターの X11 構成ファイルを作成します。","ユーザーが設定可能な時間非アクティブになったときに画面をロックします。","ユーザーのログインを処理します。"],"a":"BE","acc":["BE"],"w":["デバイス検出・設定はしない","","設定ファイル生成はXorg -configure","画面ロックはセッション側の機能",""]},{"n":22,"c":12,"t":"s","q":"SSH を使用してリモートマシンにログインするときに自動認証に使用される既存の SSH キーをプリロードして管理するコマンドはどれですか。","o":["sshd","ssh-keyring","ssh-keygen","ssh-pki","ssh-agent"],"a":"E","acc":["E"],"e":"問題文の「注文マシン」はOCR誤りで「リモートマシン」に修正。鍵の追加は ssh-add、鍵を保持・管理するのは ssh-agent。","w":["sshdはサーバーデーモン","存在しない","ssh-keygenは鍵の生成用","存在しない",""]},{"n":108,"c":7,"t":"s","q":"エイリアス ls が存在する場合、次のコマンドのうちどれがエイリアスの現在のターゲットではなくコマンド ls -l を指すようにエイリアスを更新しますか?","o":["set ls='ls -l'","alias ls='ls -l'","alias --force ls='ls -l'","alias --update ls ls='ls -l'","realias ls='ls -l'"],"a":"B","acc":["B"],"e":"alias は同名で再定義すれば上書きされる。","w":["setは変数の設定","","--forceオプションはない","--updateオプションはない","realiasは存在しない"]},{"n":117,"c":12,"t":"s","q":"ssh は SSH エージェントと対話するためにどのメカニズムを使用しますか?","o":["システム全体の SSH エージェントによって使用されるポート 2222 に接続します。","固定ソケット .ssh-agent/ipc を使用します。","ssh を ssh-agent の呼び出しに置き換えてエイリアスを作成します。","各 ssh 呼び出しに対して ssh-agent を子プロセスとして起動します。","SSH_AUTH_SOCK などの環境変数を評価します。"],"a":"E","acc":["E"],"w":["固定ポートは使わない","固定ソケットパスではない","エイリアスは作らない","都度起動はしない",""]},{"n":30,"c":7,"t":"s","q":"コマンド seq 10 はどのような出力を生成しますか?","o":["コマンドが停止されるまで、10 ずつ増加する数字の連続ストリーム。","2番目のパラメータが欠落しているため、出力は作成されません。","0 から 9 までの数字を1行に1つずつ入力します。","標準出力に数字 10 を出力します。","1行につき1つ、1 から 10 までの数字が1つずつ表示されます。"],"a":"E","acc":["E"],"w":["無限ストリームにはならない","引数1つは終値の指定","1から始まる（0からではない）","10だけの出力ではない",""]},{"n":20,"c":11,"t":"m","q":"次の IPv4 ネットワークのうち、プライベートアドレスの割り当てとプライベートルーティング用に IANA によって予約されているのはどれですか(3つ選択してください)。","o":["10.0.0.0/8","127.0.0.0/8","169.255.0.0/16","172.16.0.0/12","192.168.0.0/16"],"a":"ADE","acc":["ADE"],"e":"127/8 はループバック、リンクローカルは 169.254.0.0/16(選択肢Cは 169.255 で誤り)。","w":["","127/8はループバック","リンクローカルは169.254/16（169.255ではない）","",""]},{"n":116,"c":11,"t":"x","q":"空欄補充。\n以前は非アクティブだったネットワークインターフェイス eth0 をアクティブにするためのコマンド\nip link set ____ dev eth0 に欠けているパラメータはどれですか?(コマンド、パス、または追加オプションを指定せずにパラメータのみを指定します。)","o":[],"ax":"up"},{"n":77,"c":10,"t":"s","q":"システムログをローテーション、圧縮、メールで送信するために使用されるコマンドはどれですか。","o":["logrotate","striplog","syslogd --rotate","rotatelog","logger"],"a":"A","acc":["A"],"w":["","存在しない","syslogdに--rotateはない","存在しない","loggerはログへの書き込み用"]},{"n":115,"c":9,"t":"x","q":"空白を埋めてください。\n存在する場合、cron スケジュールシステムの使用を許可されているすべてのユーザーを含める必要があるファイルはどれですか?(パスを含むファイルの完全な名前を指定します。)","o":[],"ax":"/etc/cron.allow","axa":["cron.allow"],"e":"【解答を修正】cron の使用を許可するユーザーを列挙するファイルは /etc/cron.allow。「crontab」はコマンド名であり、本問(ファイルのフルパスを問う)の答えとして誤り。"},{"n":73,"c":7,"t":"s","q":"echo $? コマンドではどのような情報が表示されますか?","o":["echo コマンドのプロセス ID。","echo の直前に実行されたコマンドの終了値。","次のコマンドに使用されるプロセス ID。","echo コマンドの終了値。","現在のシェルのプロセス ID。"],"a":"B","acc":["B"],"w":["PIDは$$や$!","","次のコマンドのPIDという変数はない","直前のコマンドの値（echo自身ではない）","シェルのPIDは$$"]},{"n":52,"c":7,"t":"x","q":"空欄を埋めてください。\n現在の Bash シェルで定義されているエイリアスを一覧表示するコマンドは何ですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"alias"},{"n":70,"c":8,"t":"s","q":"点字ディスプレイとは何を指しますか?","o":["デスクトップアプリケーション用の標準化された高コントラストなグラフィカルテーマ。","KDE や GNOME に似た Linux デスクトップ環境。","LCD に取って代わられた従来のディスプレイ技術。","小さな点を使用して文字を物理的に表現したもの。","XML に似た、データ交換用の標準ファイル形式。"],"a":"D","acc":["D"],"w":["テーマではない","デスクトップ環境ではない","ディスプレイ技術の話ではない","","ファイル形式ではない"]},{"n":42,"c":10,"t":"s","q":"次のコマンドのうち、キューに入れられたすべての印刷ジョブを一覧表示するものはどれですか?","o":["lpd","lpr","lp","lsq","lpq"],"a":"E","acc":["E"],"w":["lpdは印刷デーモン","lprはジョブの投入","lpもジョブの投入（SysV系）","存在しないコマンド",""]},{"n":60,"c":9,"t":"s","q":"次の情報のうち、各ユーザーの /etc/shadow に保存されるのはどれですか。","o":["ユーザーの最終ログインのタイムスタンプ","ユーザーの秘密 SSH キー","ユーザーのハッシュ化されたパスワード","数値ユーザー ID(UID)","ユーザーのホームディレクトリへのパス"],"a":"C","acc":["C"],"e":"UID とホームディレクトリは /etc/passwd に保存される。","w":["最終ログインはwtmp/lastlog","SSH鍵は~/.ssh/","","UIDは/etc/passwd","ホームは/etc/passwd"]},{"n":90,"c":11,"t":"s","q":"HTTPS サービスで使用される標準化された TCP ポートはどれですか?","o":["25","80","8080","443","636"],"a":"D","acc":["D"],"e":"25=SMTP、80=HTTP、636=LDAPS。","w":["25=SMTP","80=HTTP","8080=代替HTTP","","636=LDAPS"]},{"n":86,"c":12,"t":"s","q":"特定のホストにサービスへのアクセスを許可するように TCP ラッパー構成を編集した後、これらの変更はいつ有効になりますか?","o":["新しい構成は、それぞれのサービスを再起動した後に有効になります。","新しい構成は、次回のシステム再起動時に有効になります。","サービスへの最後に確立された接続が閉じられたときに、新しい構成が有効になります。","新しい設定は、tcpd サービスを再起動した後に有効になります。","新しい構成は、すべての新しい接続に対して直ちに有効になります。"],"a":"E","acc":["E"],"e":"hosts.allow / hosts.deny は接続ごとに評価される。","w":["サービス再起動は不要（毎接続で読み直す）","再起動は不要","接続の終了を待たない","tcpdは常駐サービスではない",""]},{"n":1,"c":9,"t":"s","q":"/etc/ に cron.allow も cron.deny も存在しない場合、次のどれが正しいですか?","o":["追加の構成なしで、すべてのユーザーがユーザー固有の crontab を作成できます。","追加の構成がない場合、root のみがユーザー固有の crontab を作成できます。","cron デーモンは起動を拒否し、システムのログファイルに不足しているファイルを報告します。","ユーザーがユーザー固有の crontab を作成する場合、システム管理者はそれを明示的に承認する必要があります。","/etc/crond.conf のデフォルト設定は、ユーザー固有の crontab が一般的に許可されるかどうかを定義します。"],"a":"B","acc":["B"],"e":"実装依存: cronie(RHEL系)では root のみ(B)、Debian系 Vixie cron では全ユーザー可(A)。試験ではBが想定解答とされることが多い。","w":["設定なしで全許可にはならない","","デーモンは正常に起動する","承認フローは存在しない","crond.confというファイルはない"]},{"n":39,"c":12,"t":"x","q":"空白を埋めてください。\nxinetd サービスの設定ファイルはどのディレクトリに保存されますか?(ディレクトリへのフルパスを指定します。)","o":[],"ax":"/etc/xinetd.d/","axa":["/etc/xinetd.d","xinetd.d"]},{"n":32,"c":12,"t":"x","q":"空欄を埋めてください。\nssh コマンドのどのパラメータが、ログイン試行に使用される秘密鍵の場所を指定しますか?(値やパラメータを指定せずにオプション名のみを指定します。)","o":[],"ax":"-i","axa":["i"],"e":"【解答を修正】ssh の秘密鍵(identity file)指定オプションは -i。ssh-keygen は鍵を生成するコマンドであり、本問の答えではない。"},{"n":95,"c":9,"t":"m","q":"useradd で指定できるものは何ですか?(2つ選択してください。)","o":["ユーザーが sudo を使用して実行できるコマンド。","ユーザーのホームディレクトリへの絶対パス。","新しいユーザーが利用できるプリンター。","新しいアカウントにログインするために使用される SSH キー。","ユーザーの数値ユーザー ID(UID)。"],"a":"BE","acc":["BE"],"e":"-d でホームディレクトリ、-u で UID を指定。","w":["sudoの権限は/etc/sudoersで設定","","プリンターは無関係","SSH鍵は指定できない",""]},{"n":112,"c":11,"t":"s","q":"IPv4 サブネット 192.168.2.128/26 内の一意のホストに使用できる IP アドレスの数はいくつですか?","o":["6","14","30","62","126"],"a":"D","acc":["D"],"e":"/26 = 64 アドレス - ネットワーク/ブロードキャストの2 = 62。","w":["/29相当","/28相当","/27相当","","/25相当"]},{"n":56,"c":11,"t":"m","q":"サブネット 203.0.113.64/28 の有効なホストアドレスは次のどれですか。(2つ選択してください。)","o":["203.0.113.64","203.0.113.78","203.0.113.65","203.0.113.80","203.0.113.81"],"a":"BC","acc":["BC"],"e":"/28 の範囲は .64〜.79。ホストは .65〜.78(.64 はネットワーク、.79 はブロードキャスト)。","w":[".64はネットワークアドレス","","",".80は次のサブネット",".81は次のサブネット"]},{"n":105,"c":10,"t":"s","q":"/etc/syslog.conf の次のエントリのうち、すべてのメール関連イベントをファイル /var/log/maillog に書き込み、すべての重要(crit)イベントをリモートサーバー logger.example.com に送信するものはどれですか。","o":["mail.* /var/log/maillog mail,crit @logger.example.org","mail.* /var/log/maillog mail.crit syslog://logger.example.org","mail /var/log/maillog mail.crit @logger.example.org","mail.* /var/log/maillog mail.crit @logger.example.org","mail * /var/log/maillog mail crit @logger.example.org"],"a":"D","acc":["D"],"e":"facility.priority の書式と、リモート転送の @ホスト名 記法。","w":["mail,critという区切りは無効","syslog://という記法は無効","セレクタはファシリティ.プライオリティの形式が必要","","区切り記法が無効"]},{"n":88,"c":9,"t":"s","q":"次の getent 呼び出しのうち、既存のユーザーをすべて一覧表示するものはどれですか?","o":["getent homes","getent uids","getent passwd","getent users","getent logins"],"a":"C","acc":["C"],"w":["存在しないDB名","存在しない","","存在しない","存在しない"]},{"n":43,"c":9,"t":"s","q":"システムのタイムゾーンを正しく構成することが重要なのはなぜですか?","o":["タイムゾーンはチェックサムの計算に含まれており、タイムゾーンを変更すると既存のチェックサムが無効になるためです。","タイムゾーンはファイルの変更時刻の一部として保存され、ファイルの作成後に変更することはできません。","環境変数 LANG と LC_MESSAGES は、デフォルトでタイムゾーンに応じて設定されるためです。","NTP は設定されたタイムゾーンに基づいて近くのサーバーを選択するためです。","Unix タイムスタンプをローカル時間に変換するには、タイムゾーンの設定に依存するためです。"],"a":"E","acc":["E"],"w":["チェックサムとは無関係","変更時刻はUTCの秒で保存されTZに依存しない","LANG等は言語設定","NTPのサーバー選択はTZ非依存",""]},{"n":109,"c":7,"t":"s","q":"次のコマンドのうち、すべての環境変数とシェル変数を表示するものはどれですか?","o":["getargs","lsenv","ls","env","lsshell"],"a":"D","acc":["D"],"e":"厳密にはシェル変数まで表示するのは set だが、選択肢中では env が想定解答。","w":["存在しない","存在しない","lsはファイル一覧","","存在しない"]},{"n":47,"c":10,"t":"s","q":"次のプロトコルのうち、オープンリレーという用語に関連するものはどれですか?","o":["SMTP","POP3","NTP","IMAP","LDAP"],"a":"A","acc":["A"],"w":["","POP3は受信プロトコル","NTPは時刻同期","IMAPは受信プロトコル","LDAPはディレクトリサービス"]},{"n":111,"c":9,"t":"s","q":"ファイル /etc/localtime について正しいのは何ですか?","o":["Europe/Berlin のような文字列を含むプレーンテキストファイルです。","システムの IP アドレスの場所に基づいて NTP サービスによって作成および維持されます。","これは /sys/device/clock/ltime へのシンボリックリンクであり、常に現在のローカル時刻が含まれます。","このファイルを変更した後、変更を有効にするには newtzconfig を実行する必要があります。","/usr/share/zoneinfo/Europe/Berlin などのタイムゾーン情報ファイルへのシンボリックリンクまたはそのコピーです。"],"a":"E","acc":["E"],"w":["文字列を書くのは/etc/timezone（別ファイル）","NTPは作成しない","そのようなリンクではない","newtzconfigは不要",""]},{"n":19,"c":12,"t":"s","q":"次のコマンドのうち、TCP ポートを開いたプロセスの PID を識別できるのはどれですか?","o":["ptrace","strace","debug","lsof","nessus"],"a":"D","acc":["D"],"e":"lsof -i(または ss -tlnp / netstat -tlnp)。","w":["ptraceはデバッグ用システムコール","straceはシステムコール追跡","存在しない","","nessusは脆弱性スキャナ"]},{"n":72,"c":11,"t":"m","q":"システムの IP ルーティングテーブルからデフォルトゲートウェイを削除するコマンドはどれですか(2つ選択してください)。","o":["ifconfig unset default","route del default","ip route del default","netstat -r default","sysctl ipv4.default_gw=0"],"a":"BC","acc":["BC"],"w":["ifconfigに経路の操作機能はない","","","netstatは表示のみ","sysctlにそのようなキーはない"]},{"n":83,"c":8,"t":"s","q":"次のプロトコルのうち、仮想マシンのビデオカード出力にアクセスするために設計されているものはどれですか。","o":["KDE","X11","Xfce","SPICE","XDMCP"],"a":"D","acc":["D"],"w":["KDEはデスクトップ環境","X11は汎用のウィンドウシステム","Xfceはデスクトップ環境","","XDMCPはXのリモートログイン"]},{"n":5,"c":9,"t":"s","q":"ユーザーのパスワードの最終変更のデータが含まれているファイルはどれですか?","o":["/etc/gshadow","/etc/passwd","/etc/pwdlog","/var/log/shadow","/etc/shadow"],"a":"E","acc":["E"],"e":"/etc/shadow 第3フィールドが最終変更日。","w":["gshadowはグループ用","passwdに日付情報はない","存在しない","存在しない",""]},{"n":27,"c":11,"t":"x","q":"空白を埋めてください。\nローカルシステムのホスト名を設定するために使用されるコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"hostname","e":"systemd 環境では hostnamectl も使用されるが、設問の想定解答は hostname。"},{"n":25,"c":11,"t":"m","q":"NetworkManager は、システムのネットワーク接続に関して次のどの状態を表示できますか?(2つ選択してください。)","o":["up","portal","full","login-required","firewalled"],"a":"BC","acc":["BC"],"e":"接続性状態: none / portal / limited / full / unknown。","w":["upは接続状態の値ではない","","","login-requiredという値はない（portalが相当）","firewalledという値はない"]},{"n":6,"c":9,"t":"s","q":"特定のユーザーが at を使用してタスクをスケジュールできないようにするにはどうすればよいですか?","o":["特定のユーザーを /etc/at.allow ファイルに追加します。","/etc/atd.conf ファイルの [deny] セクションに特定のユーザーを追加します。","特定のユーザーを nojobs グループに追加します。","特定のユーザーを /etc/at.deny ファイルに追加します。","atd --deny [user] コマンドを実行します。"],"a":"D","acc":["D"],"w":["at.allowは許可リスト（存在すると記載者のみ許可）","atd.confに[deny]はない","nojobsグループは存在しない","","--denyオプションはない"]},{"n":37,"c":10,"t":"x","q":"空欄を埋めてください。\n/etc/ntp.conf ファイルのどのオプションが、時間情報を照会する外部 NTP ソースを指定しますか?(値やパラメータを指定せずにオプション名のみを指定します。)","o":[],"ax":"server"},{"n":102,"c":12,"t":"x","q":"空欄を埋めてください。\n実行中の ssh-agent インスタンスに OpenSSH 秘密鍵を追加するにはどのコマンドを使用しますか?(パスなしでコマンド名のみを指定します。)","o":[],"ax":"ssh-add"},{"n":8,"c":8,"t":"s","q":"X11 設定ファイル xorg.conf はセクションにグループ化されています。セクション SectionName の内容はどのように表現されますか?","o":["Section SectionName {...} のように中括弧で囲みます。","<SectionName> と </SectionName> のようなタグの間に配置されます。","Section \"SectionName\" を含む行と EndSection を含む行の間に配置されます。","[SectionName] 行の後に配置されます。","これは、最初のインデントされていないセクション「SectionName」の後に配置され、正確に1つのタブ文字でインデントする必要があります。"],"a":"C","acc":["C"],"e":"選択肢BはOCRで崩れていたため文意を補って修正。","w":["中括弧は使わない","XMLタグ形式ではない","","INI形式の[ ]ではない","インデント規則はない"]},{"n":14,"c":7,"t":"m","q":"次のテストの比較演算子のうち、ファイルシステム内の要素に作用するものはどれですか?(2つ選択してください。)","o":["-z","-eq","-d","-f","-lt"],"a":"CD","acc":["CD"],"e":"-d はディレクトリ、-f は通常ファイルの判定。","w":["-zは文字列長ゼロ判定","-eqは整数比較","","","-ltは整数比較"]},{"n":24,"c":10,"t":"m","q":"date コマンドで実行できるタスクは次のどれですか?(2つ選択してください。)","o":["システムの日付と時刻を設定します。","システムの日付を設定しますが、時刻は設定しません。","2つの日付間の時間範囲を計算します。","1か月または1年のカレンダーを印刷します。","特定の形式で時間を表示します。"],"a":"AE","acc":["AE"],"w":["","日付だけ・時刻だけという区別はない","期間計算の機能はない","カレンダーはcalコマンド",""]},{"n":51,"c":7,"t":"s","q":"次のファイルのうち、Bash ログインシェルによって直接読み取られないのはどれですか?","o":["~/.bashrc","~/.bash_profile","~/.bash_login","~/.profile","/etc/profile"],"a":"A","acc":["A"],"e":"~/.bashrc は対話型「非ログイン」シェルが読む(ログインシェルからは ~/.bash_profile 等から間接的に読み込まれるのが一般的)。","w":["","ログインシェルが読む","ログインシェルが読む","ログインシェルが読む","ログインシェルが読む"]},{"n":9,"c":10,"t":"x","q":"空欄を埋めてください。\nこの変更を有効にするために、構成に新しい電子メール エイリアスを追加した後、どのコマンドを実行する必要がありますか?(パスを指定せず、必要なすべてのパラメータを含めてコマンドを指定します。)","o":[],"ax":"newaliases"},{"n":85,"c":11,"t":"s","q":"ping コマンドはデフォルトでどのように機能しますか?","o":["ICMP エコー要求をリモートホストに送信し、ICMP エコー応答の受信を待機します。","リモートホストに ARP 要求を送信し、ARP 応答の受信を待機します。","TCP SYN パケットをリモートホストに送信し、TCP ACK 応答の受信を待機します。","ブロードキャストパケットをネット上のすべてのホストに送信し、ターゲットシステムからの応答などを受信するまで待機します。","リモートホストのポート 0 に UDP パケットを送信し、UDP エラー応答の受信を待機します。"],"a":"A","acc":["A"],"w":["","ARPを使うのはarping","TCPは使わない","ブロードキャストではなく宛先へ直接","UDPは使わない"]},{"n":16,"c":11,"t":"m","q":"次の nmcli サブコマンドのうちどれが存在しますか?(2つ選択してください。)","o":["nmcli ethernet","nmcli device","nmcli wifi","nmcli address","nmcli connection"],"a":"BE","acc":["BE"],"e":"トップレベルのオブジェクトは general/networking/radio/connection/device/agent/monitor。wifi は nmcli radio wifi 等の下位コマンド。","w":["存在しないオブジェクト","","wifiはdeviceのサブコマンド","存在しないオブジェクト",""]},{"n":78,"c":12,"t":"s","q":"プログラムがクラッシュしたときにユーザー用に作成されるコアファイルのサイズに制限を設定するために使用されるコマンドはどれですか。","o":["core","edquota","quota","ulimit","ktrace"],"a":"D","acc":["D"],"e":"ulimit -c でコアファイルサイズを制限。","w":["coreというコマンドはない","edquotaはディスククォータ","quotaはディスク使用量","","ktraceはBSD系のツール"]},{"n":23,"c":10,"t":"x","q":"空欄を埋めてください。\nすべての sendmail 互換 MTA で使用できる、MTA のメールキューの内容を一覧表示するために使用されるコマンドはどれですか。(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"mailq","axa":["sendmail -bp"]},{"n":57,"c":11,"t":"x","q":"空欄を埋めてください。\nオプションに応じて、開いている TCP 接続、ルーティングテーブル、およびネットワークインターフェイスの統計情報を表示できるコマンドは何ですか。(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"netstat","e":"後継の ss はルーティングテーブルを表示できないため、本問の答えは netstat。"},{"n":84,"c":9,"t":"m","q":"次の環境変数のうち、locale.conf で定義できるものはどれですか?(2つ選択してください。)","o":["LC_ALL","LC_USERNAME","LC_UTF8","LC_GEOGRAPHY","LC_TIME"],"a":"AE","acc":["AE"],"w":["","存在しないLC_変数","存在しない","存在しない",""]}],[{"n":115,"c":9,"t":"x","q":"空白を埋めてください。\n存在する場合、cron スケジュールシステムの使用を許可されているすべてのユーザーを含める必要があるファイルはどれですか?(パスを含むファイルの完全な名前を指定します。)","o":[],"ax":"/etc/cron.allow","axa":["cron.allow"],"e":"【解答を修正】cron の使用を許可するユーザーを列挙するファイルは /etc/cron.allow。「crontab」はコマンド名であり、本問(ファイルのフルパスを問う)の答えとして誤り。"},{"n":58,"c":7,"t":"s","q":"ユーザーのホームディレクトリにあるファイル .profile について正しいのは何ですか?","o":["実行可能である必要があります。","ログインシェルのバイナリを呼び出す必要があります。","有効なシェルスクリプト構文を使用する必要があります。","それはシェバンで始まらなければなりません。","所有者のみが読み取り可能でなければなりません。"],"a":"C","acc":["C"],"e":"source されるため実行権限もシバンも不要だが、構文は正しい必要がある。","w":["実行可能属性は不要（読み込まれて実行される）","シェル本体の呼び出しは不要","","シバンは不要","読み取り制限の要件はない"]},{"n":52,"c":7,"t":"x","q":"空欄を埋めてください。\n現在の Bash シェルで定義されているエイリアスを一覧表示するコマンドは何ですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"alias"},{"n":50,"c":10,"t":"s","q":"systemd ジャーナルには何が保存されますか?","o":["/var/jlog/ と /var/jlogd/","/proc/log/ と /proc/klog/","/run/log/journal/ または /var/log/journal/","/var/log/syslog.bin または /var/log/syslog.jrn","/etc/systemd/journal/ または /usr/lib/systemd/journal/"],"a":"C","acc":["C"],"e":"揮発的な場合は /run/log/journal/、永続化されている場合は /var/log/journal/。","w":["存在しないパス","存在しないパス","","存在しない","存在しない"]},{"n":94,"c":10,"t":"x","q":"空白を入力してください。\nnewaliases によって処理されるファイルはどれですか?(パスを含むファイルの完全な名前を指定します。)","o":[],"ax":"/etc/aliases","axa":["aliases"],"e":"【解答を修正】newaliases が処理するエイリアスファイルの標準的な場所は /etc/aliases(LPI の想定解答)。/etc/mail/aliases は一部環境でのシンボリックリンク/別配置。"},{"n":35,"c":12,"t":"s","q":"ユーザーが対話型ログインセッションを取得できないようにする手順はどれですか。","o":["ユーザーの UID を 0 に設定します。","ユーザー名を指定して chsh -s /bin/false コマンドを実行します。","グループスタッフからユーザーを削除します。","ユーザーを /etc/noaccess に追加します。","ユーザーのホームディレクトリに .nologin ファイルを作成します。"],"a":"B","acc":["B"],"e":"ログインシェルを /bin/false(または /sbin/nologin)にする。","w":["UID 0はroot化で逆効果","","グループ削除では防げない","/etc/noaccessは存在しない","ホームの.nologinという仕組みはない（/etc/nologinはシステム全体）"]},{"n":83,"c":8,"t":"s","q":"次のプロトコルのうち、仮想マシンのビデオカード出力にアクセスするために設計されているものはどれですか。","o":["KDE","X11","Xfce","SPICE","XDMCP"],"a":"D","acc":["D"],"w":["KDEはデスクトップ環境","X11は汎用のウィンドウシステム","Xfceはデスクトップ環境","","XDMCPはXのリモートログイン"]},{"n":114,"c":8,"t":"m","q":"次のタスクのうち、XDM や KDM などのディスプレイマネージャーによって処理されるのはどれですか(2つ選択してください)。","o":["新しいモニターやプロジェクターなどの追加デバイスが接続されたときに構成します。","ユーザーのデスクトップ環境を起動して準備します。","現在のグラフィックデバイスとモニターの X11 構成ファイルを作成します。","ユーザーが設定可能な時間非アクティブになったときに画面をロックします。","ユーザーのログインを処理します。"],"a":"BE","acc":["BE"],"w":["デバイス検出・設定はしない","","設定ファイル生成はXorg -configure","画面ロックはセッション側の機能",""]},{"n":78,"c":12,"t":"s","q":"プログラムがクラッシュしたときにユーザー用に作成されるコアファイルのサイズに制限を設定するために使用されるコマンドはどれですか。","o":["core","edquota","quota","ulimit","ktrace"],"a":"D","acc":["D"],"e":"ulimit -c でコアファイルサイズを制限。","w":["coreというコマンドはない","edquotaはディスククォータ","quotaはディスク使用量","","ktraceはBSD系のツール"]},{"n":80,"c":11,"t":"s","q":"IPv6 ヘッダーのホップリミットフィールドに関して正しいのは何ですか?","o":["パッケージの輸送中はフィールドは変更されません。","フィールドはホップバイホップ拡張ヘッダー内で送信されます。","パケットを転送する各ルータは、フィールドの値を増加させます。","パケットを転送する各ルータは、フィールドの値を減らします。","マルチキャストパッケージの場合、フィールドの値は常に 1 になります。"],"a":"D","acc":["D"],"e":"IPv4 の TTL に相当。","w":["ルータ通過ごとに変更される","基本ヘッダーのフィールド","減算される（増加ではない）","","そのような規則はない"]},{"n":111,"c":9,"t":"s","q":"ファイル /etc/localtime について正しいのは何ですか?","o":["Europe/Berlin のような文字列を含むプレーンテキストファイルです。","システムの IP アドレスの場所に基づいて NTP サービスによって作成および維持されます。","これは /sys/device/clock/ltime へのシンボリックリンクであり、常に現在のローカル時刻が含まれます。","このファイルを変更した後、変更を有効にするには newtzconfig を実行する必要があります。","/usr/share/zoneinfo/Europe/Berlin などのタイムゾーン情報ファイルへのシンボリックリンクまたはそのコピーです。"],"a":"E","acc":["E"],"w":["文字列を書くのは/etc/timezone（別ファイル）","NTPは作成しない","そのようなリンクではない","newtzconfigは不要",""]},{"n":109,"c":7,"t":"s","q":"次のコマンドのうち、すべての環境変数とシェル変数を表示するものはどれですか?","o":["getargs","lsenv","ls","env","lsshell"],"a":"D","acc":["D"],"e":"厳密にはシェル変数まで表示するのは set だが、選択肢中では env が想定解答。","w":["存在しない","存在しない","lsはファイル一覧","","存在しない"]},{"n":104,"c":10,"t":"s","q":"CUPS 構成ディレクトリ内のどのファイルにプリンターの設定が含まれていますか?","o":["cups-devices.conf","snmp.conf","printers.conf","printcap.conf","cupsd.conf"],"a":"C","acc":["C"],"w":["存在しない","snmp.confはプリンタ検出用","","printcapは互換用で設定本体ではない","cupsd.confはサーバー全体の設定"]},{"n":5,"c":9,"t":"s","q":"ユーザーのパスワードの最終変更のデータが含まれているファイルはどれですか?","o":["/etc/gshadow","/etc/passwd","/etc/pwdlog","/var/log/shadow","/etc/shadow"],"a":"E","acc":["E"],"e":"/etc/shadow 第3フィールドが最終変更日。","w":["gshadowはグループ用","passwdに日付情報はない","存在しない","存在しない",""]},{"n":82,"c":11,"t":"m","q":"/etc/resolv.conf ファイルで使用できるキーワードは次のうちどれですか?(2つ選択してください。)","o":["substitute","lookup","search","nameserver","method"],"a":"CD","acc":["CD"],"w":["存在しないキーワード","存在しない","","","存在しない"]},{"n":105,"c":10,"t":"s","q":"/etc/syslog.conf の次のエントリのうち、すべてのメール関連イベントをファイル /var/log/maillog に書き込み、すべての重要(crit)イベントをリモートサーバー logger.example.com に送信するものはどれですか。","o":["mail.* /var/log/maillog mail,crit @logger.example.org","mail.* /var/log/maillog mail.crit syslog://logger.example.org","mail /var/log/maillog mail.crit @logger.example.org","mail.* /var/log/maillog mail.crit @logger.example.org","mail * /var/log/maillog mail crit @logger.example.org"],"a":"D","acc":["D"],"e":"facility.priority の書式と、リモート転送の @ホスト名 記法。","w":["mail,critという区切りは無効","syslog://という記法は無効","セレクタはファシリティ.プライオリティの形式が必要","","区切り記法が無効"]},{"n":57,"c":11,"t":"x","q":"空欄を埋めてください。\nオプションに応じて、開いている TCP 接続、ルーティングテーブル、およびネットワークインターフェイスの統計情報を表示できるコマンドは何ですか。(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"netstat","e":"後継の ss はルーティングテーブルを表示できないため、本問の答えは netstat。"},{"n":53,"c":11,"t":"s","q":"Linux ワークステーションで、route コマンドを実行するとルーティングテーブルが表示されるまでに長い時間がかかります。これは以下のどのエラーを示していますか?","o":["ローカルルーティング情報が破損している可能性があるため、ルーティングプロトコルを使用して再検証する必要があります。","ルーティングテーブル内のルータの1つが利用できないため、自動ルータ障害検出メカニズム(ARF-D)がタイムアウトを待機しています。","誤って複数のデフォルトルータが存在する場合、ネットワーク上でデフォルトルータの選択を実行し、1つのルータをデフォルトとして選択する必要があります。","Linux カーネルルーティングデーモン(LKRD)が実行されていないため、init スクリプトまたは systemd ユニットを使用して起動する必要があります。","デフォルトではルートがルーターと宛先の名前を解決しようとするため、DNS 解決が機能していない可能性があり、タイムアウトが発生する可能性があります。"],"a":"E","acc":["E"],"e":"route -n で名前解決を抑止できる。","w":["そのような再検証機構はない","ARF-Dというものは存在しない","デフォルトルータの選挙は行われない","LKRDというデーモンは存在しない",""]},{"n":31,"c":11,"t":"m","q":"nmcli connection show に表示される次の接続タイプのうち、NetworkManager に存在する可能性があるのはどれですか?(3つ選択してください。)","o":["tcp","ethernet","wifi","ipv6","bridge"],"a":"BCE","acc":["BCE"],"w":["tcpはプロトコルで接続タイプではない","","","ipv6は接続タイプではない",""]},{"n":68,"c":9,"t":"s","q":"通常ユーザーの UID がグループの GID と同一である場合、次の記述のうち正しいものはどれですか。","o":["UID は GID よりも優先されるため、ユーザーは使用できますが、グループは使用できなくなります。","ID の競合による曖昧さを避けるため、ユーザーとグループは利用できません。","UID と GID は互いに独立しているため、ユーザーとグループは引き続き利用可能です。","グループ構成に他のメンバーが含まれている場合でも、ユーザーはグループの唯一のメンバーです。","GID は UID よりも優先されるため、ユーザーは利用できませんがグループは利用できます。"],"a":"C","acc":["C"],"w":["優先関係はない（別空間）","競合しない","","メンバー構成は変わらない","優先関係はない"]},{"n":61,"c":8,"t":"s","q":"複数の X サーバーを実行しているマシンでは、プログラムはどのようにして X11 サーバーの異なるインスタンスを識別するのでしょうか?","o":["X11 構成ファイルで定義された固定 UUID によって。","次のような表示名で: :1","X サーバーを実行するユーザーの名前(例: x11:bob)。","/dev/X11/xservers/1 のようなデバイス名で。","fe80::/64 サブネットからの一意の IPv6 アドレスによって。"],"a":"B","acc":["B"],"e":"DISPLAY=:0、:1 などのディスプレイ番号で識別する。","w":["UUIDでは識別しない","","ユーザー名では識別しない","デバイス名ではない","IPv6アドレスではない"]},{"n":37,"c":10,"t":"x","q":"空欄を埋めてください。\n/etc/ntp.conf ファイルのどのオプションが、時間情報を照会する外部 NTP ソースを指定しますか?(値やパラメータを指定せずにオプション名のみを指定します。)","o":[],"ax":"server"},{"n":112,"c":11,"t":"s","q":"IPv4 サブネット 192.168.2.128/26 内の一意のホストに使用できる IP アドレスの数はいくつですか?","o":["6","14","30","62","126"],"a":"D","acc":["D"],"e":"/26 = 64 アドレス - ネットワーク/ブロードキャストの2 = 62。","w":["/29相当","/28相当","/27相当","","/25相当"]},{"n":10,"c":10,"t":"m","q":"次のコマンドのうち、印刷キュー内のジョブのリストを表示するものはどれですか?(2つ選択してください。)","o":["cups --list","lprm -l","lpstat","lpr -q","lpq"],"a":"CE","acc":["CE"],"w":["cups --listは存在しない","lprmはジョブの削除用","","lprは投入用（-qに表示機能はない）",""]},{"n":19,"c":12,"t":"s","q":"次のコマンドのうち、TCP ポートを開いたプロセスの PID を識別できるのはどれですか?","o":["ptrace","strace","debug","lsof","nessus"],"a":"D","acc":["D"],"e":"lsof -i(または ss -tlnp / netstat -tlnp)。","w":["ptraceはデバッグ用システムコール","straceはシステムコール追跡","存在しない","","nessusは脆弱性スキャナ"]},{"n":67,"c":9,"t":"s","q":"次のコマンドのうち、すべてのアクティブな systemd タイマーを表示するものはどれですか?","o":["systemd-timer show","timectl list","systemctl -t(原文判読困難)","systemctl list-timers","timeq"],"a":"D","acc":["D"],"e":"選択肢CはOCRで判読不能のため推定表記。","w":["存在しない","存在しない","そのようなオプションではない","","存在しない"]},{"n":98,"c":12,"t":"s","q":"SSH ホストキーの目的は何ですか?","o":["クライアントのホストを識別するために、SSH クライアントはユーザーキーに加えてこれを送信する必要があります。","すべてのユーザー SSH キーに署名する必要があるルートキーです。","接続する SSH クライアントにサーバーの ID 情報を提供します。","キーのホストからリモートマシンにログインするすべてのユーザーを認証します。","cron、syslog、バックアップジョブなどのシステムサービスによって、リモートホストに自動的に接続するために使用されます。"],"a":"C","acc":["C"],"w":["クライアントの識別ではない","ルートキーという仕組みはない","","ユーザー認証はユーザー鍵の役割","それはユーザー鍵の用途"]},{"n":7,"c":11,"t":"m","q":"次のコマンドのうち、eth0 ネットワークインターフェイスを介して送受信されたバイト数を表示するものはどれですか(2つ選択してください)。","o":["route -v via eth0","ip stats show dev eth0","netstat -s -i eth0","ifconfig eth0","ip -s link show eth0"],"a":"DE","acc":["DE"],"w":["routeは経路表示","ip statsという書式はない","-sと-iの併用は統計種別が異なる","",""]},{"n":2,"c":9,"t":"s","q":"次のユーザーの crontab エントリがあるとします:\n15 14 * * 1-5 /usr/local/bin/example.sh\nスクリプト /usr/local/bin/example.sh はいつ実行されますか?","o":["現地時間14時15分、1月から5月まで。","現地時間1日から5日までの15時14分。","現地時間14時15分、2月から6月まで。","毎月1日から5日までの現地時間14時15分。","現地時間14時15分、月曜日から金曜日"],"a":"E","acc":["E"],"e":"フィールド順: 分 時 日 月 曜日。1-5 は曜日(月〜金)。","w":["5番目のフィールドは曜日","3番目が日・5番目が曜日","4番目が月（*なので毎月）","3番目（日）は*なので毎日ではなく曜日指定が効く",""]},{"n":15,"c":12,"t":"s","q":"SSH クライアントのデフォルトオプションが含まれている構成ファイルはどれですか?","o":["/etc/ssh/sshd_config","/etc/ssh/ssh","/etc/ssh/ssh_config","/etc/ssh/client","/etc/ssh/ssh_client"],"a":"C","acc":["C"],"e":"sshd_config はサーバー側の設定。","w":["sshd_configはサーバー側","存在しない","","存在しない","存在しない"]},{"n":73,"c":7,"t":"s","q":"echo $? コマンドではどのような情報が表示されますか?","o":["echo コマンドのプロセス ID。","echo の直前に実行されたコマンドの終了値。","次のコマンドに使用されるプロセス ID。","echo コマンドの終了値。","現在のシェルのプロセス ID。"],"a":"B","acc":["B"],"w":["PIDは$$や$!","","次のコマンドのPIDという変数はない","直前のコマンドの値（echo自身ではない）","シェルのPIDは$$"]},{"n":51,"c":7,"t":"s","q":"次のファイルのうち、Bash ログインシェルによって直接読み取られないのはどれですか?","o":["~/.bashrc","~/.bash_profile","~/.bash_login","~/.profile","/etc/profile"],"a":"A","acc":["A"],"e":"~/.bashrc は対話型「非ログイン」シェルが読む(ログインシェルからは ~/.bash_profile 等から間接的に読み込まれるのが一般的)。","w":["","ログインシェルが読む","ログインシェルが読む","ログインシェルが読む","ログインシェルが読む"]},{"n":71,"c":11,"t":"m","q":"ディストリビューションのメカニズムを使用してネットワークインターフェイスを構成する Linux システム上の NetworkManager について正しいのは次のうちどれですか?(2つ選択してください。)","o":["NetworkManager は、NetworkManager によって明示的に管理されない限り、すべてのネットワークインターフェイスを DHCP を使用するように再構成します。","NetworkManager は、管理するインターフェースごとに明示的に有効にする必要があります。","NetworkManager は、デフォルトでは、すでに設定されているインターフェースを変更しません。","NetworkManager は、NetworkManager によって設定されていないすべてのインターフェースを無効にします。","NetworkManager は、ディストリビューションのネットワークインターフェイス構成を使用するように構成できます。"],"a":"CE","acc":["CE"],"e":"【解答を修正】NetworkManager は既にディストリビューション設定で構成済みのインターフェイスをデフォルトでは変更せず(C)、ifupdown プラグイン等によりディストリビューションの構成を利用するよう設定できる(E)。B(インターフェースごとに明示的に有効化が必要)は誤り。","w":["全インターフェースをDHCP化はしない","明示的な有効化は不要（デフォルトで管理）","","未管理のIFを無効化はしない",""]},{"n":21,"c":12,"t":"s","q":"システムの構成に応じて、このホストで実行されているネットワークサービスを有効または無効にするために使用できるのは次のファイルのどれですか。","o":["/etc/profile","/etc/xinetd.conf","/etc/ports","/etc/services","/etc/host.conf"],"a":"B","acc":["B"],"e":"/etc/services はポート番号の名前対応表であり、サービスの有効/無効は制御しない。","w":["profileはシェルの設定","","存在しない","servicesはポート番号の対応表","host.confは名前解決の設定"]},{"n":30,"c":7,"t":"s","q":"コマンド seq 10 はどのような出力を生成しますか?","o":["コマンドが停止されるまで、10 ずつ増加する数字の連続ストリーム。","2番目のパラメータが欠落しているため、出力は作成されません。","0 から 9 までの数字を1行に1つずつ入力します。","標準出力に数字 10 を出力します。","1行につき1つ、1 から 10 までの数字が1つずつ表示されます。"],"a":"E","acc":["E"],"w":["無限ストリームにはならない","引数1つは終値の指定","1から始まる（0からではない）","10だけの出力ではない",""]},{"n":110,"c":9,"t":"s","q":"次のファイルのうち、ユーザーをプライマリグループに割り当てるのはどれですか。","o":["/etc/pgroup","/etc/shadow","/etc/passwd","/etc/group","/etc/gshadow"],"a":"C","acc":["C"],"e":"プライマリグループは /etc/passwd の第4フィールド(GID)で決まる。","w":["存在しない","shadowはパスワード情報","","/etc/groupは追加(セカンダリ)グループのメンバー","gshadowはグループパスワード"]},{"n":103,"c":7,"t":"s","q":"コマンド seq 1 5 20 はどのような出力を生成しますか?","o":["1 5 10 15","1 6 11 16","1 2 3 4","2 3 4 5","5 10 15 20"],"a":"B","acc":["B"],"e":"seq FIRST INCREMENT LAST → 1 から 5 刻みで 20 まで: 1 6 11 16。","w":["増分が一定でない並び","","増分5が反映されていない","開始値が誤り","開始は1（5ではない）"]},{"n":43,"c":9,"t":"s","q":"システムのタイムゾーンを正しく構成することが重要なのはなぜですか?","o":["タイムゾーンはチェックサムの計算に含まれており、タイムゾーンを変更すると既存のチェックサムが無効になるためです。","タイムゾーンはファイルの変更時刻の一部として保存され、ファイルの作成後に変更することはできません。","環境変数 LANG と LC_MESSAGES は、デフォルトでタイムゾーンに応じて設定されるためです。","NTP は設定されたタイムゾーンに基づいて近くのサーバーを選択するためです。","Unix タイムスタンプをローカル時間に変換するには、タイムゾーンの設定に依存するためです。"],"a":"E","acc":["E"],"w":["チェックサムとは無関係","変更時刻はUTCの秒で保存されTZに依存しない","LANG等は言語設定","NTPのサーバー選択はTZ非依存",""]},{"n":11,"c":10,"t":"s","q":"NTP クライアントによって観察され修正される状況は次のどれですか?","o":["システムクロックとコンピューターのハードウェアクロック間の時間のずれ。","物理的な場所とタイムゾーンの構成。","現在のコンピュータの場所のタイムゾーンの変更。","夏時間に対応するための調整が必要です。","システムクロックと基準クロック間の時間のずれ。"],"a":"E","acc":["E"],"w":["HWクロックとの同期はhwclockの役割","位置・TZは扱わない","TZ変更は検知しない","夏時間はタイムゾーン設定側の話",""]},{"n":87,"c":9,"t":"s","q":"iconv コマンドの目的は何ですか?","o":["ビットマップ画像を、PNG から JPEG など、ある形式から別の形式に変換します。","ルートディレクトリツリーが、Filesystem Hierarchy Standard(FHS)のすべての規則に準拠していることを確認します。","ファイルをある文字セットから別の文字セットに変換します。","ext4 ファイルシステム内の inode のモードを変更します。"],"a":"C","acc":["C"],"w":["画像変換はImageMagick等","FHS検査の機能はない","","inode操作の機能はない"]},{"n":27,"c":11,"t":"x","q":"空白を埋めてください。\nローカルシステムのホスト名を設定するために使用されるコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"hostname","e":"systemd 環境では hostnamectl も使用されるが、設問の想定解答は hostname。"},{"n":39,"c":12,"t":"x","q":"空白を埋めてください。\nxinetd サービスの設定ファイルはどのディレクトリに保存されますか?(ディレクトリへのフルパスを指定します。)","o":[],"ax":"/etc/xinetd.d/","axa":["/etc/xinetd.d","xinetd.d"]},{"n":65,"c":10,"t":"s","q":"~/.forward ファイルに関して正しいのは何ですか?","o":["正しく設定されている場合、~/.forward を使用して各受信メールを1人以上の他の受信者に転送できます。","~/.forward を編集した後、ユーザーは newaliases を実行してメールサーバーに変更を認識させる必要があります。","~/.forward を使用すると、root は任意の電子メールアドレスを設定できますが、他のすべてのユーザーは自分のアドレスのみを設定できます。","~/.forward は MTA が所有しており、ユーザーが書き込みできないため、editaliases コマンドを使用して編集する必要があります。","デフォルトでは、グループ mailq 内のユーザーの ~/.forward ファイルのみが処理され、他のすべてのユーザーの ~/.forward ファイルは無視されます。"],"a":"A","acc":["A"],"w":["","newaliasesは/etc/aliases用（.forwardは即時反映）","そのようなroot特権規則はない",".forwardはユーザー自身が編集できる","mailqグループの規則は存在しない"]},{"n":64,"c":11,"t":"m","q":"次のコマンドのうち、システムの既存のディストリビューション固有の構成ファイルに基づいてネットワークインターフェイスを構成するものはどれですか。(2つ選択してください。)","o":["ifconf","ifdown","ifpause","ifstart","ifup"],"a":"BE","acc":["BE"],"w":["存在しないコマンド","","存在しない","存在しない",""]},{"n":106,"c":12,"t":"s","q":"chage コマンドを使用すると、ユーザーアカウントに関連するどのような情報が変更されますか?","o":["新しいファイルのデフォルトの所有権","グループメンバーシップ","ユーザーが利用できるコマンドのセット","パスワードの有効期限情報","新しいファイルのデフォルトの権限"],"a":"D","acc":["D"],"w":["所有権はchown","グループはusermod","コマンド制限はsudoers","","デフォルト権限はumask"]},{"n":113,"c":11,"t":"m","q":"ip コマンドの使用の結果として、次のどの変更が発生する可能性がありますか?(3つ選択してください。)","o":["ネットワークインターフェイスがアクティブまたは非アクティブになる場合があります。","リゾルバ構成に新しいネームサーバーが追加される場合があります。","システムのホスト名が変更される場合があります。","IP アドレスは変更される可能性があります。","ルーティングテーブルが変更される場合があります。"],"a":"ADE","acc":["ADE"],"e":"ip コマンドは DNS リゾルバ設定やホスト名は扱わない。","w":["","ネームサーバーはresolv.confの編集","ホスト名はhostnamectl","",""]},{"n":70,"c":8,"t":"s","q":"点字ディスプレイとは何を指しますか?","o":["デスクトップアプリケーション用の標準化された高コントラストなグラフィカルテーマ。","KDE や GNOME に似た Linux デスクトップ環境。","LCD に取って代わられた従来のディスプレイ技術。","小さな点を使用して文字を物理的に表現したもの。","XML に似た、データ交換用の標準ファイル形式。"],"a":"D","acc":["D"],"w":["テーマではない","デスクトップ環境ではない","ディスプレイ技術の話ではない","","ファイル形式ではない"]},{"n":47,"c":10,"t":"s","q":"次のプロトコルのうち、オープンリレーという用語に関連するものはどれですか?","o":["SMTP","POP3","NTP","IMAP","LDAP"],"a":"A","acc":["A"],"w":["","POP3は受信プロトコル","NTPは時刻同期","IMAPは受信プロトコル","LDAPはディレクトリサービス"]},{"n":99,"c":10,"t":"m","q":"systemd-journald に関する次の記述のうち正しいものはどれですか?(3つ選択してください。)","o":["syslog と互換性がないため、通常の syslog を使用するシステムにインストールすることはできません。","systemd のメッセージのみを処理し、他のツールのメッセージは処理しません。","ログメッセージを syslog に渡してさらに処理することができます。","各メッセージの _UID や _PID などのメタデータを保持します。","kern、user、auth などの syslog 機能をサポートします。"],"a":"CDE","acc":["CDE"],"w":["syslogと共存できる","あらゆるプロセスのログを扱う","","",""]},{"n":6,"c":9,"t":"s","q":"特定のユーザーが at を使用してタスクをスケジュールできないようにするにはどうすればよいですか?","o":["特定のユーザーを /etc/at.allow ファイルに追加します。","/etc/atd.conf ファイルの [deny] セクションに特定のユーザーを追加します。","特定のユーザーを nojobs グループに追加します。","特定のユーザーを /etc/at.deny ファイルに追加します。","atd --deny [user] コマンドを実行します。"],"a":"D","acc":["D"],"w":["at.allowは許可リスト（存在すると記載者のみ許可）","atd.confに[deny]はない","nojobsグループは存在しない","","--denyオプションはない"]}],[{"n":69,"c":9,"t":"s","q":"/etc/passwd のパスワードフィールドにあるどの文字が、暗号化されたパスワードが /etc/shadow に保存されていることを示すために使用されますか?","o":["*","-","s","#","x"],"a":"E","acc":["E"],"w":["*はロック/無効の慣用表記","-にその意味はない","sにその意味はない","#にその意味はない",""]},{"n":37,"c":10,"t":"x","q":"空欄を埋めてください。\n/etc/ntp.conf ファイルのどのオプションが、時間情報を照会する外部 NTP ソースを指定しますか?(値やパラメータを指定せずにオプション名のみを指定します。)","o":[],"ax":"server"},{"n":18,"c":8,"t":"m","q":"SPICE によって提供される機能は次のどれですか?(2つ選択してください。)","o":["ローカル USB デバイスをリモートアプリケーションに接続します。","リモートホスト上のグラフィカルアプリケーションにアクセスする。","ローカル X11 サーバーとして Xorg を置き換える。","リモートマシンからアプリケーションをダウンロードしてローカルにインストールする。","リモートマシンにバイナリプログラムをアップロードして実行する。"],"a":"AB","acc":["AB"],"w":["","","Xorgの置き換えではない","アプリのダウンロードはしない","バイナリ転送の仕組みではない"]},{"n":25,"c":11,"t":"m","q":"NetworkManager は、システムのネットワーク接続に関して次のどの状態を表示できますか?(2つ選択してください。)","o":["up","portal","full","login-required","firewalled"],"a":"BC","acc":["BC"],"e":"接続性状態: none / portal / limited / full / unknown。","w":["upは接続状態の値ではない","","","login-requiredという値はない（portalが相当）","firewalledという値はない"]},{"n":116,"c":11,"t":"x","q":"空欄補充。\n以前は非アクティブだったネットワークインターフェイス eth0 をアクティブにするためのコマンド\nip link set ____ dev eth0 に欠けているパラメータはどれですか?(コマンド、パス、または追加オプションを指定せずにパラメータのみを指定します。)","o":[],"ax":"up"},{"n":46,"c":7,"t":"s","q":"echo $$ コマンドによって提供される情報は何ですか?","o":["現在のシェルのプロセス ID。","次のコマンドのプロセス ID。","最後に実行されたコマンドのプロセス ID。","バックグラウンドに置かれた最後のコマンドのプロセス ID。","echo コマンドのプロセス ID。"],"a":"A","acc":["A"],"e":"$! はバックグラウンドの最後のプロセス、$? は直前の終了ステータス。","w":["","次のコマンドのPIDという変数はない","直前コマンドは$?（終了値）","直前のバックグラウンドは$!","echo自身のPIDではない"]},{"n":49,"c":12,"t":"x","q":"空欄を埋めてください。\nどのファイルが存在すると、ルート以外のすべてのユーザーがシステムにログインできなくなるのでしょうか?(パスを含むファイルの完全な名前を指定してください。)","o":[],"ax":"/etc/nologin","axa":["nologin"],"e":"【解答を修正】存在すると一般ユーザーのログインを禁止するファイルは /etc/nologin。/sbin/nologin はログインを拒否する「シェルプログラム」であり、本問の答えではない。"},{"n":95,"c":9,"t":"m","q":"useradd で指定できるものは何ですか?(2つ選択してください。)","o":["ユーザーが sudo を使用して実行できるコマンド。","ユーザーのホームディレクトリへの絶対パス。","新しいユーザーが利用できるプリンター。","新しいアカウントにログインするために使用される SSH キー。","ユーザーの数値ユーザー ID(UID)。"],"a":"BE","acc":["BE"],"e":"-d でホームディレクトリ、-u で UID を指定。","w":["sudoの権限は/etc/sudoersで設定","","プリンターは無関係","SSH鍵は指定できない",""]},{"n":96,"c":8,"t":"x","q":"空欄を埋めてください。\nX11 クライアントが接続先の X サーバーを決定するために使用する環境変数はどれですか?(先行するコマンドや値なしで変数名のみを指定します。)","o":[],"ax":"DISPLAY","axa":["display","$display"]},{"n":55,"c":9,"t":"m","q":"次のフィールドのうち、グローバル /etc/crontab ファイルとユーザー固有の crontab ファイルの両方の標準形式で使用できるのはどれですか?(2つ選択してください。)","o":["年","分","ユーザー名","有効なグループ ID","コマンド"],"a":"BE","acc":["BE"],"e":"ユーザー名フィールドは /etc/crontab のみに存在する。","w":["年フィールドはない","","ユーザー名は/etc/crontab側のみ","グループIDフィールドはない",""]},{"n":47,"c":10,"t":"s","q":"次のプロトコルのうち、オープンリレーという用語に関連するものはどれですか?","o":["SMTP","POP3","NTP","IMAP","LDAP"],"a":"A","acc":["A"],"w":["","POP3は受信プロトコル","NTPは時刻同期","IMAPは受信プロトコル","LDAPはディレクトリサービス"]},{"n":28,"c":11,"t":"s","q":"/etc/nsswitch.conf ファイルでは次の記述のうちどれが有効ですか?","o":["multi on","192.168.168.4 dns-server","namespaces: net mount procs","include /etc/nsswitch.d/","hosts: files dns"],"a":"E","acc":["E"],"w":["multi onは/etc/host.confの記述","resolv.conf風だが書式が誤り","namespaces:という項目はない","includeは使えない",""]},{"n":98,"c":12,"t":"s","q":"SSH ホストキーの目的は何ですか?","o":["クライアントのホストを識別するために、SSH クライアントはユーザーキーに加えてこれを送信する必要があります。","すべてのユーザー SSH キーに署名する必要があるルートキーです。","接続する SSH クライアントにサーバーの ID 情報を提供します。","キーのホストからリモートマシンにログインするすべてのユーザーを認証します。","cron、syslog、バックアップジョブなどのシステムサービスによって、リモートホストに自動的に接続するために使用されます。"],"a":"C","acc":["C"],"w":["クライアントの識別ではない","ルートキーという仕組みはない","","ユーザー認証はユーザー鍵の役割","それはユーザー鍵の用途"]},{"n":110,"c":9,"t":"s","q":"次のファイルのうち、ユーザーをプライマリグループに割り当てるのはどれですか。","o":["/etc/pgroup","/etc/shadow","/etc/passwd","/etc/group","/etc/gshadow"],"a":"C","acc":["C"],"e":"プライマリグループは /etc/passwd の第4フィールド(GID)で決まる。","w":["存在しない","shadowはパスワード情報","","/etc/groupは追加(セカンダリ)グループのメンバー","gshadowはグループパスワード"]},{"n":21,"c":12,"t":"s","q":"システムの構成に応じて、このホストで実行されているネットワークサービスを有効または無効にするために使用できるのは次のファイルのどれですか。","o":["/etc/profile","/etc/xinetd.conf","/etc/ports","/etc/services","/etc/host.conf"],"a":"B","acc":["B"],"e":"/etc/services はポート番号の名前対応表であり、サービスの有効/無効は制御しない。","w":["profileはシェルの設定","","存在しない","servicesはポート番号の対応表","host.confは名前解決の設定"]},{"n":45,"c":10,"t":"m","q":"次のどれが syslog 機能(ファシリティ)ですか?(2つ選択してください。)","o":["local5","accounting","mail","postmaster","remote"],"a":"AC","acc":["AC"],"w":["","存在しないファシリティ","","存在しない","存在しない"]},{"n":72,"c":11,"t":"m","q":"システムの IP ルーティングテーブルからデフォルトゲートウェイを削除するコマンドはどれですか(2つ選択してください)。","o":["ifconfig unset default","route del default","ip route del default","netstat -r default","sysctl ipv4.default_gw=0"],"a":"BC","acc":["BC"],"w":["ifconfigに経路の操作機能はない","","","netstatは表示のみ","sysctlにそのようなキーはない"]},{"n":91,"c":9,"t":"s","q":"次のコマンドのうち、システムのタイムゾーンをカナダ東部時間に設定するものはどれですか?","o":["localegen -t -f /usr/share/zoneinfo/Canada/Eastern > /etc/locate.tz","tzconf /etc/localtime","sysctl -w clock.tz='Canada/Eastern'","modprobe tz_ca_est","ln -s /usr/share/zoneinfo/Canada/Eastern /etc/localtime"],"a":"E","acc":["E"],"e":"選択肢EはOCRで欠落していたため補完(/etc/localtime をゾーン情報ファイルへのシンボリックリンクにする)。","w":["localegenはロケール生成","tzconfは存在しない","sysctlでは設定できない","カーネルモジュールではない",""]},{"n":44,"c":12,"t":"m","q":"公開 SSH キーと秘密 SSH キーに関して正しいのはどれですか?(2つ選択してください。)","o":["各ユーザーアカウントには、そのアカウントにログインするために使用できるキーペアが1つだけあります。","秘密鍵は誰にも明かしてはいけません。","同じ秘密鍵に対して複数の異なる公開鍵が生成される場合があります。","秘密鍵の機密性を維持するために、SSH キーペアはその所有者によって作成される必要があります。","リモートログインを許可するには、ユーザーの秘密鍵をリモートサーバーにコピーする必要があります。"],"a":"BD","acc":["BD"],"e":"リモートサーバーにコピーするのは公開鍵(E は誤り)。","w":["鍵ペアは複数登録できる","","公開鍵は秘密鍵から一意に決まる","","サーバーに置くのは公開鍵"]},{"n":33,"c":9,"t":"x","q":"空白を埋めてください。\nuseradd のどのオプションが新しいユーザーのホームディレクトリを作成し、一連の標準ファイルをプロビジョニングしますか?(値やパラメータを指定せずにオプション名のみを指定します。)","o":[],"ax":"-m","axa":["--create-home","-m, --create-home","m"],"e":"【解答を修正】ホームディレクトリを作成し /etc/skel の標準ファイルを配置するのは -m(--create-home)。-D はデフォルト値の表示/変更。"},{"n":11,"c":10,"t":"s","q":"NTP クライアントによって観察され修正される状況は次のどれですか?","o":["システムクロックとコンピューターのハードウェアクロック間の時間のずれ。","物理的な場所とタイムゾーンの構成。","現在のコンピュータの場所のタイムゾーンの変更。","夏時間に対応するための調整が必要です。","システムクロックと基準クロック間の時間のずれ。"],"a":"E","acc":["E"],"w":["HWクロックとの同期はhwclockの役割","位置・TZは扱わない","TZ変更は検知しない","夏時間はタイムゾーン設定側の話",""]},{"n":16,"c":11,"t":"m","q":"次の nmcli サブコマンドのうちどれが存在しますか?(2つ選択してください。)","o":["nmcli ethernet","nmcli device","nmcli wifi","nmcli address","nmcli connection"],"a":"BE","acc":["BE"],"e":"トップレベルのオブジェクトは general/networking/radio/connection/device/agent/monitor。wifi は nmcli radio wifi 等の下位コマンド。","w":["存在しないオブジェクト","","wifiはdeviceのサブコマンド","存在しないオブジェクト",""]},{"n":97,"c":10,"t":"m","q":"chrony 構成ファイルの次のオプションのうち、リモートタイムソースを定義するものはどれですか(2つ選択してください)。","o":["source","clock","remote","pool","server"],"a":"DE","acc":["DE"],"w":["sourceというオプションはない","clockはない","remoteはない","",""]},{"n":109,"c":7,"t":"s","q":"次のコマンドのうち、すべての環境変数とシェル変数を表示するものはどれですか?","o":["getargs","lsenv","ls","env","lsshell"],"a":"D","acc":["D"],"e":"厳密にはシェル変数まで表示するのは set だが、選択肢中では env が想定解答。","w":["存在しない","存在しない","lsはファイル一覧","","存在しない"]},{"n":54,"c":12,"t":"s","q":"TCP ラッパーの目的は何ですか?","o":["TCP サービスで使用される帯域幅を管理および調整します。","ネットワークサービスを TCP ポートにバインドします。","TCP メッセージを IP パケットにカプセル化します。","プレーンテキスト TCP サービスに SSL サポートを追加します。","ネットワークサービスへのアクセスを制限します。"],"a":"E","acc":["E"],"e":"/etc/hosts.allow と /etc/hosts.deny によるアクセス制御。","w":["帯域制御の機能はない","バインドはサービス自身が行う","カプセル化はTCP/IPスタックの仕事","SSL付加はstunnel等",""]},{"n":1,"c":9,"t":"s","q":"/etc/ に cron.allow も cron.deny も存在しない場合、次のどれが正しいですか?","o":["追加の構成なしで、すべてのユーザーがユーザー固有の crontab を作成できます。","追加の構成がない場合、root のみがユーザー固有の crontab を作成できます。","cron デーモンは起動を拒否し、システムのログファイルに不足しているファイルを報告します。","ユーザーがユーザー固有の crontab を作成する場合、システム管理者はそれを明示的に承認する必要があります。","/etc/crond.conf のデフォルト設定は、ユーザー固有の crontab が一般的に許可されるかどうかを定義します。"],"a":"B","acc":["B"],"e":"実装依存: cronie(RHEL系)では root のみ(B)、Debian系 Vixie cron では全ユーザー可(A)。試験ではBが想定解答とされることが多い。","w":["設定なしで全許可にはならない","","デーモンは正常に起動する","承認フローは存在しない","crond.confというファイルはない"]},{"n":29,"c":10,"t":"m","q":"systemd-journald を使用するシステムでは、次のコマンドのどれがシステムログに Howdy メッセージを追加しますか?(2つ選択してください。)","o":["append Howdy","logger Howdy","systemd-cat echo Howdy","echo Howdy > /dev/journal","journalctl add Howdy"],"a":"BC","acc":["BC"],"e":"【解答を修正】2つ選択の設問。logger と systemd-cat の両方が正解(原本はBのみ)。","w":["appendというコマンドはない","","","/dev/journalは存在しない","journalctl addは存在しない"]},{"n":14,"c":7,"t":"m","q":"次のテストの比較演算子のうち、ファイルシステム内の要素に作用するものはどれですか?(2つ選択してください。)","o":["-z","-eq","-d","-f","-lt"],"a":"CD","acc":["CD"],"e":"-d はディレクトリ、-f は通常ファイルの判定。","w":["-zは文字列長ゼロ判定","-eqは整数比較","","","-ltは整数比較"]},{"n":118,"c":9,"t":"s","q":"国際化プログラムのメッセージの言語をポルトガル語(pt)に変更するには、ログインシェルを起動するときに次のコマンドのどれを実行する必要がありますか?","o":["export LANGUAGE=\"pt\"","export LC_MESSAGES=\"pt\"","export UI_MESSAGES=\"pt\"","export MESSAGE=\"pt\"","export ALL_MESSAGES=\"pt\""],"a":"B","acc":["B"],"w":["LANGUAGEはgettext固有の優先リスト（標準はLC_MESSAGES）","","存在しない変数","存在しない","存在しない"]},{"n":86,"c":12,"t":"s","q":"特定のホストにサービスへのアクセスを許可するように TCP ラッパー構成を編集した後、これらの変更はいつ有効になりますか?","o":["新しい構成は、それぞれのサービスを再起動した後に有効になります。","新しい構成は、次回のシステム再起動時に有効になります。","サービスへの最後に確立された接続が閉じられたときに、新しい構成が有効になります。","新しい設定は、tcpd サービスを再起動した後に有効になります。","新しい構成は、すべての新しい接続に対して直ちに有効になります。"],"a":"E","acc":["E"],"e":"hosts.allow / hosts.deny は接続ごとに評価される。","w":["サービス再起動は不要（毎接続で読み直す）","再起動は不要","接続の終了を待たない","tcpdは常駐サービスではない",""]},{"n":3,"c":7,"t":"s","q":"次のコマンドのうち、コマンド date の出力をシェル変数 mydate に格納するものはどれですか?","o":["mydate=\"date\"","mydate=\"exec date\"","mydate=\"$((date))\"","mydate=\"$(date)\"","mydate=\"${date}\""],"a":"D","acc":["D"],"e":"$( ) がコマンド置換。$(( )) は算術展開。","w":["文字列\"date\"が入るだけ","execは置換しない","$(( ))は算術展開","","${date}は変数dateの参照"]},{"n":53,"c":11,"t":"s","q":"Linux ワークステーションで、route コマンドを実行するとルーティングテーブルが表示されるまでに長い時間がかかります。これは以下のどのエラーを示していますか?","o":["ローカルルーティング情報が破損している可能性があるため、ルーティングプロトコルを使用して再検証する必要があります。","ルーティングテーブル内のルータの1つが利用できないため、自動ルータ障害検出メカニズム(ARF-D)がタイムアウトを待機しています。","誤って複数のデフォルトルータが存在する場合、ネットワーク上でデフォルトルータの選択を実行し、1つのルータをデフォルトとして選択する必要があります。","Linux カーネルルーティングデーモン(LKRD)が実行されていないため、init スクリプトまたは systemd ユニットを使用して起動する必要があります。","デフォルトではルートがルーターと宛先の名前を解決しようとするため、DNS 解決が機能していない可能性があり、タイムアウトが発生する可能性があります。"],"a":"E","acc":["E"],"e":"route -n で名前解決を抑止できる。","w":["そのような再検証機構はない","ARF-Dというものは存在しない","デフォルトルータの選挙は行われない","LKRDというデーモンは存在しない",""]},{"n":77,"c":10,"t":"s","q":"システムログをローテーション、圧縮、メールで送信するために使用されるコマンドはどれですか。","o":["logrotate","striplog","syslogd --rotate","rotatelog","logger"],"a":"A","acc":["A"],"w":["","存在しない","syslogdに--rotateはない","存在しない","loggerはログへの書き込み用"]},{"n":100,"c":10,"t":"s","q":"初期同期を高速化するために、NTP サーバーへのポーリングの初期間隔を変更する chrony 構成ファイルのどのオプションですか?","o":["iburst","quickstart","fast","fsync","flood"],"a":"A","acc":["A"],"w":["","存在しないオプション","存在しない","存在しない","存在しない"]},{"n":112,"c":11,"t":"s","q":"IPv4 サブネット 192.168.2.128/26 内の一意のホストに使用できる IP アドレスの数はいくつですか?","o":["6","14","30","62","126"],"a":"D","acc":["D"],"e":"/26 = 64 アドレス - ネットワーク/ブロードキャストの2 = 62。","w":["/29相当","/28相当","/27相当","","/25相当"]},{"n":62,"c":11,"t":"s","q":"次のコマンドについて正しいのは何ですか?\nnmcli device wifi connect WIFIoI","o":["NetworkManager は、SSID WIFIoI の新しいパブリックホットスポットを開きます。","NetworkManager は、WIFIoI という名前の未構成の新しい仮想ネットワークインターフェイスを作成します。","NetworkManager は新しい WiFi 接続 WIFIoI を作成し、アクティブ化します。","NetworkManager は、接続 WIFIoI が存在しない場合はエラーを返します。","WIFIoI は無効な Wi-Fi デバイスであるため、NetworkManager はエラーを返します。"],"a":"D","acc":["D"],"w":["ホットスポット開設はhotspotサブコマンド","仮想インターフェースは作られない","SSIDが電波圏内に実在する場合の動作","","デバイス名ではなくSSIDの指定"]},{"n":40,"c":11,"t":"x","q":"空欄を埋めてください。\nNetworkManager に含まれるどのコマンドが、コマンドラインで NetworkManager に簡単にアクセスできるようにする curses アプリケーションですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"nmtui"},{"n":15,"c":12,"t":"s","q":"SSH クライアントのデフォルトオプションが含まれている構成ファイルはどれですか?","o":["/etc/ssh/sshd_config","/etc/ssh/ssh","/etc/ssh/ssh_config","/etc/ssh/client","/etc/ssh/ssh_client"],"a":"C","acc":["C"],"e":"sshd_config はサーバー側の設定。","w":["sshd_configはサーバー側","存在しない","","存在しない","存在しない"]},{"n":99,"c":10,"t":"m","q":"systemd-journald に関する次の記述のうち正しいものはどれですか?(3つ選択してください。)","o":["syslog と互換性がないため、通常の syslog を使用するシステムにインストールすることはできません。","systemd のメッセージのみを処理し、他のツールのメッセージは処理しません。","ログメッセージを syslog に渡してさらに処理することができます。","各メッセージの _UID や _PID などのメタデータを保持します。","kern、user、auth などの syslog 機能をサポートします。"],"a":"CDE","acc":["CDE"],"w":["syslogと共存できる","あらゆるプロセスのログを扱う","","",""]},{"n":61,"c":8,"t":"s","q":"複数の X サーバーを実行しているマシンでは、プログラムはどのようにして X11 サーバーの異なるインスタンスを識別するのでしょうか?","o":["X11 構成ファイルで定義された固定 UUID によって。","次のような表示名で: :1","X サーバーを実行するユーザーの名前(例: x11:bob)。","/dev/X11/xservers/1 のようなデバイス名で。","fe80::/64 サブネットからの一意の IPv6 アドレスによって。"],"a":"B","acc":["B"],"e":"DISPLAY=:0、:1 などのディスプレイ番号で識別する。","w":["UUIDでは識別しない","","ユーザー名では識別しない","デバイス名ではない","IPv6アドレスではない"]},{"n":22,"c":12,"t":"s","q":"SSH を使用してリモートマシンにログインするときに自動認証に使用される既存の SSH キーをプリロードして管理するコマンドはどれですか。","o":["sshd","ssh-keyring","ssh-keygen","ssh-pki","ssh-agent"],"a":"E","acc":["E"],"e":"問題文の「注文マシン」はOCR誤りで「リモートマシン」に修正。鍵の追加は ssh-add、鍵を保持・管理するのは ssh-agent。","w":["sshdはサーバーデーモン","存在しない","ssh-keygenは鍵の生成用","存在しない",""]},{"n":76,"c":7,"t":"s","q":"すべてのユーザーに対してシェル変数をグローバルに設定するには、次のどの構成ファイルを変更する必要がありますか?","o":["/etc/profile","/etc/bashrc","~/.bash_profile","/etc/.bashrc","/etc/shellenv"],"a":"A","acc":["A"],"w":["","ディストリ依存で標準ではない","~はユーザー個別","存在しない","存在しない"]},{"n":31,"c":11,"t":"m","q":"nmcli connection show に表示される次の接続タイプのうち、NetworkManager に存在する可能性があるのはどれですか?(3つ選択してください。)","o":["tcp","ethernet","wifi","ipv6","bridge"],"a":"BCE","acc":["BCE"],"w":["tcpはプロトコルで接続タイプではない","","","ipv6は接続タイプではない",""]},{"n":67,"c":9,"t":"s","q":"次のコマンドのうち、すべてのアクティブな systemd タイマーを表示するものはどれですか?","o":["systemd-timer show","timectl list","systemctl -t(原文判読困難)","systemctl list-timers","timeq"],"a":"D","acc":["D"],"e":"選択肢CはOCRで判読不能のため推定表記。","w":["存在しない","存在しない","そのようなオプションではない","","存在しない"]},{"n":81,"c":9,"t":"s","q":"シャドウパスワードを使用すると、標準のシャドウなしパスワードと比較して、パスワードのセキュリティがどのように向上しますか?","o":["通常のユーザーはシャドウパスワードのパスワードハッシュにアクセスできません。","すべてのシャドウパスワードは 45 日間有効で、その後は変更する必要があります。","システムのホストキーは、すべてのシャドウパスワードの暗号化に使用されます。","シャドウパスワードは常に、ユーザーの秘密キーと一致する公開キーと組み合わせられます。","シャドウパスワードはプレーンテキストで保存され、弱いパスワードかどうかをチェックできます。"],"a":"A","acc":["A"],"e":"/etc/shadow は root のみ読み取り可能。","w":["","45日という規則はない","ホストキーは無関係","公開鍵とは無関係","平文では保存されない"]},{"n":74,"c":7,"t":"s","q":"どのコマンドが VARIABLE という名前のシェル変数をサブシェルに表示しますか?","o":["export $VARIABLE","env VARIABLE","set $VARIABLE","set VARIABLE","export VARIABLE"],"a":"E","acc":["E"],"e":"export には変数名を $ なしで渡す。","w":["$付きだと値に展開されてしまう","envは一時設定・表示用","setではエクスポートされない","setではエクスポートされない",""]},{"n":65,"c":10,"t":"s","q":"~/.forward ファイルに関して正しいのは何ですか?","o":["正しく設定されている場合、~/.forward を使用して各受信メールを1人以上の他の受信者に転送できます。","~/.forward を編集した後、ユーザーは newaliases を実行してメールサーバーに変更を認識させる必要があります。","~/.forward を使用すると、root は任意の電子メールアドレスを設定できますが、他のすべてのユーザーは自分のアドレスのみを設定できます。","~/.forward は MTA が所有しており、ユーザーが書き込みできないため、editaliases コマンドを使用して編集する必要があります。","デフォルトでは、グループ mailq 内のユーザーの ~/.forward ファイルのみが処理され、他のすべてのユーザーの ~/.forward ファイルは無視されます。"],"a":"A","acc":["A"],"w":["","newaliasesは/etc/aliases用（.forwardは即時反映）","そのようなroot特権規則はない",".forwardはユーザー自身が編集できる","mailqグループの規則は存在しない"]},{"n":71,"c":11,"t":"m","q":"ディストリビューションのメカニズムを使用してネットワークインターフェイスを構成する Linux システム上の NetworkManager について正しいのは次のうちどれですか?(2つ選択してください。)","o":["NetworkManager は、NetworkManager によって明示的に管理されない限り、すべてのネットワークインターフェイスを DHCP を使用するように再構成します。","NetworkManager は、管理するインターフェースごとに明示的に有効にする必要があります。","NetworkManager は、デフォルトでは、すでに設定されているインターフェースを変更しません。","NetworkManager は、NetworkManager によって設定されていないすべてのインターフェースを無効にします。","NetworkManager は、ディストリビューションのネットワークインターフェイス構成を使用するように構成できます。"],"a":"CE","acc":["CE"],"e":"【解答を修正】NetworkManager は既にディストリビューション設定で構成済みのインターフェイスをデフォルトでは変更せず(C)、ifupdown プラグイン等によりディストリビューションの構成を利用するよう設定できる(E)。B(インターフェースごとに明示的に有効化が必要)は誤り。","w":["全インターフェースをDHCP化はしない","明示的な有効化は不要（デフォルトで管理）","","未管理のIFを無効化はしない",""]},{"n":41,"c":8,"t":"x","q":"空欄を埋めてください。\nSSH で X11 転送を使用する場合、アプリケーションが正しい X11 サーバーに接続できるようにするために、リモートシェルで自動的に設定される環境変数は何ですか?(追加のコマンドや値を指定せずに、環境変数のみを指定します。)","o":[],"ax":"DISPLAY","axa":["display","$display"]},{"n":58,"c":7,"t":"s","q":"ユーザーのホームディレクトリにあるファイル .profile について正しいのは何ですか?","o":["実行可能である必要があります。","ログインシェルのバイナリを呼び出す必要があります。","有効なシェルスクリプト構文を使用する必要があります。","それはシェバンで始まらなければなりません。","所有者のみが読み取り可能でなければなりません。"],"a":"C","acc":["C"],"e":"source されるため実行権限もシバンも不要だが、構文は正しい必要がある。","w":["実行可能属性は不要（読み込まれて実行される）","シェル本体の呼び出しは不要","","シバンは不要","読み取り制限の要件はない"]}],[{"n":111,"c":9,"t":"s","q":"ファイル /etc/localtime について正しいのは何ですか?","o":["Europe/Berlin のような文字列を含むプレーンテキストファイルです。","システムの IP アドレスの場所に基づいて NTP サービスによって作成および維持されます。","これは /sys/device/clock/ltime へのシンボリックリンクであり、常に現在のローカル時刻が含まれます。","このファイルを変更した後、変更を有効にするには newtzconfig を実行する必要があります。","/usr/share/zoneinfo/Europe/Berlin などのタイムゾーン情報ファイルへのシンボリックリンクまたはそのコピーです。"],"a":"E","acc":["E"],"w":["文字列を書くのは/etc/timezone（別ファイル）","NTPは作成しない","そのようなリンクではない","newtzconfigは不要",""]},{"n":25,"c":11,"t":"m","q":"NetworkManager は、システムのネットワーク接続に関して次のどの状態を表示できますか?(2つ選択してください。)","o":["up","portal","full","login-required","firewalled"],"a":"BC","acc":["BC"],"e":"接続性状態: none / portal / limited / full / unknown。","w":["upは接続状態の値ではない","","","login-requiredという値はない（portalが相当）","firewalledという値はない"]},{"n":68,"c":9,"t":"s","q":"通常ユーザーの UID がグループの GID と同一である場合、次の記述のうち正しいものはどれですか。","o":["UID は GID よりも優先されるため、ユーザーは使用できますが、グループは使用できなくなります。","ID の競合による曖昧さを避けるため、ユーザーとグループは利用できません。","UID と GID は互いに独立しているため、ユーザーとグループは引き続き利用可能です。","グループ構成に他のメンバーが含まれている場合でも、ユーザーはグループの唯一のメンバーです。","GID は UID よりも優先されるため、ユーザーは利用できませんがグループは利用できます。"],"a":"C","acc":["C"],"w":["優先関係はない（別空間）","競合しない","","メンバー構成は変わらない","優先関係はない"]},{"n":79,"c":11,"t":"s","q":"DNS デバッグに使用される次のツールのうち、どれがネームサーバーからの応答だけでなく、クエリの詳細も報告しますか?","o":["dnsq","hostname","dig","dnslookup","zoneinfo"],"a":"C","acc":["C"],"w":["存在しない","hostnameは自ホスト名の表示","","存在しない（nslookupが実在）","存在しない"]},{"n":23,"c":10,"t":"x","q":"空欄を埋めてください。\nすべての sendmail 互換 MTA で使用できる、MTA のメールキューの内容を一覧表示するために使用されるコマンドはどれですか。(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"mailq","axa":["sendmail -bp"]},{"n":14,"c":7,"t":"m","q":"次のテストの比較演算子のうち、ファイルシステム内の要素に作用するものはどれですか?(2つ選択してください。)","o":["-z","-eq","-d","-f","-lt"],"a":"CD","acc":["CD"],"e":"-d はディレクトリ、-f は通常ファイルの判定。","w":["-zは文字列長ゼロ判定","-eqは整数比較","","","-ltは整数比較"]},{"n":31,"c":11,"t":"m","q":"nmcli connection show に表示される次の接続タイプのうち、NetworkManager に存在する可能性があるのはどれですか?(3つ選択してください。)","o":["tcp","ethernet","wifi","ipv6","bridge"],"a":"BCE","acc":["BCE"],"w":["tcpはプロトコルで接続タイプではない","","","ipv6は接続タイプではない",""]},{"n":36,"c":10,"t":"x","q":"空欄を埋めてください。\nハードウェアクロックをシステムクロックに同期するために使用されるコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"hwclock","e":"hwclock --systohc でシステムクロックをハードウェアクロックに書き込む。"},{"n":3,"c":7,"t":"s","q":"次のコマンドのうち、コマンド date の出力をシェル変数 mydate に格納するものはどれですか?","o":["mydate=\"date\"","mydate=\"exec date\"","mydate=\"$((date))\"","mydate=\"$(date)\"","mydate=\"${date}\""],"a":"D","acc":["D"],"e":"$( ) がコマンド置換。$(( )) は算術展開。","w":["文字列\"date\"が入るだけ","execは置換しない","$(( ))は算術展開","","${date}は変数dateの参照"]},{"n":90,"c":11,"t":"s","q":"HTTPS サービスで使用される標準化された TCP ポートはどれですか?","o":["25","80","8080","443","636"],"a":"D","acc":["D"],"e":"25=SMTP、80=HTTP、636=LDAPS。","w":["25=SMTP","80=HTTP","8080=代替HTTP","","636=LDAPS"]},{"n":101,"c":11,"t":"s","q":"次のどれが有効な IPv6 アドレスですか?","o":["2001:db8:0g21::1","2001::db8:4581::1","2001:db8:3241::1","2001%db8%9990%%1","2001.db8.819f..1"],"a":"C","acc":["C"],"e":"A は16進数でない g を含み、B は :: が2回出現するため無効。","w":["gは16進数として無効","::は1アドレスに1回まで","","%区切りは無効",".区切りは無効"]},{"n":11,"c":10,"t":"s","q":"NTP クライアントによって観察され修正される状況は次のどれですか?","o":["システムクロックとコンピューターのハードウェアクロック間の時間のずれ。","物理的な場所とタイムゾーンの構成。","現在のコンピュータの場所のタイムゾーンの変更。","夏時間に対応するための調整が必要です。","システムクロックと基準クロック間の時間のずれ。"],"a":"E","acc":["E"],"w":["HWクロックとの同期はhwclockの役割","位置・TZは扱わない","TZ変更は検知しない","夏時間はタイムゾーン設定側の話",""]},{"n":74,"c":7,"t":"s","q":"どのコマンドが VARIABLE という名前のシェル変数をサブシェルに表示しますか?","o":["export $VARIABLE","env VARIABLE","set $VARIABLE","set VARIABLE","export VARIABLE"],"a":"E","acc":["E"],"e":"export には変数名を $ なしで渡す。","w":["$付きだと値に展開されてしまう","envは一時設定・表示用","setではエクスポートされない","setではエクスポートされない",""]},{"n":108,"c":7,"t":"s","q":"エイリアス ls が存在する場合、次のコマンドのうちどれがエイリアスの現在のターゲットではなくコマンド ls -l を指すようにエイリアスを更新しますか?","o":["set ls='ls -l'","alias ls='ls -l'","alias --force ls='ls -l'","alias --update ls ls='ls -l'","realias ls='ls -l'"],"a":"B","acc":["B"],"e":"alias は同名で再定義すれば上書きされる。","w":["setは変数の設定","","--forceオプションはない","--updateオプションはない","realiasは存在しない"]},{"n":45,"c":10,"t":"m","q":"次のどれが syslog 機能(ファシリティ)ですか?(2つ選択してください。)","o":["local5","accounting","mail","postmaster","remote"],"a":"AC","acc":["AC"],"w":["","存在しないファシリティ","","存在しない","存在しない"]},{"n":13,"c":12,"t":"m","q":"次のような sudo 設定の抜粋があるとします:\njane ANY=NOPASSWD: /bin/kill, /bin/id, PASSWD: /sbin/fdisk\n次の文のうち正しいものはどれですか?(3つ選択してください。)","o":["ジェーンはパスワードを指定した後でのみ /bin/id を実行できます。","ジェーンは、root のパスワードを指定した後、/sbin/fdisk を実行できます。","ジェーンはパスワードを指定した後、/sbin/fdisk を実行できます。","ジェーンはパスワードを指定せずに /bin/kill を実行できます。","ジェーンはパスワードを指定せずに /bin/id を実行できます。"],"a":"CDE","acc":["CDE"],"e":"sudo で入力するのは自分(jane)のパスワードであり root のパスワードではない。","w":["idはNOPASSWD指定なのでパスワード不要","求められるのは自分のパスワード（rootではない）","","",""]},{"n":34,"c":11,"t":"x","q":"空欄補充。\n/etc/network/interfaces や /etc/sysconfig/network-scripts/ifcfg-eth0 などのディストリビューション固有の設定に従ってネットワークインターフェイスを有効にするコマンドは何ですか?(パスやパラメータを指定せずにコマンドのみを指定してください。)","o":[],"ax":"ifup","e":"【解答を修正】ディストリビューションの設定ファイルに基づいてインターフェイスを有効化するコマンドは ifup(「up」はコマンドではない)。"},{"n":83,"c":8,"t":"s","q":"次のプロトコルのうち、仮想マシンのビデオカード出力にアクセスするために設計されているものはどれですか。","o":["KDE","X11","Xfce","SPICE","XDMCP"],"a":"D","acc":["D"],"w":["KDEはデスクトップ環境","X11は汎用のウィンドウシステム","Xfceはデスクトップ環境","","XDMCPはXのリモートログイン"]},{"n":63,"c":10,"t":"m","q":"journalctl で出力の時間枠を制限するために使用されるパラメータは次のどれですか(2つ選択してください)。","o":["--since=","--from=","--until=","--upto=","--date="],"a":"AC","acc":["AC"],"w":["","存在しないオプション","","存在しない","存在しない"]},{"n":67,"c":9,"t":"s","q":"次のコマンドのうち、すべてのアクティブな systemd タイマーを表示するものはどれですか?","o":["systemd-timer show","timectl list","systemctl -t(原文判読困難)","systemctl list-timers","timeq"],"a":"D","acc":["D"],"e":"選択肢CはOCRで判読不能のため推定表記。","w":["存在しない","存在しない","そのようなオプションではない","","存在しない"]},{"n":91,"c":9,"t":"s","q":"次のコマンドのうち、システムのタイムゾーンをカナダ東部時間に設定するものはどれですか?","o":["localegen -t -f /usr/share/zoneinfo/Canada/Eastern > /etc/locate.tz","tzconf /etc/localtime","sysctl -w clock.tz='Canada/Eastern'","modprobe tz_ca_est","ln -s /usr/share/zoneinfo/Canada/Eastern /etc/localtime"],"a":"E","acc":["E"],"e":"選択肢EはOCRで欠落していたため補完(/etc/localtime をゾーン情報ファイルへのシンボリックリンクにする)。","w":["localegenはロケール生成","tzconfは存在しない","sysctlでは設定できない","カーネルモジュールではない",""]},{"n":107,"c":7,"t":"s","q":"次のコマンドのうち、Bash 内のすべての定義変数と関数を一覧表示するものはどれですか?","o":["env","export","env -a","set","echo $ENV"],"a":"D","acc":["D"],"e":"env は環境変数のみ。set はシェル変数・関数も含めて表示する。","w":["envは環境変数のみ","exportはエクスポート済みのみ","-aオプションは意味が異なる","","$ENVは1つの変数"]},{"n":49,"c":12,"t":"x","q":"空欄を埋めてください。\nどのファイルが存在すると、ルート以外のすべてのユーザーがシステムにログインできなくなるのでしょうか?(パスを含むファイルの完全な名前を指定してください。)","o":[],"ax":"/etc/nologin","axa":["nologin"],"e":"【解答を修正】存在すると一般ユーザーのログインを禁止するファイルは /etc/nologin。/sbin/nologin はログインを拒否する「シェルプログラム」であり、本問の答えではない。"},{"n":46,"c":7,"t":"s","q":"echo $$ コマンドによって提供される情報は何ですか?","o":["現在のシェルのプロセス ID。","次のコマンドのプロセス ID。","最後に実行されたコマンドのプロセス ID。","バックグラウンドに置かれた最後のコマンドのプロセス ID。","echo コマンドのプロセス ID。"],"a":"A","acc":["A"],"e":"$! はバックグラウンドの最後のプロセス、$? は直前の終了ステータス。","w":["","次のコマンドのPIDという変数はない","直前コマンドは$?（終了値）","直前のバックグラウンドは$!","echo自身のPIDではない"]},{"n":37,"c":10,"t":"x","q":"空欄を埋めてください。\n/etc/ntp.conf ファイルのどのオプションが、時間情報を照会する外部 NTP ソースを指定しますか?(値やパラメータを指定せずにオプション名のみを指定します。)","o":[],"ax":"server"},{"n":87,"c":9,"t":"s","q":"iconv コマンドの目的は何ですか?","o":["ビットマップ画像を、PNG から JPEG など、ある形式から別の形式に変換します。","ルートディレクトリツリーが、Filesystem Hierarchy Standard(FHS)のすべての規則に準拠していることを確認します。","ファイルをある文字セットから別の文字セットに変換します。","ext4 ファイルシステム内の inode のモードを変更します。"],"a":"C","acc":["C"],"w":["画像変換はImageMagick等","FHS検査の機能はない","","inode操作の機能はない"]},{"n":21,"c":12,"t":"s","q":"システムの構成に応じて、このホストで実行されているネットワークサービスを有効または無効にするために使用できるのは次のファイルのどれですか。","o":["/etc/profile","/etc/xinetd.conf","/etc/ports","/etc/services","/etc/host.conf"],"a":"B","acc":["B"],"e":"/etc/services はポート番号の名前対応表であり、サービスの有効/無効は制御しない。","w":["profileはシェルの設定","","存在しない","servicesはポート番号の対応表","host.confは名前解決の設定"]},{"n":22,"c":12,"t":"s","q":"SSH を使用してリモートマシンにログインするときに自動認証に使用される既存の SSH キーをプリロードして管理するコマンドはどれですか。","o":["sshd","ssh-keyring","ssh-keygen","ssh-pki","ssh-agent"],"a":"E","acc":["E"],"e":"問題文の「注文マシン」はOCR誤りで「リモートマシン」に修正。鍵の追加は ssh-add、鍵を保持・管理するのは ssh-agent。","w":["sshdはサーバーデーモン","存在しない","ssh-keygenは鍵の生成用","存在しない",""]},{"n":78,"c":12,"t":"s","q":"プログラムがクラッシュしたときにユーザー用に作成されるコアファイルのサイズに制限を設定するために使用されるコマンドはどれですか。","o":["core","edquota","quota","ulimit","ktrace"],"a":"D","acc":["D"],"e":"ulimit -c でコアファイルサイズを制限。","w":["coreというコマンドはない","edquotaはディスククォータ","quotaはディスク使用量","","ktraceはBSD系のツール"]},{"n":56,"c":11,"t":"m","q":"サブネット 203.0.113.64/28 の有効なホストアドレスは次のどれですか。(2つ選択してください。)","o":["203.0.113.64","203.0.113.78","203.0.113.65","203.0.113.80","203.0.113.81"],"a":"BC","acc":["BC"],"e":"/28 の範囲は .64〜.79。ホストは .65〜.78(.64 はネットワーク、.79 はブロードキャスト)。","w":[".64はネットワークアドレス","","",".80は次のサブネット",".81は次のサブネット"]},{"n":88,"c":9,"t":"s","q":"次の getent 呼び出しのうち、既存のユーザーをすべて一覧表示するものはどれですか?","o":["getent homes","getent uids","getent passwd","getent users","getent logins"],"a":"C","acc":["C"],"w":["存在しないDB名","存在しない","","存在しない","存在しない"]},{"n":65,"c":10,"t":"s","q":"~/.forward ファイルに関して正しいのは何ですか?","o":["正しく設定されている場合、~/.forward を使用して各受信メールを1人以上の他の受信者に転送できます。","~/.forward を編集した後、ユーザーは newaliases を実行してメールサーバーに変更を認識させる必要があります。","~/.forward を使用すると、root は任意の電子メールアドレスを設定できますが、他のすべてのユーザーは自分のアドレスのみを設定できます。","~/.forward は MTA が所有しており、ユーザーが書き込みできないため、editaliases コマンドを使用して編集する必要があります。","デフォルトでは、グループ mailq 内のユーザーの ~/.forward ファイルのみが処理され、他のすべてのユーザーの ~/.forward ファイルは無視されます。"],"a":"A","acc":["A"],"w":["","newaliasesは/etc/aliases用（.forwardは即時反映）","そのようなroot特権規則はない",".forwardはユーザー自身が編集できる","mailqグループの規則は存在しない"]},{"n":19,"c":12,"t":"s","q":"次のコマンドのうち、TCP ポートを開いたプロセスの PID を識別できるのはどれですか?","o":["ptrace","strace","debug","lsof","nessus"],"a":"D","acc":["D"],"e":"lsof -i(または ss -tlnp / netstat -tlnp)。","w":["ptraceはデバッグ用システムコール","straceはシステムコール追跡","存在しない","","nessusは脆弱性スキャナ"]},{"n":76,"c":7,"t":"s","q":"すべてのユーザーに対してシェル変数をグローバルに設定するには、次のどの構成ファイルを変更する必要がありますか?","o":["/etc/profile","/etc/bashrc","~/.bash_profile","/etc/.bashrc","/etc/shellenv"],"a":"A","acc":["A"],"w":["","ディストリ依存で標準ではない","~はユーザー個別","存在しない","存在しない"]},{"n":29,"c":10,"t":"m","q":"systemd-journald を使用するシステムでは、次のコマンドのどれがシステムログに Howdy メッセージを追加しますか?(2つ選択してください。)","o":["append Howdy","logger Howdy","systemd-cat echo Howdy","echo Howdy > /dev/journal","journalctl add Howdy"],"a":"BC","acc":["BC"],"e":"【解答を修正】2つ選択の設問。logger と systemd-cat の両方が正解(原本はBのみ)。","w":["appendというコマンドはない","","","/dev/journalは存在しない","journalctl addは存在しない"]},{"n":1,"c":9,"t":"s","q":"/etc/ に cron.allow も cron.deny も存在しない場合、次のどれが正しいですか?","o":["追加の構成なしで、すべてのユーザーがユーザー固有の crontab を作成できます。","追加の構成がない場合、root のみがユーザー固有の crontab を作成できます。","cron デーモンは起動を拒否し、システムのログファイルに不足しているファイルを報告します。","ユーザーがユーザー固有の crontab を作成する場合、システム管理者はそれを明示的に承認する必要があります。","/etc/crond.conf のデフォルト設定は、ユーザー固有の crontab が一般的に許可されるかどうかを定義します。"],"a":"B","acc":["B"],"e":"実装依存: cronie(RHEL系)では root のみ(B)、Debian系 Vixie cron では全ユーザー可(A)。試験ではBが想定解答とされることが多い。","w":["設定なしで全許可にはならない","","デーモンは正常に起動する","承認フローは存在しない","crond.confというファイルはない"]},{"n":17,"c":9,"t":"s","q":"systemd タイマーユニットに関して正しい記述は次のどれですか?","o":["タイマーユニットは、サービスユニットのファイル内でのみ定義できます。","タイマーによって実行されるコマンドは、タイマーユニットの [Cmd] セクションで指定されます。","専用のシステムサービスである systemd-cron がタイマーユニットの実行を処理します。","タイマーユニットはシステムスコープ内にのみ存在し、ユーザーは利用できません。","各 systemd タイマーユニットは特定の systemd サービスユニットを制御します。"],"a":"E","acc":["E"],"w":["独立した.timerユニットファイルで定義する","コマンドは対応するサービス側で指定","systemd-cronというサービスはない","ユーザースコープのタイマーもある",""]},{"n":104,"c":10,"t":"s","q":"CUPS 構成ディレクトリ内のどのファイルにプリンターの設定が含まれていますか?","o":["cups-devices.conf","snmp.conf","printers.conf","printcap.conf","cupsd.conf"],"a":"C","acc":["C"],"w":["存在しない","snmp.confはプリンタ検出用","","printcapは互換用で設定本体ではない","cupsd.confはサーバー全体の設定"]},{"n":9,"c":10,"t":"x","q":"空欄を埋めてください。\nこの変更を有効にするために、構成に新しい電子メール エイリアスを追加した後、どのコマンドを実行する必要がありますか?(パスを指定せず、必要なすべてのパラメータを含めてコマンドを指定します。)","o":[],"ax":"newaliases"},{"n":61,"c":8,"t":"s","q":"複数の X サーバーを実行しているマシンでは、プログラムはどのようにして X11 サーバーの異なるインスタンスを識別するのでしょうか?","o":["X11 構成ファイルで定義された固定 UUID によって。","次のような表示名で: :1","X サーバーを実行するユーザーの名前(例: x11:bob)。","/dev/X11/xservers/1 のようなデバイス名で。","fe80::/64 サブネットからの一意の IPv6 アドレスによって。"],"a":"B","acc":["B"],"e":"DISPLAY=:0、:1 などのディスプレイ番号で識別する。","w":["UUIDでは識別しない","","ユーザー名では識別しない","デバイス名ではない","IPv6アドレスではない"]},{"n":40,"c":11,"t":"x","q":"空欄を埋めてください。\nNetworkManager に含まれるどのコマンドが、コマンドラインで NetworkManager に簡単にアクセスできるようにする curses アプリケーションですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"nmtui"},{"n":4,"c":9,"t":"m","q":"/etc/group ファイルには、次のどのフィールドが含まれていますか?(2つ選択してください。)","o":["グループのホームディレクトリ。","グループに属するユーザーのリスト。","グループの名前。","デフォルトのグループ ACL。","グループの説明。"],"a":"BC","acc":["BC"],"e":"フィールド: グループ名:パスワード:GID:メンバーリスト。","w":["ホームディレクトリは/etc/passwd","","","ACLは含まれない","説明フィールドはない（passwdのGECOSに相当）"]},{"n":93,"c":12,"t":"s","q":"次のコマンドのうち、SetUID ビットが設定されている、ルートが所有するすべてのファイルを検索するものはどれですか。","o":["find / -user root -perm -4000","find / -user 0 -mode +s","find / -owner root -setuid","find / -owner 0 -permbits 0x100000000","find / --filter uid=1 --filter pers=u+s"],"a":"A","acc":["A"],"w":["","-modeというオプションはない","-owner/-setuidは存在しない","-permbitsは存在しない","--filterは存在しない"]},{"n":8,"c":8,"t":"s","q":"X11 設定ファイル xorg.conf はセクションにグループ化されています。セクション SectionName の内容はどのように表現されますか?","o":["Section SectionName {...} のように中括弧で囲みます。","<SectionName> と </SectionName> のようなタグの間に配置されます。","Section \"SectionName\" を含む行と EndSection を含む行の間に配置されます。","[SectionName] 行の後に配置されます。","これは、最初のインデントされていないセクション「SectionName」の後に配置され、正確に1つのタブ文字でインデントする必要があります。"],"a":"C","acc":["C"],"e":"選択肢BはOCRで崩れていたため文意を補って修正。","w":["中括弧は使わない","XMLタグ形式ではない","","INI形式の[ ]ではない","インデント規則はない"]},{"n":81,"c":9,"t":"s","q":"シャドウパスワードを使用すると、標準のシャドウなしパスワードと比較して、パスワードのセキュリティがどのように向上しますか?","o":["通常のユーザーはシャドウパスワードのパスワードハッシュにアクセスできません。","すべてのシャドウパスワードは 45 日間有効で、その後は変更する必要があります。","システムのホストキーは、すべてのシャドウパスワードの暗号化に使用されます。","シャドウパスワードは常に、ユーザーの秘密キーと一致する公開キーと組み合わせられます。","シャドウパスワードはプレーンテキストで保存され、弱いパスワードかどうかをチェックできます。"],"a":"A","acc":["A"],"e":"/etc/shadow は root のみ読み取り可能。","w":["","45日という規則はない","ホストキーは無関係","公開鍵とは無関係","平文では保存されない"]},{"n":85,"c":11,"t":"s","q":"ping コマンドはデフォルトでどのように機能しますか?","o":["ICMP エコー要求をリモートホストに送信し、ICMP エコー応答の受信を待機します。","リモートホストに ARP 要求を送信し、ARP 応答の受信を待機します。","TCP SYN パケットをリモートホストに送信し、TCP ACK 応答の受信を待機します。","ブロードキャストパケットをネット上のすべてのホストに送信し、ターゲットシステムからの応答などを受信するまで待機します。","リモートホストのポート 0 に UDP パケットを送信し、UDP エラー応答の受信を待機します。"],"a":"A","acc":["A"],"w":["","ARPを使うのはarping","TCPは使わない","ブロードキャストではなく宛先へ直接","UDPは使わない"]},{"n":70,"c":8,"t":"s","q":"点字ディスプレイとは何を指しますか?","o":["デスクトップアプリケーション用の標準化された高コントラストなグラフィカルテーマ。","KDE や GNOME に似た Linux デスクトップ環境。","LCD に取って代わられた従来のディスプレイ技術。","小さな点を使用して文字を物理的に表現したもの。","XML に似た、データ交換用の標準ファイル形式。"],"a":"D","acc":["D"],"w":["テーマではない","デスクトップ環境ではない","ディスプレイ技術の話ではない","","ファイル形式ではない"]},{"n":27,"c":11,"t":"x","q":"空白を埋めてください。\nローカルシステムのホスト名を設定するために使用されるコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"hostname","e":"systemd 環境では hostnamectl も使用されるが、設問の想定解答は hostname。"},{"n":62,"c":11,"t":"s","q":"次のコマンドについて正しいのは何ですか?\nnmcli device wifi connect WIFIoI","o":["NetworkManager は、SSID WIFIoI の新しいパブリックホットスポットを開きます。","NetworkManager は、WIFIoI という名前の未構成の新しい仮想ネットワークインターフェイスを作成します。","NetworkManager は新しい WiFi 接続 WIFIoI を作成し、アクティブ化します。","NetworkManager は、接続 WIFIoI が存在しない場合はエラーを返します。","WIFIoI は無効な Wi-Fi デバイスであるため、NetworkManager はエラーを返します。"],"a":"D","acc":["D"],"w":["ホットスポット開設はhotspotサブコマンド","仮想インターフェースは作られない","SSIDが電波圏内に実在する場合の動作","","デバイス名ではなくSSIDの指定"]},{"n":39,"c":12,"t":"x","q":"空白を埋めてください。\nxinetd サービスの設定ファイルはどのディレクトリに保存されますか?(ディレクトリへのフルパスを指定します。)","o":[],"ax":"/etc/xinetd.d/","axa":["/etc/xinetd.d","xinetd.d"]}],[{"n":50,"c":10,"t":"s","q":"systemd ジャーナルには何が保存されますか?","o":["/var/jlog/ と /var/jlogd/","/proc/log/ と /proc/klog/","/run/log/journal/ または /var/log/journal/","/var/log/syslog.bin または /var/log/syslog.jrn","/etc/systemd/journal/ または /usr/lib/systemd/journal/"],"a":"C","acc":["C"],"e":"揮発的な場合は /run/log/journal/、永続化されている場合は /var/log/journal/。","w":["存在しないパス","存在しないパス","","存在しない","存在しない"]},{"n":84,"c":9,"t":"m","q":"次の環境変数のうち、locale.conf で定義できるものはどれですか?(2つ選択してください。)","o":["LC_ALL","LC_USERNAME","LC_UTF8","LC_GEOGRAPHY","LC_TIME"],"a":"AE","acc":["AE"],"w":["","存在しないLC_変数","存在しない","存在しない",""]},{"n":111,"c":9,"t":"s","q":"ファイル /etc/localtime について正しいのは何ですか?","o":["Europe/Berlin のような文字列を含むプレーンテキストファイルです。","システムの IP アドレスの場所に基づいて NTP サービスによって作成および維持されます。","これは /sys/device/clock/ltime へのシンボリックリンクであり、常に現在のローカル時刻が含まれます。","このファイルを変更した後、変更を有効にするには newtzconfig を実行する必要があります。","/usr/share/zoneinfo/Europe/Berlin などのタイムゾーン情報ファイルへのシンボリックリンクまたはそのコピーです。"],"a":"E","acc":["E"],"w":["文字列を書くのは/etc/timezone（別ファイル）","NTPは作成しない","そのようなリンクではない","newtzconfigは不要",""]},{"n":7,"c":11,"t":"m","q":"次のコマンドのうち、eth0 ネットワークインターフェイスを介して送受信されたバイト数を表示するものはどれですか(2つ選択してください)。","o":["route -v via eth0","ip stats show dev eth0","netstat -s -i eth0","ifconfig eth0","ip -s link show eth0"],"a":"DE","acc":["DE"],"w":["routeは経路表示","ip statsという書式はない","-sと-iの併用は統計種別が異なる","",""]},{"n":73,"c":7,"t":"s","q":"echo $? コマンドではどのような情報が表示されますか?","o":["echo コマンドのプロセス ID。","echo の直前に実行されたコマンドの終了値。","次のコマンドに使用されるプロセス ID。","echo コマンドの終了値。","現在のシェルのプロセス ID。"],"a":"B","acc":["B"],"w":["PIDは$$や$!","","次のコマンドのPIDという変数はない","直前のコマンドの値（echo自身ではない）","シェルのPIDは$$"]},{"n":36,"c":10,"t":"x","q":"空欄を埋めてください。\nハードウェアクロックをシステムクロックに同期するために使用されるコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"hwclock","e":"hwclock --systohc でシステムクロックをハードウェアクロックに書き込む。"},{"n":5,"c":9,"t":"s","q":"ユーザーのパスワードの最終変更のデータが含まれているファイルはどれですか?","o":["/etc/gshadow","/etc/passwd","/etc/pwdlog","/var/log/shadow","/etc/shadow"],"a":"E","acc":["E"],"e":"/etc/shadow 第3フィールドが最終変更日。","w":["gshadowはグループ用","passwdに日付情報はない","存在しない","存在しない",""]},{"n":68,"c":9,"t":"s","q":"通常ユーザーの UID がグループの GID と同一である場合、次の記述のうち正しいものはどれですか。","o":["UID は GID よりも優先されるため、ユーザーは使用できますが、グループは使用できなくなります。","ID の競合による曖昧さを避けるため、ユーザーとグループは利用できません。","UID と GID は互いに独立しているため、ユーザーとグループは引き続き利用可能です。","グループ構成に他のメンバーが含まれている場合でも、ユーザーはグループの唯一のメンバーです。","GID は UID よりも優先されるため、ユーザーは利用できませんがグループは利用できます。"],"a":"C","acc":["C"],"w":["優先関係はない（別空間）","競合しない","","メンバー構成は変わらない","優先関係はない"]},{"n":8,"c":8,"t":"s","q":"X11 設定ファイル xorg.conf はセクションにグループ化されています。セクション SectionName の内容はどのように表現されますか?","o":["Section SectionName {...} のように中括弧で囲みます。","<SectionName> と </SectionName> のようなタグの間に配置されます。","Section \"SectionName\" を含む行と EndSection を含む行の間に配置されます。","[SectionName] 行の後に配置されます。","これは、最初のインデントされていないセクション「SectionName」の後に配置され、正確に1つのタブ文字でインデントする必要があります。"],"a":"C","acc":["C"],"e":"選択肢BはOCRで崩れていたため文意を補って修正。","w":["中括弧は使わない","XMLタグ形式ではない","","INI形式の[ ]ではない","インデント規則はない"]},{"n":60,"c":9,"t":"s","q":"次の情報のうち、各ユーザーの /etc/shadow に保存されるのはどれですか。","o":["ユーザーの最終ログインのタイムスタンプ","ユーザーの秘密 SSH キー","ユーザーのハッシュ化されたパスワード","数値ユーザー ID(UID)","ユーザーのホームディレクトリへのパス"],"a":"C","acc":["C"],"e":"UID とホームディレクトリは /etc/passwd に保存される。","w":["最終ログインはwtmp/lastlog","SSH鍵は~/.ssh/","","UIDは/etc/passwd","ホームは/etc/passwd"]},{"n":24,"c":10,"t":"m","q":"date コマンドで実行できるタスクは次のどれですか?(2つ選択してください。)","o":["システムの日付と時刻を設定します。","システムの日付を設定しますが、時刻は設定しません。","2つの日付間の時間範囲を計算します。","1か月または1年のカレンダーを印刷します。","特定の形式で時間を表示します。"],"a":"AE","acc":["AE"],"w":["","日付だけ・時刻だけという区別はない","期間計算の機能はない","カレンダーはcalコマンド",""]},{"n":38,"c":7,"t":"m","q":"スクリプトの最初の行にある #! で始まるステートメントに関して正しいのは何ですか?(2つ選択してください。)","o":["! が削除されるまでスクリプトが実行されないようにします。","スクリプトのインタープリターのインストールをトリガーします。","スクリプトを実行するために使用されるインタープリターのパスと引数を指定します。","スクリプトの文字エンコーディングを定義します。","スクリプトインタープリタによって無視されるコメントです。"],"a":"CE","acc":["CE"],"e":"【解答を修正】シバン(#!)はカーネルが解釈するインタープリターのパスと引数の指定(C)であり、インタープリター自身からは # で始まるコメントとして無視される(E)。B(インストールをトリガー)は誤り。","w":["実行を止める機能はない","インタープリターの導入はされない","","文字エンコーディングとは無関係",""]},{"n":112,"c":11,"t":"s","q":"IPv4 サブネット 192.168.2.128/26 内の一意のホストに使用できる IP アドレスの数はいくつですか?","o":["6","14","30","62","126"],"a":"D","acc":["D"],"e":"/26 = 64 アドレス - ネットワーク/ブロードキャストの2 = 62。","w":["/29相当","/28相当","/27相当","","/25相当"]},{"n":91,"c":9,"t":"s","q":"次のコマンドのうち、システムのタイムゾーンをカナダ東部時間に設定するものはどれですか?","o":["localegen -t -f /usr/share/zoneinfo/Canada/Eastern > /etc/locate.tz","tzconf /etc/localtime","sysctl -w clock.tz='Canada/Eastern'","modprobe tz_ca_est","ln -s /usr/share/zoneinfo/Canada/Eastern /etc/localtime"],"a":"E","acc":["E"],"e":"選択肢EはOCRで欠落していたため補完(/etc/localtime をゾーン情報ファイルへのシンボリックリンクにする)。","w":["localegenはロケール生成","tzconfは存在しない","sysctlでは設定できない","カーネルモジュールではない",""]},{"n":113,"c":11,"t":"m","q":"ip コマンドの使用の結果として、次のどの変更が発生する可能性がありますか?(3つ選択してください。)","o":["ネットワークインターフェイスがアクティブまたは非アクティブになる場合があります。","リゾルバ構成に新しいネームサーバーが追加される場合があります。","システムのホスト名が変更される場合があります。","IP アドレスは変更される可能性があります。","ルーティングテーブルが変更される場合があります。"],"a":"ADE","acc":["ADE"],"e":"ip コマンドは DNS リゾルバ設定やホスト名は扱わない。","w":["","ネームサーバーはresolv.confの編集","ホスト名はhostnamectl","",""]},{"n":82,"c":11,"t":"m","q":"/etc/resolv.conf ファイルで使用できるキーワードは次のうちどれですか?(2つ選択してください。)","o":["substitute","lookup","search","nameserver","method"],"a":"CD","acc":["CD"],"w":["存在しないキーワード","存在しない","","","存在しない"]},{"n":10,"c":10,"t":"m","q":"次のコマンドのうち、印刷キュー内のジョブのリストを表示するものはどれですか?(2つ選択してください。)","o":["cups --list","lprm -l","lpstat","lpr -q","lpq"],"a":"CE","acc":["CE"],"w":["cups --listは存在しない","lprmはジョブの削除用","","lprは投入用（-qに表示機能はない）",""]},{"n":96,"c":8,"t":"x","q":"空欄を埋めてください。\nX11 クライアントが接続先の X サーバーを決定するために使用する環境変数はどれですか?(先行するコマンドや値なしで変数名のみを指定します。)","o":[],"ax":"DISPLAY","axa":["display","$display"]},{"n":98,"c":12,"t":"s","q":"SSH ホストキーの目的は何ですか?","o":["クライアントのホストを識別するために、SSH クライアントはユーザーキーに加えてこれを送信する必要があります。","すべてのユーザー SSH キーに署名する必要があるルートキーです。","接続する SSH クライアントにサーバーの ID 情報を提供します。","キーのホストからリモートマシンにログインするすべてのユーザーを認証します。","cron、syslog、バックアップジョブなどのシステムサービスによって、リモートホストに自動的に接続するために使用されます。"],"a":"C","acc":["C"],"w":["クライアントの識別ではない","ルートキーという仕組みはない","","ユーザー認証はユーザー鍵の役割","それはユーザー鍵の用途"]},{"n":13,"c":12,"t":"m","q":"次のような sudo 設定の抜粋があるとします:\njane ANY=NOPASSWD: /bin/kill, /bin/id, PASSWD: /sbin/fdisk\n次の文のうち正しいものはどれですか?(3つ選択してください。)","o":["ジェーンはパスワードを指定した後でのみ /bin/id を実行できます。","ジェーンは、root のパスワードを指定した後、/sbin/fdisk を実行できます。","ジェーンはパスワードを指定した後、/sbin/fdisk を実行できます。","ジェーンはパスワードを指定せずに /bin/kill を実行できます。","ジェーンはパスワードを指定せずに /bin/id を実行できます。"],"a":"CDE","acc":["CDE"],"e":"sudo で入力するのは自分(jane)のパスワードであり root のパスワードではない。","w":["idはNOPASSWD指定なのでパスワード不要","求められるのは自分のパスワード（rootではない）","","",""]},{"n":45,"c":10,"t":"m","q":"次のどれが syslog 機能(ファシリティ)ですか?(2つ選択してください。)","o":["local5","accounting","mail","postmaster","remote"],"a":"AC","acc":["AC"],"w":["","存在しないファシリティ","","存在しない","存在しない"]},{"n":80,"c":11,"t":"s","q":"IPv6 ヘッダーのホップリミットフィールドに関して正しいのは何ですか?","o":["パッケージの輸送中はフィールドは変更されません。","フィールドはホップバイホップ拡張ヘッダー内で送信されます。","パケットを転送する各ルータは、フィールドの値を増加させます。","パケットを転送する各ルータは、フィールドの値を減らします。","マルチキャストパッケージの場合、フィールドの値は常に 1 になります。"],"a":"D","acc":["D"],"e":"IPv4 の TTL に相当。","w":["ルータ通過ごとに変更される","基本ヘッダーのフィールド","減算される（増加ではない）","","そのような規則はない"]},{"n":32,"c":12,"t":"x","q":"空欄を埋めてください。\nssh コマンドのどのパラメータが、ログイン試行に使用される秘密鍵の場所を指定しますか?(値やパラメータを指定せずにオプション名のみを指定します。)","o":[],"ax":"-i","axa":["i"],"e":"【解答を修正】ssh の秘密鍵(identity file)指定オプションは -i。ssh-keygen は鍵を生成するコマンドであり、本問の答えではない。"},{"n":71,"c":11,"t":"m","q":"ディストリビューションのメカニズムを使用してネットワークインターフェイスを構成する Linux システム上の NetworkManager について正しいのは次のうちどれですか?(2つ選択してください。)","o":["NetworkManager は、NetworkManager によって明示的に管理されない限り、すべてのネットワークインターフェイスを DHCP を使用するように再構成します。","NetworkManager は、管理するインターフェースごとに明示的に有効にする必要があります。","NetworkManager は、デフォルトでは、すでに設定されているインターフェースを変更しません。","NetworkManager は、NetworkManager によって設定されていないすべてのインターフェースを無効にします。","NetworkManager は、ディストリビューションのネットワークインターフェイス構成を使用するように構成できます。"],"a":"CE","acc":["CE"],"e":"【解答を修正】NetworkManager は既にディストリビューション設定で構成済みのインターフェイスをデフォルトでは変更せず(C)、ifupdown プラグイン等によりディストリビューションの構成を利用するよう設定できる(E)。B(インターフェースごとに明示的に有効化が必要)は誤り。","w":["全インターフェースをDHCP化はしない","明示的な有効化は不要（デフォルトで管理）","","未管理のIFを無効化はしない",""]},{"n":118,"c":9,"t":"s","q":"国際化プログラムのメッセージの言語をポルトガル語(pt)に変更するには、ログインシェルを起動するときに次のコマンドのどれを実行する必要がありますか?","o":["export LANGUAGE=\"pt\"","export LC_MESSAGES=\"pt\"","export UI_MESSAGES=\"pt\"","export MESSAGE=\"pt\"","export ALL_MESSAGES=\"pt\""],"a":"B","acc":["B"],"w":["LANGUAGEはgettext固有の優先リスト（標準はLC_MESSAGES）","","存在しない変数","存在しない","存在しない"]},{"n":22,"c":12,"t":"s","q":"SSH を使用してリモートマシンにログインするときに自動認証に使用される既存の SSH キーをプリロードして管理するコマンドはどれですか。","o":["sshd","ssh-keyring","ssh-keygen","ssh-pki","ssh-agent"],"a":"E","acc":["E"],"e":"問題文の「注文マシン」はOCR誤りで「リモートマシン」に修正。鍵の追加は ssh-add、鍵を保持・管理するのは ssh-agent。","w":["sshdはサーバーデーモン","存在しない","ssh-keygenは鍵の生成用","存在しない",""]},{"n":20,"c":11,"t":"m","q":"次の IPv4 ネットワークのうち、プライベートアドレスの割り当てとプライベートルーティング用に IANA によって予約されているのはどれですか(3つ選択してください)。","o":["10.0.0.0/8","127.0.0.0/8","169.255.0.0/16","172.16.0.0/12","192.168.0.0/16"],"a":"ADE","acc":["ADE"],"e":"127/8 はループバック、リンクローカルは 169.254.0.0/16(選択肢Cは 169.255 で誤り)。","w":["","127/8はループバック","リンクローカルは169.254/16（169.255ではない）","",""]},{"n":64,"c":11,"t":"m","q":"次のコマンドのうち、システムの既存のディストリビューション固有の構成ファイルに基づいてネットワークインターフェイスを構成するものはどれですか。(2つ選択してください。)","o":["ifconf","ifdown","ifpause","ifstart","ifup"],"a":"BE","acc":["BE"],"w":["存在しないコマンド","","存在しない","存在しない",""]},{"n":61,"c":8,"t":"s","q":"複数の X サーバーを実行しているマシンでは、プログラムはどのようにして X11 サーバーの異なるインスタンスを識別するのでしょうか?","o":["X11 構成ファイルで定義された固定 UUID によって。","次のような表示名で: :1","X サーバーを実行するユーザーの名前(例: x11:bob)。","/dev/X11/xservers/1 のようなデバイス名で。","fe80::/64 サブネットからの一意の IPv6 アドレスによって。"],"a":"B","acc":["B"],"e":"DISPLAY=:0、:1 などのディスプレイ番号で識別する。","w":["UUIDでは識別しない","","ユーザー名では識別しない","デバイス名ではない","IPv6アドレスではない"]},{"n":94,"c":10,"t":"x","q":"空白を入力してください。\nnewaliases によって処理されるファイルはどれですか?(パスを含むファイルの完全な名前を指定します。)","o":[],"ax":"/etc/aliases","axa":["aliases"],"e":"【解答を修正】newaliases が処理するエイリアスファイルの標準的な場所は /etc/aliases(LPI の想定解答)。/etc/mail/aliases は一部環境でのシンボリックリンク/別配置。"},{"n":117,"c":12,"t":"s","q":"ssh は SSH エージェントと対話するためにどのメカニズムを使用しますか?","o":["システム全体の SSH エージェントによって使用されるポート 2222 に接続します。","固定ソケット .ssh-agent/ipc を使用します。","ssh を ssh-agent の呼び出しに置き換えてエイリアスを作成します。","各 ssh 呼び出しに対して ssh-agent を子プロセスとして起動します。","SSH_AUTH_SOCK などの環境変数を評価します。"],"a":"E","acc":["E"],"w":["固定ポートは使わない","固定ソケットパスではない","エイリアスは作らない","都度起動はしない",""]},{"n":11,"c":10,"t":"s","q":"NTP クライアントによって観察され修正される状況は次のどれですか?","o":["システムクロックとコンピューターのハードウェアクロック間の時間のずれ。","物理的な場所とタイムゾーンの構成。","現在のコンピュータの場所のタイムゾーンの変更。","夏時間に対応するための調整が必要です。","システムクロックと基準クロック間の時間のずれ。"],"a":"E","acc":["E"],"w":["HWクロックとの同期はhwclockの役割","位置・TZは扱わない","TZ変更は検知しない","夏時間はタイムゾーン設定側の話",""]},{"n":92,"c":11,"t":"s","q":"IPv6 について正しいのは次のうちどれですか?","o":["IPv6 ではブロードキャストアドレスはサポートされなくなりました。","IPv6 では、ほとんどのサービスの TCP ポート番号が変更されました。","IPv4 アドレスは IPv6 でも変更なく使用できます。","IPv6 はマルチキャストアドレスをサポートしなくなりました。","IPv6 では、UDP と TCP が Rapid Transmission Protocol RTP に置き換えられました。"],"a":"A","acc":["A"],"e":"IPv6 はブロードキャストを廃止し、マルチキャストで代替する。","w":["","ポート番号は変わらない","IPv4アドレスをそのままは使えない","マルチキャストは存在する（代替手段）","そのような置き換えはない"]},{"n":37,"c":10,"t":"x","q":"空欄を埋めてください。\n/etc/ntp.conf ファイルのどのオプションが、時間情報を照会する外部 NTP ソースを指定しますか?(値やパラメータを指定せずにオプション名のみを指定します。)","o":[],"ax":"server"},{"n":75,"c":10,"t":"s","q":"sendmail コマンドに関して正しいのは次のうちどれですか?","o":["どの MTA でも、sendmail コマンドは cron デーモンによって定期的に実行する必要があります。","systemd を使用する場合、sendmail は relayctl のエイリアスになります。","sendmail コマンドは、どのメールが正常に送信されたかを示す MTA のキュー履歴を出力します。","sendmail は MTA がインストールされている場合にのみ使用できます。","Postfix や Exim を含むすべての一般的な MTA は、sendmail コマンドを提供します。"],"a":"E","acc":["E"],"w":["cronでの定期実行は不要","relayctlのエイリアスではない","キュー表示はmailq","互換コマンドとして各MTAが提供する",""]},{"n":25,"c":11,"t":"m","q":"NetworkManager は、システムのネットワーク接続に関して次のどの状態を表示できますか?(2つ選択してください。)","o":["up","portal","full","login-required","firewalled"],"a":"BC","acc":["BC"],"e":"接続性状態: none / portal / limited / full / unknown。","w":["upは接続状態の値ではない","","","login-requiredという値はない（portalが相当）","firewalledという値はない"]},{"n":33,"c":9,"t":"x","q":"空白を埋めてください。\nuseradd のどのオプションが新しいユーザーのホームディレクトリを作成し、一連の標準ファイルをプロビジョニングしますか?(値やパラメータを指定せずにオプション名のみを指定します。)","o":[],"ax":"-m","axa":["--create-home","-m, --create-home","m"],"e":"【解答を修正】ホームディレクトリを作成し /etc/skel の標準ファイルを配置するのは -m(--create-home)。-D はデフォルト値の表示/変更。"},{"n":85,"c":11,"t":"s","q":"ping コマンドはデフォルトでどのように機能しますか?","o":["ICMP エコー要求をリモートホストに送信し、ICMP エコー応答の受信を待機します。","リモートホストに ARP 要求を送信し、ARP 応答の受信を待機します。","TCP SYN パケットをリモートホストに送信し、TCP ACK 応答の受信を待機します。","ブロードキャストパケットをネット上のすべてのホストに送信し、ターゲットシステムからの応答などを受信するまで待機します。","リモートホストのポート 0 に UDP パケットを送信し、UDP エラー応答の受信を待機します。"],"a":"A","acc":["A"],"w":["","ARPを使うのはarping","TCPは使わない","ブロードキャストではなく宛先へ直接","UDPは使わない"]},{"n":30,"c":7,"t":"s","q":"コマンド seq 10 はどのような出力を生成しますか?","o":["コマンドが停止されるまで、10 ずつ増加する数字の連続ストリーム。","2番目のパラメータが欠落しているため、出力は作成されません。","0 から 9 までの数字を1行に1つずつ入力します。","標準出力に数字 10 を出力します。","1行につき1つ、1 から 10 までの数字が1つずつ表示されます。"],"a":"E","acc":["E"],"w":["無限ストリームにはならない","引数1つは終値の指定","1から始まる（0からではない）","10だけの出力ではない",""]},{"n":63,"c":10,"t":"m","q":"journalctl で出力の時間枠を制限するために使用されるパラメータは次のどれですか(2つ選択してください)。","o":["--since=","--from=","--until=","--upto=","--date="],"a":"AC","acc":["AC"],"w":["","存在しないオプション","","存在しない","存在しない"]},{"n":39,"c":12,"t":"x","q":"空白を埋めてください。\nxinetd サービスの設定ファイルはどのディレクトリに保存されますか?(ディレクトリへのフルパスを指定します。)","o":[],"ax":"/etc/xinetd.d/","axa":["/etc/xinetd.d","xinetd.d"]},{"n":12,"c":8,"t":"s","q":"スクリーンリーダーの目的は何ですか?","o":["タッチスクリーンディスプレイ上の仮想キーボードを管理します。","接続されているモニターのパラメータを読み取り、適切な X11 構成を作成します。","速読テクニックの使用を支援するために線とマーカーを表示します。","電子書籍を含むファイルを管理および表示します。","視覚障害者のニーズに対応するために、表示されたテキストを読み上げます。"],"a":"E","acc":["E"],"w":["仮想キーボードは別機能","X設定の生成とは無関係","速読支援ではない","電子書籍管理ではない",""]},{"n":58,"c":7,"t":"s","q":"ユーザーのホームディレクトリにあるファイル .profile について正しいのは何ですか?","o":["実行可能である必要があります。","ログインシェルのバイナリを呼び出す必要があります。","有効なシェルスクリプト構文を使用する必要があります。","それはシェバンで始まらなければなりません。","所有者のみが読み取り可能でなければなりません。"],"a":"C","acc":["C"],"e":"source されるため実行権限もシバンも不要だが、構文は正しい必要がある。","w":["実行可能属性は不要（読み込まれて実行される）","シェル本体の呼び出しは不要","","シバンは不要","読み取り制限の要件はない"]},{"n":35,"c":12,"t":"s","q":"ユーザーが対話型ログインセッションを取得できないようにする手順はどれですか。","o":["ユーザーの UID を 0 に設定します。","ユーザー名を指定して chsh -s /bin/false コマンドを実行します。","グループスタッフからユーザーを削除します。","ユーザーを /etc/noaccess に追加します。","ユーザーのホームディレクトリに .nologin ファイルを作成します。"],"a":"B","acc":["B"],"e":"ログインシェルを /bin/false(または /sbin/nologin)にする。","w":["UID 0はroot化で逆効果","","グループ削除では防げない","/etc/noaccessは存在しない","ホームの.nologinという仕組みはない（/etc/nologinはシステム全体）"]},{"n":59,"c":12,"t":"s","q":"ユーザーが使用できるメモリの量を制限するために使用できるコマンドはどれですか?","o":["umask","usermod","passwd","ulimit","chage"],"a":"D","acc":["D"],"w":["umaskは新規ファイルの権限マスク","usermodはアカウント属性の変更","passwdはパスワード管理","","chageはパスワード期限"]},{"n":115,"c":9,"t":"x","q":"空白を埋めてください。\n存在する場合、cron スケジュールシステムの使用を許可されているすべてのユーザーを含める必要があるファイルはどれですか?(パスを含むファイルの完全な名前を指定します。)","o":[],"ax":"/etc/cron.allow","axa":["cron.allow"],"e":"【解答を修正】cron の使用を許可するユーザーを列挙するファイルは /etc/cron.allow。「crontab」はコマンド名であり、本問(ファイルのフルパスを問う)の答えとして誤り。"},{"n":109,"c":7,"t":"s","q":"次のコマンドのうち、すべての環境変数とシェル変数を表示するものはどれですか?","o":["getargs","lsenv","ls","env","lsshell"],"a":"D","acc":["D"],"e":"厳密にはシェル変数まで表示するのは set だが、選択肢中では env が想定解答。","w":["存在しない","存在しない","lsはファイル一覧","","存在しない"]},{"n":14,"c":7,"t":"m","q":"次のテストの比較演算子のうち、ファイルシステム内の要素に作用するものはどれですか?(2つ選択してください。)","o":["-z","-eq","-d","-f","-lt"],"a":"CD","acc":["CD"],"e":"-d はディレクトリ、-f は通常ファイルの判定。","w":["-zは文字列長ゼロ判定","-eqは整数比較","","","-ltは整数比較"]},{"n":66,"c":7,"t":"s","q":"次のコマンドシーケンスによってどのような出力が生成されますか?\necho '1 2 3 4 5 6' | while read a b c; do\necho result $c $b $a;\ndone","o":["result: 6 5 4","result: 1 2 3 4 5 6","result: 3 4 5 6 2 1","result: 6 5 4 3 2 1","result: 3 2 1"],"a":"C","acc":["C"],"e":"read a b c は a=1、b=2、c=「3 4 5 6」(残り全部)となる。原文の「while read abc」は「while read a b c」に修正。","w":["readは前から割り当てる（a=1,b=2,c=残り）","cには3以降がまとめて入る","","逆順にはならない","cは「3 4 5 6」"]},{"n":4,"c":9,"t":"m","q":"/etc/group ファイルには、次のどのフィールドが含まれていますか?(2つ選択してください。)","o":["グループのホームディレクトリ。","グループに属するユーザーのリスト。","グループの名前。","デフォルトのグループ ACL。","グループの説明。"],"a":"BC","acc":["BC"],"e":"フィールド: グループ名:パスワード:GID:メンバーリスト。","w":["ホームディレクトリは/etc/passwd","","","ACLは含まれない","説明フィールドはない（passwdのGECOSに相当）"]}],[{"n":109,"c":7,"t":"s","q":"次のコマンドのうち、すべての環境変数とシェル変数を表示するものはどれですか?","o":["getargs","lsenv","ls","env","lsshell"],"a":"D","acc":["D"],"e":"厳密にはシェル変数まで表示するのは set だが、選択肢中では env が想定解答。","w":["存在しない","存在しない","lsはファイル一覧","","存在しない"]},{"n":47,"c":10,"t":"s","q":"次のプロトコルのうち、オープンリレーという用語に関連するものはどれですか?","o":["SMTP","POP3","NTP","IMAP","LDAP"],"a":"A","acc":["A"],"w":["","POP3は受信プロトコル","NTPは時刻同期","IMAPは受信プロトコル","LDAPはディレクトリサービス"]},{"n":67,"c":9,"t":"s","q":"次のコマンドのうち、すべてのアクティブな systemd タイマーを表示するものはどれですか?","o":["systemd-timer show","timectl list","systemctl -t(原文判読困難)","systemctl list-timers","timeq"],"a":"D","acc":["D"],"e":"選択肢CはOCRで判読不能のため推定表記。","w":["存在しない","存在しない","そのようなオプションではない","","存在しない"]},{"n":35,"c":12,"t":"s","q":"ユーザーが対話型ログインセッションを取得できないようにする手順はどれですか。","o":["ユーザーの UID を 0 に設定します。","ユーザー名を指定して chsh -s /bin/false コマンドを実行します。","グループスタッフからユーザーを削除します。","ユーザーを /etc/noaccess に追加します。","ユーザーのホームディレクトリに .nologin ファイルを作成します。"],"a":"B","acc":["B"],"e":"ログインシェルを /bin/false(または /sbin/nologin)にする。","w":["UID 0はroot化で逆効果","","グループ削除では防げない","/etc/noaccessは存在しない","ホームの.nologinという仕組みはない（/etc/nologinはシステム全体）"]},{"n":112,"c":11,"t":"s","q":"IPv4 サブネット 192.168.2.128/26 内の一意のホストに使用できる IP アドレスの数はいくつですか?","o":["6","14","30","62","126"],"a":"D","acc":["D"],"e":"/26 = 64 アドレス - ネットワーク/ブロードキャストの2 = 62。","w":["/29相当","/28相当","/27相当","","/25相当"]},{"n":108,"c":7,"t":"s","q":"エイリアス ls が存在する場合、次のコマンドのうちどれがエイリアスの現在のターゲットではなくコマンド ls -l を指すようにエイリアスを更新しますか?","o":["set ls='ls -l'","alias ls='ls -l'","alias --force ls='ls -l'","alias --update ls ls='ls -l'","realias ls='ls -l'"],"a":"B","acc":["B"],"e":"alias は同名で再定義すれば上書きされる。","w":["setは変数の設定","","--forceオプションはない","--updateオプションはない","realiasは存在しない"]},{"n":18,"c":8,"t":"m","q":"SPICE によって提供される機能は次のどれですか?(2つ選択してください。)","o":["ローカル USB デバイスをリモートアプリケーションに接続します。","リモートホスト上のグラフィカルアプリケーションにアクセスする。","ローカル X11 サーバーとして Xorg を置き換える。","リモートマシンからアプリケーションをダウンロードしてローカルにインストールする。","リモートマシンにバイナリプログラムをアップロードして実行する。"],"a":"AB","acc":["AB"],"w":["","","Xorgの置き換えではない","アプリのダウンロードはしない","バイナリ転送の仕組みではない"]},{"n":26,"c":10,"t":"x","q":"空欄を埋めてください。\nsystemd に含まれるどのコマンドが、時間やユニット名などの基準で systemd ジャーナルからメッセージを選択することをサポートしていますか?(パスやパラメータを指定せずにコマンドのみを指定してください。)","o":[],"ax":"journalctl"},{"n":113,"c":11,"t":"m","q":"ip コマンドの使用の結果として、次のどの変更が発生する可能性がありますか?(3つ選択してください。)","o":["ネットワークインターフェイスがアクティブまたは非アクティブになる場合があります。","リゾルバ構成に新しいネームサーバーが追加される場合があります。","システムのホスト名が変更される場合があります。","IP アドレスは変更される可能性があります。","ルーティングテーブルが変更される場合があります。"],"a":"ADE","acc":["ADE"],"e":"ip コマンドは DNS リゾルバ設定やホスト名は扱わない。","w":["","ネームサーバーはresolv.confの編集","ホスト名はhostnamectl","",""]},{"n":101,"c":11,"t":"s","q":"次のどれが有効な IPv6 アドレスですか?","o":["2001:db8:0g21::1","2001::db8:4581::1","2001:db8:3241::1","2001%db8%9990%%1","2001.db8.819f..1"],"a":"C","acc":["C"],"e":"A は16進数でない g を含み、B は :: が2回出現するため無効。","w":["gは16進数として無効","::は1アドレスに1回まで","","%区切りは無効",".区切りは無効"]},{"n":8,"c":8,"t":"s","q":"X11 設定ファイル xorg.conf はセクションにグループ化されています。セクション SectionName の内容はどのように表現されますか?","o":["Section SectionName {...} のように中括弧で囲みます。","<SectionName> と </SectionName> のようなタグの間に配置されます。","Section \"SectionName\" を含む行と EndSection を含む行の間に配置されます。","[SectionName] 行の後に配置されます。","これは、最初のインデントされていないセクション「SectionName」の後に配置され、正確に1つのタブ文字でインデントする必要があります。"],"a":"C","acc":["C"],"e":"選択肢BはOCRで崩れていたため文意を補って修正。","w":["中括弧は使わない","XMLタグ形式ではない","","INI形式の[ ]ではない","インデント規則はない"]},{"n":100,"c":10,"t":"s","q":"初期同期を高速化するために、NTP サーバーへのポーリングの初期間隔を変更する chrony 構成ファイルのどのオプションですか?","o":["iburst","quickstart","fast","fsync","flood"],"a":"A","acc":["A"],"w":["","存在しないオプション","存在しない","存在しない","存在しない"]},{"n":90,"c":11,"t":"s","q":"HTTPS サービスで使用される標準化された TCP ポートはどれですか?","o":["25","80","8080","443","636"],"a":"D","acc":["D"],"e":"25=SMTP、80=HTTP、636=LDAPS。","w":["25=SMTP","80=HTTP","8080=代替HTTP","","636=LDAPS"]},{"n":21,"c":12,"t":"s","q":"システムの構成に応じて、このホストで実行されているネットワークサービスを有効または無効にするために使用できるのは次のファイルのどれですか。","o":["/etc/profile","/etc/xinetd.conf","/etc/ports","/etc/services","/etc/host.conf"],"a":"B","acc":["B"],"e":"/etc/services はポート番号の名前対応表であり、サービスの有効/無効は制御しない。","w":["profileはシェルの設定","","存在しない","servicesはポート番号の対応表","host.confは名前解決の設定"]},{"n":69,"c":9,"t":"s","q":"/etc/passwd のパスワードフィールドにあるどの文字が、暗号化されたパスワードが /etc/shadow に保存されていることを示すために使用されますか?","o":["*","-","s","#","x"],"a":"E","acc":["E"],"w":["*はロック/無効の慣用表記","-にその意味はない","sにその意味はない","#にその意味はない",""]},{"n":75,"c":10,"t":"s","q":"sendmail コマンドに関して正しいのは次のうちどれですか?","o":["どの MTA でも、sendmail コマンドは cron デーモンによって定期的に実行する必要があります。","systemd を使用する場合、sendmail は relayctl のエイリアスになります。","sendmail コマンドは、どのメールが正常に送信されたかを示す MTA のキュー履歴を出力します。","sendmail は MTA がインストールされている場合にのみ使用できます。","Postfix や Exim を含むすべての一般的な MTA は、sendmail コマンドを提供します。"],"a":"E","acc":["E"],"w":["cronでの定期実行は不要","relayctlのエイリアスではない","キュー表示はmailq","互換コマンドとして各MTAが提供する",""]},{"n":29,"c":10,"t":"m","q":"systemd-journald を使用するシステムでは、次のコマンドのどれがシステムログに Howdy メッセージを追加しますか?(2つ選択してください。)","o":["append Howdy","logger Howdy","systemd-cat echo Howdy","echo Howdy > /dev/journal","journalctl add Howdy"],"a":"BC","acc":["BC"],"e":"【解答を修正】2つ選択の設問。logger と systemd-cat の両方が正解(原本はBのみ)。","w":["appendというコマンドはない","","","/dev/journalは存在しない","journalctl addは存在しない"]},{"n":30,"c":7,"t":"s","q":"コマンド seq 10 はどのような出力を生成しますか?","o":["コマンドが停止されるまで、10 ずつ増加する数字の連続ストリーム。","2番目のパラメータが欠落しているため、出力は作成されません。","0 から 9 までの数字を1行に1つずつ入力します。","標準出力に数字 10 を出力します。","1行につき1つ、1 から 10 までの数字が1つずつ表示されます。"],"a":"E","acc":["E"],"w":["無限ストリームにはならない","引数1つは終値の指定","1から始まる（0からではない）","10だけの出力ではない",""]},{"n":12,"c":8,"t":"s","q":"スクリーンリーダーの目的は何ですか?","o":["タッチスクリーンディスプレイ上の仮想キーボードを管理します。","接続されているモニターのパラメータを読み取り、適切な X11 構成を作成します。","速読テクニックの使用を支援するために線とマーカーを表示します。","電子書籍を含むファイルを管理および表示します。","視覚障害者のニーズに対応するために、表示されたテキストを読み上げます。"],"a":"E","acc":["E"],"w":["仮想キーボードは別機能","X設定の生成とは無関係","速読支援ではない","電子書籍管理ではない",""]},{"n":86,"c":12,"t":"s","q":"特定のホストにサービスへのアクセスを許可するように TCP ラッパー構成を編集した後、これらの変更はいつ有効になりますか?","o":["新しい構成は、それぞれのサービスを再起動した後に有効になります。","新しい構成は、次回のシステム再起動時に有効になります。","サービスへの最後に確立された接続が閉じられたときに、新しい構成が有効になります。","新しい設定は、tcpd サービスを再起動した後に有効になります。","新しい構成は、すべての新しい接続に対して直ちに有効になります。"],"a":"E","acc":["E"],"e":"hosts.allow / hosts.deny は接続ごとに評価される。","w":["サービス再起動は不要（毎接続で読み直す）","再起動は不要","接続の終了を待たない","tcpdは常駐サービスではない",""]},{"n":87,"c":9,"t":"s","q":"iconv コマンドの目的は何ですか?","o":["ビットマップ画像を、PNG から JPEG など、ある形式から別の形式に変換します。","ルートディレクトリツリーが、Filesystem Hierarchy Standard(FHS)のすべての規則に準拠していることを確認します。","ファイルをある文字セットから別の文字セットに変換します。","ext4 ファイルシステム内の inode のモードを変更します。"],"a":"C","acc":["C"],"w":["画像変換はImageMagick等","FHS検査の機能はない","","inode操作の機能はない"]},{"n":7,"c":11,"t":"m","q":"次のコマンドのうち、eth0 ネットワークインターフェイスを介して送受信されたバイト数を表示するものはどれですか(2つ選択してください)。","o":["route -v via eth0","ip stats show dev eth0","netstat -s -i eth0","ifconfig eth0","ip -s link show eth0"],"a":"DE","acc":["DE"],"w":["routeは経路表示","ip statsという書式はない","-sと-iの併用は統計種別が異なる","",""]},{"n":72,"c":11,"t":"m","q":"システムの IP ルーティングテーブルからデフォルトゲートウェイを削除するコマンドはどれですか(2つ選択してください)。","o":["ifconfig unset default","route del default","ip route del default","netstat -r default","sysctl ipv4.default_gw=0"],"a":"BC","acc":["BC"],"w":["ifconfigに経路の操作機能はない","","","netstatは表示のみ","sysctlにそのようなキーはない"]},{"n":111,"c":9,"t":"s","q":"ファイル /etc/localtime について正しいのは何ですか?","o":["Europe/Berlin のような文字列を含むプレーンテキストファイルです。","システムの IP アドレスの場所に基づいて NTP サービスによって作成および維持されます。","これは /sys/device/clock/ltime へのシンボリックリンクであり、常に現在のローカル時刻が含まれます。","このファイルを変更した後、変更を有効にするには newtzconfig を実行する必要があります。","/usr/share/zoneinfo/Europe/Berlin などのタイムゾーン情報ファイルへのシンボリックリンクまたはそのコピーです。"],"a":"E","acc":["E"],"w":["文字列を書くのは/etc/timezone（別ファイル）","NTPは作成しない","そのようなリンクではない","newtzconfigは不要",""]},{"n":105,"c":10,"t":"s","q":"/etc/syslog.conf の次のエントリのうち、すべてのメール関連イベントをファイル /var/log/maillog に書き込み、すべての重要(crit)イベントをリモートサーバー logger.example.com に送信するものはどれですか。","o":["mail.* /var/log/maillog mail,crit @logger.example.org","mail.* /var/log/maillog mail.crit syslog://logger.example.org","mail /var/log/maillog mail.crit @logger.example.org","mail.* /var/log/maillog mail.crit @logger.example.org","mail * /var/log/maillog mail crit @logger.example.org"],"a":"D","acc":["D"],"e":"facility.priority の書式と、リモート転送の @ホスト名 記法。","w":["mail,critという区切りは無効","syslog://という記法は無効","セレクタはファシリティ.プライオリティの形式が必要","","区切り記法が無効"]},{"n":78,"c":12,"t":"s","q":"プログラムがクラッシュしたときにユーザー用に作成されるコアファイルのサイズに制限を設定するために使用されるコマンドはどれですか。","o":["core","edquota","quota","ulimit","ktrace"],"a":"D","acc":["D"],"e":"ulimit -c でコアファイルサイズを制限。","w":["coreというコマンドはない","edquotaはディスククォータ","quotaはディスク使用量","","ktraceはBSD系のツール"]},{"n":95,"c":9,"t":"m","q":"useradd で指定できるものは何ですか?(2つ選択してください。)","o":["ユーザーが sudo を使用して実行できるコマンド。","ユーザーのホームディレクトリへの絶対パス。","新しいユーザーが利用できるプリンター。","新しいアカウントにログインするために使用される SSH キー。","ユーザーの数値ユーザー ID(UID)。"],"a":"BE","acc":["BE"],"e":"-d でホームディレクトリ、-u で UID を指定。","w":["sudoの権限は/etc/sudoersで設定","","プリンターは無関係","SSH鍵は指定できない",""]},{"n":55,"c":9,"t":"m","q":"次のフィールドのうち、グローバル /etc/crontab ファイルとユーザー固有の crontab ファイルの両方の標準形式で使用できるのはどれですか?(2つ選択してください。)","o":["年","分","ユーザー名","有効なグループ ID","コマンド"],"a":"BE","acc":["BE"],"e":"ユーザー名フィールドは /etc/crontab のみに存在する。","w":["年フィールドはない","","ユーザー名は/etc/crontab側のみ","グループIDフィールドはない",""]},{"n":40,"c":11,"t":"x","q":"空欄を埋めてください。\nNetworkManager に含まれるどのコマンドが、コマンドラインで NetworkManager に簡単にアクセスできるようにする curses アプリケーションですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"nmtui"},{"n":46,"c":7,"t":"s","q":"echo $$ コマンドによって提供される情報は何ですか?","o":["現在のシェルのプロセス ID。","次のコマンドのプロセス ID。","最後に実行されたコマンドのプロセス ID。","バックグラウンドに置かれた最後のコマンドのプロセス ID。","echo コマンドのプロセス ID。"],"a":"A","acc":["A"],"e":"$! はバックグラウンドの最後のプロセス、$? は直前の終了ステータス。","w":["","次のコマンドのPIDという変数はない","直前コマンドは$?（終了値）","直前のバックグラウンドは$!","echo自身のPIDではない"]},{"n":54,"c":12,"t":"s","q":"TCP ラッパーの目的は何ですか?","o":["TCP サービスで使用される帯域幅を管理および調整します。","ネットワークサービスを TCP ポートにバインドします。","TCP メッセージを IP パケットにカプセル化します。","プレーンテキスト TCP サービスに SSL サポートを追加します。","ネットワークサービスへのアクセスを制限します。"],"a":"E","acc":["E"],"e":"/etc/hosts.allow と /etc/hosts.deny によるアクセス制御。","w":["帯域制御の機能はない","バインドはサービス自身が行う","カプセル化はTCP/IPスタックの仕事","SSL付加はstunnel等",""]},{"n":51,"c":7,"t":"s","q":"次のファイルのうち、Bash ログインシェルによって直接読み取られないのはどれですか?","o":["~/.bashrc","~/.bash_profile","~/.bash_login","~/.profile","/etc/profile"],"a":"A","acc":["A"],"e":"~/.bashrc は対話型「非ログイン」シェルが読む(ログインシェルからは ~/.bash_profile 等から間接的に読み込まれるのが一般的)。","w":["","ログインシェルが読む","ログインシェルが読む","ログインシェルが読む","ログインシェルが読む"]},{"n":1,"c":9,"t":"s","q":"/etc/ に cron.allow も cron.deny も存在しない場合、次のどれが正しいですか?","o":["追加の構成なしで、すべてのユーザーがユーザー固有の crontab を作成できます。","追加の構成がない場合、root のみがユーザー固有の crontab を作成できます。","cron デーモンは起動を拒否し、システムのログファイルに不足しているファイルを報告します。","ユーザーがユーザー固有の crontab を作成する場合、システム管理者はそれを明示的に承認する必要があります。","/etc/crond.conf のデフォルト設定は、ユーザー固有の crontab が一般的に許可されるかどうかを定義します。"],"a":"B","acc":["B"],"e":"実装依存: cronie(RHEL系)では root のみ(B)、Debian系 Vixie cron では全ユーザー可(A)。試験ではBが想定解答とされることが多い。","w":["設定なしで全許可にはならない","","デーモンは正常に起動する","承認フローは存在しない","crond.confというファイルはない"]},{"n":2,"c":9,"t":"s","q":"次のユーザーの crontab エントリがあるとします:\n15 14 * * 1-5 /usr/local/bin/example.sh\nスクリプト /usr/local/bin/example.sh はいつ実行されますか?","o":["現地時間14時15分、1月から5月まで。","現地時間1日から5日までの15時14分。","現地時間14時15分、2月から6月まで。","毎月1日から5日までの現地時間14時15分。","現地時間14時15分、月曜日から金曜日"],"a":"E","acc":["E"],"e":"フィールド順: 分 時 日 月 曜日。1-5 は曜日(月〜金)。","w":["5番目のフィールドは曜日","3番目が日・5番目が曜日","4番目が月（*なので毎月）","3番目（日）は*なので毎日ではなく曜日指定が効く",""]},{"n":88,"c":9,"t":"s","q":"次の getent 呼び出しのうち、既存のユーザーをすべて一覧表示するものはどれですか?","o":["getent homes","getent uids","getent passwd","getent users","getent logins"],"a":"C","acc":["C"],"w":["存在しないDB名","存在しない","","存在しない","存在しない"]},{"n":92,"c":11,"t":"s","q":"IPv6 について正しいのは次のうちどれですか?","o":["IPv6 ではブロードキャストアドレスはサポートされなくなりました。","IPv6 では、ほとんどのサービスの TCP ポート番号が変更されました。","IPv4 アドレスは IPv6 でも変更なく使用できます。","IPv6 はマルチキャストアドレスをサポートしなくなりました。","IPv6 では、UDP と TCP が Rapid Transmission Protocol RTP に置き換えられました。"],"a":"A","acc":["A"],"e":"IPv6 はブロードキャストを廃止し、マルチキャストで代替する。","w":["","ポート番号は変わらない","IPv4アドレスをそのままは使えない","マルチキャストは存在する（代替手段）","そのような置き換えはない"]},{"n":24,"c":10,"t":"m","q":"date コマンドで実行できるタスクは次のどれですか?(2つ選択してください。)","o":["システムの日付と時刻を設定します。","システムの日付を設定しますが、時刻は設定しません。","2つの日付間の時間範囲を計算します。","1か月または1年のカレンダーを印刷します。","特定の形式で時間を表示します。"],"a":"AE","acc":["AE"],"w":["","日付だけ・時刻だけという区別はない","期間計算の機能はない","カレンダーはcalコマンド",""]},{"n":114,"c":8,"t":"m","q":"次のタスクのうち、XDM や KDM などのディスプレイマネージャーによって処理されるのはどれですか(2つ選択してください)。","o":["新しいモニターやプロジェクターなどの追加デバイスが接続されたときに構成します。","ユーザーのデスクトップ環境を起動して準備します。","現在のグラフィックデバイスとモニターの X11 構成ファイルを作成します。","ユーザーが設定可能な時間非アクティブになったときに画面をロックします。","ユーザーのログインを処理します。"],"a":"BE","acc":["BE"],"w":["デバイス検出・設定はしない","","設定ファイル生成はXorg -configure","画面ロックはセッション側の機能",""]},{"n":39,"c":12,"t":"x","q":"空白を埋めてください。\nxinetd サービスの設定ファイルはどのディレクトリに保存されますか?(ディレクトリへのフルパスを指定します。)","o":[],"ax":"/etc/xinetd.d/","axa":["/etc/xinetd.d","xinetd.d"]},{"n":89,"c":9,"t":"s","q":"systemd タイマーユニットには次のどのセクションが存在しますか?","o":["[Events]","[Timer]","[cron]","[Schedule]","[Trigger]"],"a":"B","acc":["B"],"w":["存在しないセクション","","存在しない","存在しない","存在しない"]},{"n":73,"c":7,"t":"s","q":"echo $? コマンドではどのような情報が表示されますか?","o":["echo コマンドのプロセス ID。","echo の直前に実行されたコマンドの終了値。","次のコマンドに使用されるプロセス ID。","echo コマンドの終了値。","現在のシェルのプロセス ID。"],"a":"B","acc":["B"],"w":["PIDは$$や$!","","次のコマンドのPIDという変数はない","直前のコマンドの値（echo自身ではない）","シェルのPIDは$$"]},{"n":93,"c":12,"t":"s","q":"次のコマンドのうち、SetUID ビットが設定されている、ルートが所有するすべてのファイルを検索するものはどれですか。","o":["find / -user root -perm -4000","find / -user 0 -mode +s","find / -owner root -setuid","find / -owner 0 -permbits 0x100000000","find / --filter uid=1 --filter pers=u+s"],"a":"A","acc":["A"],"w":["","-modeというオプションはない","-owner/-setuidは存在しない","-permbitsは存在しない","--filterは存在しない"]},{"n":42,"c":10,"t":"s","q":"次のコマンドのうち、キューに入れられたすべての印刷ジョブを一覧表示するものはどれですか?","o":["lpd","lpr","lp","lsq","lpq"],"a":"E","acc":["E"],"w":["lpdは印刷デーモン","lprはジョブの投入","lpもジョブの投入（SysV系）","存在しないコマンド",""]},{"n":44,"c":12,"t":"m","q":"公開 SSH キーと秘密 SSH キーに関して正しいのはどれですか?(2つ選択してください。)","o":["各ユーザーアカウントには、そのアカウントにログインするために使用できるキーペアが1つだけあります。","秘密鍵は誰にも明かしてはいけません。","同じ秘密鍵に対して複数の異なる公開鍵が生成される場合があります。","秘密鍵の機密性を維持するために、SSH キーペアはその所有者によって作成される必要があります。","リモートログインを許可するには、ユーザーの秘密鍵をリモートサーバーにコピーする必要があります。"],"a":"BD","acc":["BD"],"e":"リモートサーバーにコピーするのは公開鍵(E は誤り)。","w":["鍵ペアは複数登録できる","","公開鍵は秘密鍵から一意に決まる","","サーバーに置くのは公開鍵"]},{"n":116,"c":11,"t":"x","q":"空欄補充。\n以前は非アクティブだったネットワークインターフェイス eth0 をアクティブにするためのコマンド\nip link set ____ dev eth0 に欠けているパラメータはどれですか?(コマンド、パス、または追加オプションを指定せずにパラメータのみを指定します。)","o":[],"ax":"up"},{"n":3,"c":7,"t":"s","q":"次のコマンドのうち、コマンド date の出力をシェル変数 mydate に格納するものはどれですか?","o":["mydate=\"date\"","mydate=\"exec date\"","mydate=\"$((date))\"","mydate=\"$(date)\"","mydate=\"${date}\""],"a":"D","acc":["D"],"e":"$( ) がコマンド置換。$(( )) は算術展開。","w":["文字列\"date\"が入るだけ","execは置換しない","$(( ))は算術展開","","${date}は変数dateの参照"]},{"n":64,"c":11,"t":"m","q":"次のコマンドのうち、システムの既存のディストリビューション固有の構成ファイルに基づいてネットワークインターフェイスを構成するものはどれですか。(2つ選択してください。)","o":["ifconf","ifdown","ifpause","ifstart","ifup"],"a":"BE","acc":["BE"],"w":["存在しないコマンド","","存在しない","存在しない",""]},{"n":10,"c":10,"t":"m","q":"次のコマンドのうち、印刷キュー内のジョブのリストを表示するものはどれですか?(2つ選択してください。)","o":["cups --list","lprm -l","lpstat","lpr -q","lpq"],"a":"CE","acc":["CE"],"w":["cups --listは存在しない","lprmはジョブの削除用","","lprは投入用（-qに表示機能はない）",""]},{"n":48,"c":10,"t":"x","q":"空白を記入してください。\nCUPS の設定ファイルが含まれている最上位ディレクトリは何ですか?(ディレクトリへのフルパスを指定してください。)","o":[],"ax":"/etc/cups/","axa":["/etc/cups","cups"],"e":"【解答を修正】設問は「ディレクトリ」を問うており、正解は /etc/cups/。原本の「cups-files.conf」はファイル名であり不要(OCRで別解答と混在した可能性)。"},{"n":34,"c":11,"t":"x","q":"空欄補充。\n/etc/network/interfaces や /etc/sysconfig/network-scripts/ifcfg-eth0 などのディストリビューション固有の設定に従ってネットワークインターフェイスを有効にするコマンドは何ですか?(パスやパラメータを指定せずにコマンドのみを指定してください。)","o":[],"ax":"ifup","e":"【解答を修正】ディストリビューションの設定ファイルに基づいてインターフェイスを有効化するコマンドは ifup(「up」はコマンドではない)。"}]];
+const CH={7:"シェルとシェルスクリプト",8:"ユーザーインターフェースとデスクトップ",9:"管理タスク",10:"必須システムサービス",11:"ネットワークの基礎",12:"セキュリティ"};
+const KEYS="ABCDE";
+const DURATION=50*60; // sec
+const PASS=65;
+
+/* ---- storage ---- */
+let canStore=true; try{localStorage.setItem("__t","1");localStorage.removeItem("__t");}catch(e){canStore=false;}
+function lget(k,d){ if(!canStore)return d; try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;} }
+function lset(k,v){ if(!canStore)return; try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
+let NAME=lget("lpicExam102Name","")||"";
+let HIST=lget("lpicExam102Hist",{}); // {round: [ {name,score,ok,total,ts,pass}... ]}
+
+/* ---- views ---- */
+const V={home:vHome,brief:vBrief,exam:vExam,submit:vSubmit,result:vResult,study:vStudy,history:vHistory};
+let cur="home";
+function show(v){ for(const k in V)V[k].classList.toggle("hidden",k!==v); cur=v; window.scrollTo(0,0); }
+
+/* ---- helpers ---- */
+function esc(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function fmt(sec){const m=Math.floor(sec/60),s=sec%60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
+function normAns(t){t=String(t||"").normalize("NFKC").trim().toLowerCase();t=t.replace(/\s+/g," ").replace(/^['"`]+|['"`]+$/g,"");if(t.length>1)t=t.replace(/\/+$/,"");return t;}
+function toast(m){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t);}t.textContent=m;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(()=>t.style.display="none",2400);}
+
+/* ---- home ---- */
+nameInput.value=NAME;
+nameInput.addEventListener("input",()=>{ NAME=nameInput.value.trim(); lset("lpicExam102Name",NAME);
+  nameSaved.classList.toggle("hidden",!NAME); });
+function renderHome(){
+  nameInput.value=NAME;
+  roundGrid.innerHTML="";
+  EXAMS.forEach((qs,i)=>{
+    const r=i+1; const h=(HIST[r]||[]);
+    const best=h.length?Math.max(...h.map(x=>x.score)):null;
+    const nx=qs.filter(q=>q.t==="x").length, nm=qs.filter(q=>q.t==="m").length;
+    const card=document.createElement("button"); card.className="round";
+    card.innerHTML=`<span class="rnum"><small>Round</small>${r}</span>
+      <span class="rmeta">50問 / 50分 · 記述${nx}・複数選択${nm}</span>
+      <span class="rbest">${best==null?'<span class="none">未受験</span>':`最高 <span class="${best>=PASS?'pass':'fail'}">${best}%</span> · ${h.length}回受験`}</span>
+      <span class="go">この回を受験 →</span>`;
+    card.onclick=()=>openBrief(i);
+    roundGrid.appendChild(card);
+  });
+  const total=EXAMS.reduce((a,q)=>a+q.length,0);
+  footInfo.textContent=`模試102（LPIC_b）全118問 · 6回×50問=${total}スロット（回をまたぐ重複あり／各回は重複なし）`;
+}
+histBtn.onclick=()=>{renderHistory();show("history");};
+histBack.onclick=()=>{renderHome();show("home");};
+resetBtn.onclick=()=>{ if(confirm("すべての受験履歴を削除します。よろしいですか？")){HIST={};lset("lpicExam102Hist",HIST);renderHome();toast("履歴を削除しました");}};
+
+/* ---- session ---- */
+let S=null, timer=null;
+function openBrief(idx){
+  S={idx:idx,round:idx+1};
+  briefTitle.textContent=`第${S.round}回 模擬試験`;
+  briefBarMeta.textContent=`第${S.round}回 / 全6回`;
+  const h=HIST[S.round]||[]; const best=h.length?Math.max(...h.map(x=>x.score))+"%":"—";
+  briefRetake.textContent=best;
+  briefNameWarn.classList.toggle("hidden",!!NAME);
+  briefBody.classList.remove("hidden"); countBody.classList.add("hidden");
+  show("brief");
+}
+briefBack.onclick=()=>{renderHome();show("home");};
+startBtn.onclick=()=>{
+  if(!NAME){ toast("先に氏名を入力してください"); briefNameWarn.classList.remove("hidden"); return; }
+  briefBody.classList.add("hidden"); countBody.classList.remove("hidden");
+  countWho.textContent=NAME+" さん";
+  let n=5; countNum.textContent=n; countNum.classList.remove("go");
+  const ci=setInterval(()=>{
+    n--;
+    if(n>0){countNum.textContent=n;}
+    else if(n===0){countNum.textContent="START";countNum.classList.add("go");}
+    else{clearInterval(ci);beginExam();}
+  },1000);
+};
+
+function beginExam(){
+  const qs=EXAMS[S.idx].map(q=>({...q}));
+  S.qs=qs; S.pos=0;
+  S.answers=qs.map(()=>({sel:new Set(),text:""}));
+  S.flags=qs.map(()=>false);
+  S.remain=DURATION; S.startedAt=new Date();
+  show("exam"); renderQ(); startTimer();
+}
+function startTimer(){
+  stopTimer();
+  timer=setInterval(()=>{
+    S.remain--;
+    updateClock();
+    if(S.remain<=0){ stopTimer(); toast("時間切れです。採点します"); doSubmit(true); }
+  },1000);
+  updateClock();
+}
+function stopTimer(){ if(timer){clearInterval(timer);timer=null;} }
+function updateClock(){
+  const t=fmt(Math.max(0,S.remain));
+  [exClock,subClock].forEach(el=>{ el.textContent=t;
+    el.className="t"+(S.remain<=60?" crit":S.remain<=300?" warn":""); });
+  const pct=(1-S.remain/DURATION)*100;
+  exPbar.style.width=pct+"%"; subPbar.style.width=pct+"%";
+}
+
+/* ---- render question ---- */
+function renderQ(){
+  const i=S.pos, q=S.qs[i], ans=S.answers[i];
+  exRound.textContent=`第${S.round}回`;
+  exQn.textContent=`問 ${i+1} / ${S.qs.length}`;
+  const typeTag=q.t==="m"?'<span class="tag multi">複数選択</span>':q.t==="x"?'<span class="tag text">記述式</span>':'<span class="tag">単一選択</span>';
+  const flagOn=S.flags[i];
+  let h=`<div class="qhd"><span class="idx">Q${i+1}</span>${typeTag}
+     <span class="tag">第${q.c}章</span>
+     <button class="flag${flagOn?' on':''}" id="flagBtn">${flagOn?'★ フラグ中':'☆ フラグ'}</button></div>
+    <div class="qbody"><div class="qtext">${esc(q.q)}</div>`;
+  if(q.t==="x"){
+    h+=`<div class="qhint">コマンド名・パスなどを入力してください</div>
+      <input class="txtin" id="txtIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="答えを入力" value="${esc(ans.text)}">`;
+  }else{
+    const multi=q.t==="m";
+    if(multi){const need=q.a.length; h+=`<div class="qhint">${need}つ選択してください</div>`;}
+    h+='<div class="opts">'+q.o.map((o,k)=>{
+      const L=KEYS[k], seld=ans.sel.has(L);
+      return `<button class="opt ${multi?'multi':'single'}${seld?' sel':''}" data-k="${L}"><span class="box">${seld?(multi?'✓':L):L}</span><span>${esc(o)}</span></button>`;
+    }).join("")+'</div>';
+  }
+  h+='</div>';
+  qCard.innerHTML=h;
+  document.getElementById("flagBtn").onclick=()=>{ S.flags[i]=!S.flags[i]; renderQ(); renderPalette(); };
+  if(q.t==="x"){
+    const inp=document.getElementById("txtIn");
+    inp.oninput=()=>{ ans.text=inp.value; renderPalette(); };
+    inp.onkeydown=e=>{ if(e.key==="Enter"){e.preventDefault(); go(1);} };
+  }else{
+    const multi=q.t==="m";
+    qCard.querySelectorAll(".opt").forEach(b=>{
+      b.onclick=()=>{
+        const L=b.dataset.k;
+        if(multi){ ans.sel.has(L)?ans.sel.delete(L):ans.sel.add(L); }
+        else{ ans.sel=new Set([L]); }
+        renderQ(); renderPalette();
+        if(!multi){ setTimeout(()=>go(1),180); }
+      };
+    });
+  }
+  prevBtn.disabled=(i===0); prevBtn.style.opacity=i===0?.4:1;
+  nextBtn.textContent=(i===S.qs.length-1)?"見直しへ →":"次へ →";
+  navMid.textContent=`回答済み ${answeredCount()} / ${S.qs.length}`;
+  renderPalette();
+}
+function answered(i){ const q=S.qs[i],a=S.answers[i]; return q.t==="x"? a.text.trim()!=="" : a.sel.size>0; }
+function answeredCount(){ let n=0; for(let i=0;i<S.qs.length;i++) if(answered(i))n++; return n; }
+function renderPalette(){
+  pGrid.innerHTML="";
+  S.qs.forEach((q,i)=>{
+    const c=document.createElement("button"); c.className="pcell";
+    if(answered(i))c.classList.add("answered");
+    if(S.flags[i])c.classList.add("flagged");
+    if(i===S.pos)c.classList.add("current");
+    c.textContent=i+1; c.onclick=()=>{S.pos=i;renderQ();};
+    pGrid.appendChild(c);
+  });
+}
+function go(d){ const n=S.pos+d;
+  if(n<0)return;
+  if(n>=S.qs.length){ openSubmit(); return; }
+  S.pos=n; renderQ();
+}
+prevBtn.onclick=()=>go(-1);
+nextBtn.onclick=()=>go(1);
+toReviewBtn.onclick=()=>openSubmit();
+
+/* ---- submit review ---- */
+function openSubmit(){
+  subRound.textContent=`第${S.round}回`;
+  const un=[],fl=[];
+  S.qs.forEach((q,i)=>{ if(!answered(i))un.push(i); if(S.flags[i])fl.push(i); });
+  subAnswered.textContent=answeredCount();
+  subUnanswered.textContent=un.length;
+  subFlagged.textContent=fl.length;
+  const mk=(arr,cls)=>arr.length?arr.map(i=>`<button class="${cls}" data-i="${i}">問${i+1}</button>`).join(""):'<span style="color:var(--faint);font-size:.85rem">なし</span>';
+  subUnansweredList.innerHTML=mk(un,"unanswered");
+  subFlaggedList.innerHTML=mk(fl,"flagged");
+  subUnansweredWrap.style.display=un.length?"":"none";
+  document.querySelectorAll("#subUnansweredList button,#subFlaggedList button").forEach(b=>{
+    b.onclick=()=>{ S.pos=+b.dataset.i; show("exam"); renderQ(); };
+  });
+  show("submit");
+}
+backToExamBtn.onclick=()=>{ show("exam"); renderQ(); };
+submitBtn.onclick=()=>{
+  const un=S.qs.filter((q,i)=>!answered(i)).length;
+  if(un>0 && !confirm(`未回答が${un}問あります。このまま採点しますか？`))return;
+  doSubmit(false);
+};
+
+/* ---- grading ---- */
+function isCorrect(q,ans){
+  if(q.t==="x"){ const cands=[q.ax].concat(q.axa||[]).map(normAns); return cands.includes(normAns(ans.text)); }
+  if(q.t==="m"){ return [...ans.sel].sort().join("")===q.a; }
+  return q.acc.includes([...ans.sel][0]);
+}
+function doSubmit(timeUp){
+  stopTimer();
+  const detail=S.qs.map((q,i)=>({q,ans:S.answers[i],ok:isCorrect(q,S.answers[i]),flag:S.flags[i]}));
+  const ok=detail.filter(d=>d.ok).length;
+  const score=Math.round(ok/S.qs.length*100);
+  const pass=score>=PASS;
+  // 章別
+  const bych={};
+  detail.forEach(d=>{ const c=d.q.c; (bych[c]=bych[c]||{ok:0,t:0}).t++; if(d.ok)bych[c].ok++; });
+  const rec={ name:NAME||"（無記名）", round:S.round, score, ok, total:S.qs.length, pass,
+    ts:new Date().toISOString(), timeUp, durationUsed:DURATION-Math.max(0,S.remain), bych };
+  // 履歴保存（各回10件）
+  HIST[S.round]=HIST[S.round]||[];
+  HIST[S.round].unshift({name:rec.name,score,ok,total:rec.total,ts:rec.ts,pass});
+  HIST[S.round]=HIST[S.round].slice(0,10);
+  lset("lpicExam102Hist",HIST);
+  S.detail=detail; S.result=rec;
+  renderResult();
+}
+
+function renderResult(){
+  const r=S.result;
+  resBarMeta.textContent=`第${r.round}回 結果`;
+  resBand.className="band "+(r.pass?"pass":"fail");
+  resVerdict.textContent=r.pass?"合格ライン到達":"合格ライン未満";
+  resScore.textContent=r.score+"%";
+  resSub.textContent=`${r.ok} / ${r.total} 問正解（合格ライン目安 ${PASS}%）`;
+  const used=r.durationUsed, um=Math.floor(used/60), us=used%60;
+  resMeta.innerHTML=`<span>受験者: <b>${esc(r.name)}</b></span><span>第 <b>${r.round}</b> 回</span>
+    <span>所要時間: <b>${um}分${us}秒</b>${r.timeUp?"（時間切れ）":""}</span>
+    <span>受験日時: <b>${new Date(r.ts).toLocaleString("ja-JP")}</b></span>`;
+  // 章別
+  resChapters.innerHTML=Object.keys(r.bych).map(Number).sort((a,b)=>a-b).map(c=>{
+    const v=r.bych[c],p=Math.round(v.ok/v.t*100);
+    const col=p>=PASS?"var(--ok)":p>=40?"var(--flag)":"var(--ng)";
+    return `<div class="chrow"><span class="cn">第${c}章 ${CH[c]}</span>
+      <span class="cbar"><span style="width:${p}%;background:${col}"></span></span>
+      <span class="cv">${v.ok}/${v.t}</span></div>`;
+  }).join("");
+  renderReviewList("all");
+  show("result");
+}
+document.querySelectorAll("#vResult .rev-filter button").forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll("#vResult .rev-filter button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); renderReviewList(b.dataset.filter); };
+});
+function renderReviewList(filter){
+  let items=S.detail.map((d,i)=>({...d,i}));
+  if(filter==="wrong")items=items.filter(d=>!d.ok);
+  if(filter==="flag")items=items.filter(d=>d.flag);
+  if(!items.length){ resReview.innerHTML='<div class="empty">該当する問題はありません</div>'; return; }
+  resReview.innerHTML=items.map(d=>revHtml(d,d.i)).join("");
+  resReview.querySelectorAll(".rev .rvhd").forEach(h=>{ h.onclick=()=>h.parentElement.classList.toggle("open"); });
+}
+function revHtml(d,i){
+  const q=d.q, ans=d.ans;
+  let inner="";
+  if(q.t==="x"){
+    const your=ans.text.trim()||"（未回答）";
+    inner=`<div class="yourans">あなたの回答: <span class="${d.ok?'ok':'ng'}">${esc(your)}</span></div>
+      <div class="ro correct"><span class="k">正解</span><span>${esc(q.ax)}${q.axa&&q.axa.length?`　（別解: ${q.axa.map(esc).join(" / ")}）`:""}</span></div>`;
+  }else{
+    const correct=q.t==="m"?new Set(q.a.split("")):new Set(q.acc);
+    inner='<div>'+q.o.map((o,k)=>{
+      const L=KEYS[k], isC=correct.has(L), chosen=ans.sel.has(L);
+      let cls=""; if(isC)cls="correct"; else if(chosen)cls="chosen-wrong";
+      const why=q.w&&q.w[k];
+      return `<div class="ro ${cls}"><span class="k">${L}${chosen?" ●":""}</span><span>${esc(o)}${why?`<div class="why">${esc(why)}</div>`:""}</span></div>`;
+    }).join("")+'</div>';
+  }
+  if(q.e)inner+=`<div class="expl">${esc(q.e)}</div>`;
+  return `<div class="rev"><div class="rvhd"><span class="mk ${d.ok?'ok':'ng'}">${d.ok?'○':'×'}</span>
+    <span class="qx">Q${i+1}. ${esc(q.q.split("\\n")[0]).slice(0,72)}</span>
+    <span class="ch">第${q.c}章</span></div><div class="rvbody">${inner}</div></div>`;
+}
+
+/* ---- download PDF score report ---- */
+function chapterRows(r){
+  return Object.keys(r.bych).map(Number).sort((a,b)=>a-b).map(c=>{
+    const v=r.bych[c],p=Math.round(v.ok/v.t*100);
+    const col=p>=PASS?"#1B7A4B":p>=40?"#B8860B":"#C0392B";
+    return `<tr><td class="cn">第${c}章　${CH[c]}</td>
+      <td class="cbarcell"><div class="cbar"><span style="width:${p}%;background:${col}"></span></div></td>
+      <td class="cvv">${v.ok} / ${v.t}</td><td class="cpp" style="color:${col}">${p}%</td></tr>`;
+  }).join("");
+}
+function questionRows(){
+  return S.detail.map((d,i)=>{
+    let your,correct;
+    if(d.q.t==="x"){ your=d.ans.text.trim()||"—"; correct=d.q.ax; }
+    else if(d.q.t==="m"){ your=[...d.ans.sel].sort().join("")||"—"; correct=d.q.a; }
+    else{ your=[...d.ans.sel][0]||"—"; correct=d.q.a; }
+    const typ=d.q.t==="x"?"記述":d.q.t==="m"?"複数":"単一";
+    return `<tr class="${d.ok?'':'wrongrow'}"><td>${i+1}</td><td>第${d.q.c}章</td><td>${typ}</td>
+      <td class="mono">${esc(your)}</td><td class="mono">${esc(correct)}</td>
+      <td class="jc ${d.ok?'okc':'ngc'}">${d.ok?'○':'×'}</td></tr>`;
+  }).join("");
+}
+function buildReportHTML(r){
+  const used=r.durationUsed,um=Math.floor(used/60),us=used%60;
+  const wrong=r.total-r.ok;
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>LPIC102模試 第${r.round}回 スコアレポート ${esc(r.name)}</title>
+<style>
+@page{size:A4;margin:14mm 14mm 16mm}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;color:#182430;font-size:10.5pt;line-height:1.6}
+.mono{font-family:"SFMono-Regular",Menlo,Consolas,monospace}
+.head{border-bottom:3px solid #0B4F6C;padding-bottom:10px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end}
+.head .ttl{font-size:16pt;font-weight:800;color:#0B4F6C}
+.head .ttl small{display:block;font-size:8.5pt;font-weight:700;letter-spacing:.15em;color:#0E6E93}
+.head .brand{font-size:8.5pt;color:#6B7B8B;text-align:right}
+.meta{width:100%;border-collapse:collapse;margin-bottom:14px}
+.meta td{padding:5px 8px;border:1px solid #D5DEE6;font-size:9.5pt}
+.meta td.k{background:#E4EFF4;font-weight:700;color:#0B4F6C;width:22%;white-space:nowrap}
+.scorebox{display:flex;gap:12px;margin-bottom:16px}
+.scorebox .big{flex:1;border:2px solid #0B4F6C;border-radius:8px;padding:12px 16px;text-align:center}
+.scorebox .big .s{font-size:30pt;font-weight:800;line-height:1;color:#0B4F6C}
+.scorebox .big.pass{border-color:#1B7A4B}.scorebox .big.pass .s{color:#1B7A4B}
+.scorebox .big.fail{border-color:#C0392B}.scorebox .big.fail .s{color:#C0392B}
+.scorebox .big .l{font-size:9pt;color:#3E4E5E;margin-top:4px}
+.scorebox .verdict{flex:1;border-radius:8px;padding:12px 16px;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.scorebox .verdict.pass{background:#1B7A4B}.scorebox .verdict.fail{background:#C0392B}
+.scorebox .verdict .v{font-size:15pt;font-weight:800}
+.scorebox .verdict .sub{font-size:8.5pt;opacity:.92;margin-top:2px}
+h2{font-size:11pt;color:#0B4F6C;border-left:4px solid #0E6E93;padding-left:8px;margin:16px 0 8px}
+table.ch{width:100%;border-collapse:collapse}
+table.ch td{padding:5px 6px;font-size:9.5pt;border-bottom:1px solid #E5ECF1;vertical-align:middle}
+table.ch td.cn{width:40%;font-weight:600}
+table.ch td.cbarcell{width:38%}
+table.ch .cbar{height:9px;background:#E5ECF1;border-radius:99px;overflow:hidden}
+table.ch .cbar span{display:block;height:100%;border-radius:99px}
+table.ch td.cvv{width:12%;text-align:right;font-family:monospace}
+table.ch td.cpp{width:10%;text-align:right;font-weight:700;font-family:monospace}
+table.q{width:100%;border-collapse:collapse;font-size:8.5pt;margin-top:4px}
+table.q th{background:#0B4F6C;color:#fff;padding:4px 5px;font-size:8pt;font-weight:700}
+table.q td{padding:3px 5px;border:1px solid #D5DEE6;text-align:center}
+table.q td.mono{font-family:monospace;text-align:left;max-width:130px;word-break:break-all}
+table.q td.jc{font-weight:800}table.q td.okc{color:#1B7A4B}table.q td.ngc{color:#C0392B}
+table.q tr.wrongrow td{background:#FBE6E4}
+.sig{margin-top:22px;display:flex;gap:20px}
+.sig .box{flex:1;border:1px solid #B0BFCB;border-radius:6px;height:52px;position:relative}
+.sig .box .lb{position:absolute;top:4px;left:8px;font-size:8pt;color:#6B7B8B}
+.foot{margin-top:14px;font-size:8pt;color:#9AA8B4;text-align:center;border-top:1px solid #D5DEE6;padding-top:6px}
+.note{font-size:8.5pt;color:#6B7B8B;margin-top:4px}
+@media print{.noprint{display:none}}
+.noprint{position:fixed;top:10px;right:12px;background:#0B4F6C;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:11pt;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+</style></head><body>
+<button class="noprint" onclick="window.print()">PDFとして保存 / 印刷</button>
+<div class="head"><div class="ttl"><small>LPIC-1 EXAM 102 · MOCK TEST</small>102試験 模擬試験 スコアレポート</div>
+  <div class="brand">Hack × The × LPIC<br>発行: ${new Date(r.ts).toLocaleString("ja-JP")}</div></div>
+<table class="meta">
+  <tr><td class="k">受験者氏名</td><td style="font-size:12pt;font-weight:700">${esc(r.name)}</td>
+      <td class="k">受験した回</td><td>第 ${r.round} 回 / 全6回</td></tr>
+  <tr><td class="k">受験日時</td><td>${new Date(r.ts).toLocaleString("ja-JP")}</td>
+      <td class="k">所要時間</td><td>${um}分${us}秒${r.timeUp?"（時間切れ）":""}</td></tr>
+</table>
+<div class="scorebox">
+  <div class="big ${r.pass?'pass':'fail'}"><div class="s">${r.score}%</div><div class="l">${r.ok} / ${r.total} 問正解（誤答 ${wrong}問）</div></div>
+  <div class="verdict ${r.pass?'pass':'fail'}"><div class="v">${r.pass?'合格ライン到達':'合格ライン未満'}</div><div class="sub">合格ライン目安 ${PASS}%</div></div>
+</div>
+<h2>分野別スコア</h2>
+<table class="ch"><tbody>${chapterRows(r)}</tbody></table>
+<div class="note">※本番LPIC-1 102試験の出題分野に準拠した章構成です。40%未満の分野は重点的な復習を推奨します。</div>
+<h2>問題別の正誤</h2>
+<table class="q"><thead><tr><th>No</th><th>章</th><th>形式</th><th>あなたの回答</th><th>正解</th><th>判定</th></tr></thead>
+<tbody>${questionRows()}</tbody></table>
+<div class="sig"><div class="box"><span class="lb">受験者確認</span></div><div class="box"><span class="lb">講師確認</span></div></div>
+<div class="foot">このスコアレポートを講師に提出してください。　Hack × The × LPIC — LPIC-1 102 模擬試験プログラム</div>
+</body></html>`;
+}
+dlBtn.onclick=()=>{
+  const r=S.result;
+  const win=window.open("","_blank");
+  if(!win){ toast("ポップアップがブロックされました。許可してください"); return; }
+  win.document.write(buildReportHTML(r));
+  win.document.close();
+  win.focus();
+  setTimeout(()=>{ try{win.print();}catch(e){} },500);
+  toast("印刷ダイアログから「PDFとして保存」を選んでください");
+};
+
+/* ---- wrong-answer study ---- */
+retryWrongBtn.onclick=()=>{
+  const wrong=S.detail.filter(d=>!d.ok);
+  if(!wrong.length){ toast("全問正解です。復習は不要です"); return; }
+  studyTitle.textContent=`第${S.round}回 間違えた問題の復習`;
+  studyLead.textContent=`${wrong.length}問を間違えました。正解と解説を確認しましょう。`;
+  studyBody.innerHTML=wrong.map(d=>{
+    const q=d.q, i=S.detail.indexOf(d);
+    let inner="";
+    if(q.t==="x"){
+      inner=`<div class="yourans">あなたの回答: <span class="ng">${esc(d.ans.text.trim()||"未回答")}</span></div>
+        <div class="ro correct"><span class="k">正解</span><span>${esc(q.ax)}${q.axa&&q.axa.length?`　（別解: ${q.axa.map(esc).join(" / ")}）`:""}</span></div>`;
+    }else{
+      const correct=q.t==="m"?new Set(q.a.split("")):new Set(q.acc);
+      inner=q.o.map((o,k)=>{const L=KEYS[k],isC=correct.has(L),chosen=d.ans.sel.has(L);
+        let cls=isC?"correct":(chosen?"chosen-wrong":"");const why=q.w&&q.w[k];
+        return `<div class="ro ${cls}"><span class="k">${L}${chosen?" ●":""}</span><span>${esc(o)}${why?`<div class="why">${esc(why)}</div>`:""}</span></div>`;
+      }).join("");
+    }
+    if(q.e)inner+=`<div class="expl">${esc(q.e)}</div>`;
+    return `<div class="rev open"><div class="rvhd"><span class="mk ng">×</span><span class="qx">Q${i+1}. ${esc(q.q.split("\\n")[0]).slice(0,72)}</span><span class="ch">第${q.c}章</span></div><div class="rvbody">${inner}</div></div>`;
+  }).join("");
+  show("study");
+};
+studyBack.onclick=()=>{ renderResult(); };
+resHomeBtn.onclick=()=>{ renderHome(); show("home"); };
+
+/* ---- history ---- */
+function renderHistory(){
+  let any=false; let html="";
+  for(let r=1;r<=EXAMS.length;r++){
+    const h=HIST[r]||[]; if(!h.length)continue; any=true;
+    html+=`<div class="rsec"><h3>第${r}回（過去${h.length}回）</h3>
+      <table class="htable"><thead><tr><th>#</th><th>氏名</th><th>スコア</th><th>正解数</th><th>判定</th><th>受験日時</th></tr></thead><tbody>`;
+    h.forEach((x,idx)=>{ html+=`<tr><td>${idx+1}</td><td class="name">${esc(x.name)}</td>
+      <td class="${x.pass?'pass':'fail'}">${x.score}%</td><td>${x.ok}/${x.total}</td>
+      <td class="${x.pass?'pass':'fail'}">${x.pass?"合格":"不合格"}</td>
+      <td>${new Date(x.ts).toLocaleString("ja-JP")}</td></tr>`; });
+    html+="</tbody></table></div>";
+  }
+  histBody.innerHTML=any?html:'<div class="empty">まだ受験履歴はありません。</div>';
+}
+
+/* ---- guard: leaving exam ---- */
+window.addEventListener("beforeunload",e=>{ if(cur==="exam"||cur==="submit"){ e.preventDefault(); e.returnValue=""; } });
+
+renderHome();
+</script>
+</body>
+</html>
