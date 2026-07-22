@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LPIC-1 101 模擬試験 — Hack × The × LPIC</title>
+<style>
+:root{
+  --bg:#EEF1F4; --ink:#182430; --ink2:#3E4E5E; --mute:#6B7B8B; --faint:#9AA8B4;
+  --panel:#FFFFFF; --line:#D5DEE6; --line2:#C2CFDA;
+  --brand:#0B4F6C; --brand2:#0E6E93; --brand-soft:#E4EFF4;
+  --accent:#C25A1D; --accent-soft:#F7E8DC;
+  --ok:#1B7A4B; --ok-soft:#E1F1E8; --ok-line:#9BD4B4;
+  --ng:#C0392B; --ng-soft:#FBE6E4; --ng-line:#E8AEA8;
+  --warn:#B8860B; --flag:#D98324; --flag-soft:#FBEEDD;
+  --shadow:0 1px 2px rgba(24,36,48,.06),0 6px 20px rgba(24,36,48,.07);
+  --mono:"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;min-height:100vh}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;font-size:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2.5px solid var(--brand2);outline-offset:2px}
+input{font-family:inherit}
+code,.mono{font-family:var(--mono)}
+.wrap{max-width:920px;margin:0 auto;padding:0 20px 120px}
+.hidden{display:none!important}
+
+/* ===== top bar ===== */
+.bar{position:sticky;top:0;z-index:30;background:var(--brand);color:#fff;box-shadow:var(--shadow)}
+.bar .in{max-width:920px;margin:0 auto;padding:11px 20px;display:flex;align-items:center;gap:14px}
+.bar .brand{font-weight:800;font-size:.95rem;letter-spacing:.02em;display:flex;align-items:center;gap:9px}
+.bar .brand .mk{font-family:var(--mono);background:rgba(255,255,255,.15);border-radius:5px;padding:2px 8px;font-size:.72rem;font-weight:700}
+.bar .spacer{margin-left:auto}
+.bar .exam-meta{font-size:.8rem;opacity:.9;font-variant-numeric:tabular-nums}
+
+/* live exam bar */
+.exambar{position:sticky;top:0;z-index:30;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.exambar .in{max-width:920px;margin:0 auto;padding:9px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.exambar .rd{font-weight:800;font-size:.9rem;color:var(--brand)}
+.exambar .qn{font-size:.82rem;color:var(--mute);font-variant-numeric:tabular-nums}
+.exambar .clock{margin-left:auto;display:flex;align-items:center;gap:9px;font-variant-numeric:tabular-nums}
+.exambar .clock .t{font-family:var(--mono);font-weight:800;font-size:1.15rem;letter-spacing:.02em}
+.exambar .clock .t.warn{color:var(--warn)} .exambar .clock .t.crit{color:var(--ng)}
+.exambar .clock .lb{font-size:.68rem;color:var(--faint);text-transform:uppercase;letter-spacing:.08em}
+.pbar{height:4px;background:var(--line);width:100%}
+.pbar>span{display:block;height:100%;background:var(--brand2);width:0;transition:width .3s}
+
+/* ===== home ===== */
+.home-hd{padding:44px 0 8px}
+.eyebrow{font-family:var(--mono);font-size:.74rem;font-weight:700;letter-spacing:.14em;color:var(--brand2);text-transform:uppercase}
+.home-hd h1{font-family:var(--serif);font-size:2.3rem;font-weight:700;line-height:1.2;margin-top:12px;letter-spacing:.01em}
+.home-hd .lead{color:var(--ink2);font-size:1rem;margin-top:14px;max-width:60ch}
+.namecard{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.namecard label{font-weight:700;font-size:.88rem;color:var(--ink2);white-space:nowrap}
+.namecard input{flex:1;min-width:200px;border:1.5px solid var(--line2);border-radius:9px;padding:11px 14px;font-size:1rem;background:#fff}
+.namecard input:focus{border-color:var(--brand2);outline:none}
+.namecard .saved{font-size:.78rem;color:var(--ok);font-weight:700}
+
+.sec{margin-top:34px}
+.sec-h{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.sec-h h2{font-size:1.12rem;font-weight:800}
+.sec-h .cap{font-size:.8rem;color:var(--mute)}
+.sec-h::after{content:"";flex:1;height:1px;background:var(--line);align-self:center}
+
+.rounds{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:720px){.rounds{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.rounds{grid-template-columns:1fr}}
+.round{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 16px 16px;text-align:left;box-shadow:var(--shadow);transition:transform .1s,border-color .15s;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+.round::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--brand2)}
+.round:hover{transform:translateY(-2px);border-color:var(--brand2)}
+.round .rnum{font-family:var(--serif);font-size:1.9rem;font-weight:700;color:var(--brand);line-height:1}
+.round .rnum small{font-family:var(--sans);font-size:.7rem;font-weight:700;color:var(--faint);letter-spacing:.1em;display:block;text-transform:uppercase;margin-bottom:2px}
+.round .rmeta{font-size:.78rem;color:var(--mute)}
+.round .rbest{margin-top:auto;font-size:.8rem;font-weight:700;color:var(--ink2);font-variant-numeric:tabular-nums;padding-top:8px;border-top:1px dashed var(--line)}
+.round .rbest .none{color:var(--faint);font-weight:400}
+.round .rbest .pass{color:var(--ok)} .round .rbest .fail{color:var(--ng)}
+.round .go{margin-top:4px;display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:.86rem;color:var(--brand2)}
+
+.info{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow);font-size:.9rem;color:var(--ink2)}
+.info b{color:var(--ink)}
+.info ul{margin:8px 0 0 0;padding:0;list-style:none}
+.info li{padding:6px 0 6px 26px;position:relative;border-top:1px solid var(--line)}
+.info li:first-child{border-top:none}
+.info li::before{content:"›";position:absolute;left:8px;color:var(--brand2);font-weight:800}
+
+.histbtn{margin-top:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--line2);border-radius:10px;padding:11px 20px;font-size:.9rem;font-weight:700;background:var(--panel);box-shadow:var(--shadow);transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--brand2)}
+.btn.pri{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.pri:hover{background:var(--brand2)}
+.btn.lg{padding:14px 30px;font-size:1rem}
+.btn.ghost{background:transparent}
+.btn.danger:hover{border-color:var(--ng);color:var(--ng)}
+
+/* ===== brief / countdown ===== */
+.brief{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin-top:24px;overflow:hidden}
+.brief .top{background:var(--brand);color:#fff;padding:22px 26px}
+.brief .top .k{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;opacity:.85;text-transform:uppercase}
+.brief .top h2{font-family:var(--serif);font-size:1.7rem;font-weight:700;margin-top:4px}
+.brief .body{padding:22px 26px}
+.spec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+@media(max-width:620px){.spec-grid{grid-template-columns:1fr 1fr}}
+.spec{background:var(--brand-soft);border-radius:11px;padding:13px 15px;text-align:center}
+.spec .v{font-family:var(--serif);font-size:1.5rem;font-weight:700;color:var(--brand)}
+.spec .l{font-size:.74rem;color:var(--ink2);font-weight:700;margin-top:2px}
+.rules{margin-top:18px;list-style:none}
+.rules li{padding:8px 0 8px 28px;position:relative;font-size:.9rem;color:var(--ink2);border-top:1px solid var(--line)}
+.rules li::before{content:"✓";position:absolute;left:6px;color:var(--ok);font-weight:800}
+.namewarn{margin-top:16px;background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 14px;font-size:.85rem;color:#7a3a12;font-weight:600}
+.brief .actions{padding:18px 26px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line)}
+
+.count{padding:60px 26px;text-align:center}
+.count .lead{font-size:1rem;color:var(--mute);font-weight:700}
+.count .n{font-family:var(--serif);font-size:6rem;font-weight:700;color:var(--brand);line-height:1.1}
+.count .n.go{color:var(--accent)}
+.count .who{margin-top:8px;font-size:.9rem;color:var(--ink2)}
+
+/* ===== question ===== */
+.qwrap{padding-top:24px;display:grid;grid-template-columns:1fr 210px;gap:24px;align-items:start}
+@media(max-width:820px){.qwrap{grid-template-columns:1fr}}
+.qmain{min-width:0}
+.qcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.qcard .qhd{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:#FAFCFD}
+.qcard .qhd .idx{font-family:var(--serif);font-weight:700;font-size:1.15rem;color:var(--brand)}
+.qcard .qhd .tag{font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--brand-soft);color:var(--brand);letter-spacing:.02em}
+.qcard .qhd .tag.multi{background:var(--accent-soft);color:var(--accent)}
+.qcard .qhd .tag.text{background:var(--flag-soft);color:var(--flag)}
+.qcard .qhd .flag{margin-left:auto;font-size:.8rem;font-weight:700;color:var(--mute);display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid var(--line2);border-radius:8px}
+.qcard .qhd .flag.on{background:var(--flag-soft);border-color:var(--flag);color:var(--flag)}
+.qbody{padding:20px}
+.qtext{font-size:1.06rem;font-weight:600;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.qhint{font-size:.82rem;color:var(--accent);font-weight:700;margin-top:8px}
+.opts{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:13px;align-items:flex-start;text-align:left;border:1.5px solid var(--line);border-radius:11px;padding:13px 15px;background:#fff;font-size:.96rem;line-height:1.65;transition:border-color .12s,background .12s;word-break:break-word}
+.opt:hover:not(.locked){border-color:var(--brand2);background:var(--brand-soft)}
+.opt .box{flex-shrink:0;width:24px;height:24px;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:.82rem;color:var(--mute);background:#fff}
+.opt.single .box{border-radius:50%}
+.opt.multi .box{border-radius:6px}
+.opt.sel{border-color:var(--brand2);background:var(--brand-soft)}
+.opt.sel .box{background:var(--brand2);border-color:var(--brand2);color:#fff}
+.opt.locked{cursor:default}
+.txtin{width:100%;border:1.5px solid var(--line2);border-radius:11px;padding:14px 16px;font-size:1.05rem;font-family:var(--mono);margin-top:18px;background:#fff}
+.txtin:focus{border-color:var(--brand2);outline:none}
+.qnav{display:flex;gap:10px;margin-top:20px;align-items:center;flex-wrap:wrap}
+.qnav .btn{min-width:104px}
+.qnav .mid{margin-left:auto;font-size:.8rem;color:var(--mute)}
+
+/* side palette */
+.palette{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px;position:sticky;top:80px}
+@media(max-width:820px){.palette{position:static}}
+.palette h3{font-size:.78rem;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.pgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+@media(max-width:820px){.pgrid{grid-template-columns:repeat(10,1fr)}}
+@media(max-width:480px){.pgrid{grid-template-columns:repeat(8,1fr)}}
+.pcell{aspect-ratio:1;border:1.5px solid var(--line2);border-radius:7px;font-size:.76rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink2);display:flex;align-items:center;justify-content:center;background:#fff;position:relative}
+.pcell:hover{border-color:var(--brand2)}
+.pcell.answered{background:var(--brand);color:#fff;border-color:var(--brand)}
+.pcell.flagged::after{content:"";position:absolute;top:-3px;right:-3px;width:9px;height:9px;background:var(--flag);border-radius:50%;border:1.5px solid #fff}
+.pcell.current{outline:2.5px solid var(--accent);outline-offset:1px}
+.plegend{margin-top:12px;font-size:.72rem;color:var(--mute);display:flex;flex-direction:column;gap:5px}
+.plegend span{display:inline-flex;align-items:center;gap:6px}
+.plegend .sw{width:12px;height:12px;border-radius:4px;border:1.5px solid var(--line2)}
+.plegend .sw.a{background:var(--brand);border-color:var(--brand)}
+.plegend .sw.f{background:#fff;position:relative}
+.plegend .sw.f::after{content:"";position:absolute;top:-2px;right:-2px;width:7px;height:7px;background:var(--flag);border-radius:50%}
+.palette .fin{margin-top:14px}
+.palette .fin .btn{width:100%}
+
+/* ===== review-before-submit ===== */
+.submitcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:24px;margin-top:24px}
+.submitcard h2{font-family:var(--serif);font-size:1.5rem;margin-bottom:6px}
+.sumrow{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}
+.sumstat{flex:1;min-width:130px;background:var(--brand-soft);border-radius:11px;padding:14px 16px;text-align:center}
+.sumstat .v{font-family:var(--serif);font-size:1.7rem;font-weight:700;color:var(--brand)}
+.sumstat .v.warn{color:var(--flag)}
+.sumstat .l{font-size:.76rem;color:var(--ink2);font-weight:700}
+.jumplist{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.jumplist button{border:1.5px solid var(--line2);border-radius:8px;padding:6px 11px;font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums}
+.jumplist button.flagged{border-color:var(--flag);background:var(--flag-soft);color:var(--flag)}
+.jumplist button.unanswered{border-color:var(--ng);background:var(--ng-soft);color:var(--ng)}
+
+/* ===== result ===== */
+.result-hero{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-top:24px}
+.result-hero .band{padding:26px;color:#fff;text-align:center}
+.result-hero .band.pass{background:linear-gradient(120deg,var(--ok),#15633c)}
+.result-hero .band.fail{background:linear-gradient(120deg,#8a2c22,var(--ng))}
+.result-hero .band .verdict{font-family:var(--serif);font-size:2rem;font-weight:700}
+.result-hero .band .score{font-family:var(--mono);font-size:3.2rem;font-weight:800;line-height:1.1;margin-top:4px}
+.result-hero .band .sub{opacity:.92;font-size:.9rem;margin-top:4px}
+.result-hero .meta{padding:16px 24px;display:flex;gap:20px;flex-wrap:wrap;font-size:.85rem;color:var(--ink2)}
+.result-hero .meta b{color:var(--ink)}
+.rsec{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px 22px;margin-top:18px}
+.rsec h3{font-size:1rem;font-weight:800;margin-bottom:12px}
+.chrow{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:.88rem}
+.chrow .cn{width:14em;color:var(--ink2);font-weight:600;flex-shrink:0}
+@media(max-width:520px){.chrow .cn{width:8em}}
+.chrow .cbar{flex:1;height:9px;background:var(--line);border-radius:99px;overflow:hidden}
+.chrow .cbar>span{display:block;height:100%;border-radius:99px}
+.chrow .cv{font-family:var(--mono);font-size:.8rem;color:var(--ink2);min-width:3.6em;text-align:right;font-variant-numeric:tabular-nums}
+.ractions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+
+/* review of answers */
+.rev{border:1px solid var(--line);border-radius:12px;margin-top:12px;overflow:hidden}
+.rev .rvhd{padding:12px 16px;display:flex;gap:10px;align-items:center;cursor:pointer;background:#FAFCFD;border-bottom:1px solid var(--line)}
+.rev .rvhd .mk{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:#fff}
+.rev .rvhd .mk.ok{background:var(--ok)} .rev .rvhd .mk.ng{background:var(--ng)}
+.rev .rvhd .qx{font-size:.9rem;font-weight:600;flex:1;min-width:0}
+.rev .rvhd .ch{font-size:.72rem;color:var(--mute);white-space:nowrap}
+.rev .rvbody{padding:14px 16px;display:none}
+.rev.open .rvbody{display:block}
+.rev .ro{padding:8px 12px;border-radius:8px;margin:5px 0;font-size:.9rem;border:1.5px solid var(--line);display:flex;gap:10px}
+.rev .ro .k{font-family:var(--mono);font-weight:700;color:var(--mute)}
+.rev .ro.correct{background:var(--ok-soft);border-color:var(--ok-line)}
+.rev .ro.correct .k{color:var(--ok)}
+.rev .ro.chosen-wrong{background:var(--ng-soft);border-color:var(--ng-line)}
+.rev .ro.chosen-wrong .k{color:var(--ng)}
+.rev .ro .why{font-size:.78rem;color:var(--mute);margin-top:2px}
+.rev .yourans{font-size:.86rem;margin:8px 0}
+.rev .yourans .ok{color:var(--ok);font-weight:700} .rev .yourans .ng{color:var(--ng);font-weight:700}
+.rev .expl{background:#F7F9FB;border-radius:9px;padding:10px 13px;font-size:.84rem;color:var(--ink2);margin-top:8px;white-space:pre-wrap}
+.rev-filter{display:flex;gap:8px;margin:6px 0 2px}
+.rev-filter button{border:1.5px solid var(--line2);border-radius:8px;padding:6px 14px;font-size:.82rem;font-weight:700;background:#fff}
+.rev-filter button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+/* history */
+.htable{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:6px}
+.htable th,.htable td{border:1px solid var(--line);padding:8px 10px;text-align:center;font-variant-numeric:tabular-nums}
+.htable th{background:var(--brand);color:#fff;font-weight:700;font-size:.8rem}
+.htable td.name{text-align:left}
+.htable .pass{color:var(--ok);font-weight:800} .htable .fail{color:var(--ng);font-weight:800}
+.htable tr:nth-child(even) td{background:#F7F9FB}
+.empty{text-align:center;color:var(--faint);padding:30px 0;font-size:.9rem}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.85rem;font-weight:700;padding:11px 22px;border-radius:99px;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.28)}
+.foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--faint);font-size:.76rem;text-align:center}
+.hrev{background:var(--brand);color:#fff;border-radius:8px;padding:6px 12px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.hrev:hover{background:var(--brand2)}
+.hrev-none{color:var(--faint);font-size:.8rem;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- ===== HOME ===== -->
+<div id="vHome">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span>
+    <span class="exam-meta">LPIC-1 101 模擬試験</span>
+  </div></div>
+  <div class="wrap">
+    <div class="home-hd">
+      <div class="eyebrow">LPIC-1 · Exam 101 · Mock Test</div>
+      <h1>101試験 模擬試験プログラム</h1>
+      <p class="lead">本番と同じ50問・50分の形式で、全6回にわたり模試101の全120問を演習します。選択式・複数選択・記述式に対応。各回の結果は記録され、ダウンロードして講師に提出できます。</p>
+      <div class="namecard">
+        <label for="nameInput">受験者氏名</label>
+        <input id="nameInput" type="text" placeholder="氏名を入力（結果に記載されます）" autocomplete="name">
+        <span class="saved hidden" id="nameSaved">✓ 保存しました</span>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>受験する回を選ぶ</h2><span class="cap">全6回 / 各50問・50分</span></div>
+      <div class="rounds" id="roundGrid"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>試験の概要</h2></div>
+      <div class="info">
+        <ul>
+          <li><b>出題範囲</b> ― LPIC-1 101試験（第1〜5章）に加え、模試101に含まれる第7章の2問も出題。6回すべてを受験すると模試101の全120問を網羅します。</li>
+          <li><b>問題数と時間</b> ― 各回50問・制限時間50分。章の構成比は本番に準拠（毎回すべての章から出題）。</li>
+          <li><b>形式</b> ― 単一選択・複数選択（「2つ選択」等は全て選んで正解）・記述式（キーボード入力）。各回に記述式を必ず含みます。</li>
+          <li><b>見直し</b> ― 提出前に前の問題へ自由に戻れます。未回答・フラグ付き問題は一覧から確認できます。</li>
+          <li><b>結果</b> ― 採点後に分野別スコアを表示。結果ファイルをダウンロードして講師へ提出します。記録は各回ごとに過去10回分保存されます。</li>
+        </ul>
+        <div class="histbtn"><button class="btn" id="histBtn">これまでの受験履歴を見る</button>
+          <button class="btn ghost danger" id="resetBtn">記録をリセット</button></div>
+      </div>
+    </div>
+    <div class="foot" id="footInfo"></div>
+  </div>
+</div>
+
+<!-- ===== BRIEF + COUNTDOWN ===== -->
+<div id="vBrief" class="hidden">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span><span class="exam-meta" id="briefBarMeta"></span>
+  </div></div>
+  <div class="wrap">
+    <div class="brief" id="briefBody">
+      <div class="top"><div class="k">Before you begin</div><h2 id="briefTitle"></h2></div>
+      <div class="body">
+        <div class="spec-grid">
+          <div class="spec"><div class="v">50</div><div class="l">問題数</div></div>
+          <div class="spec"><div class="v">50<span style="font-size:1rem">分</span></div><div class="l">制限時間</div></div>
+          <div class="spec"><div class="v">65<span style="font-size:1rem">%</span></div><div class="l">合格ライン目安</div></div>
+          <div class="spec"><div class="v" id="briefRetake">—</div><div class="l">今回の最高</div></div>
+        </div>
+        <ul class="rules">
+          <li>制限時間は50分です。時間切れになると自動的に採点されます。</li>
+          <li>提出する前に、前の問題へ戻って見直し・修正ができます。</li>
+          <li>複数選択の問題は、正解の選択肢をすべて選んで正解になります。</li>
+      <li>選択肢の表示順は毎回ランダムに並び替えられます（記号の丸暗記はできません）。</li>
+          <li>記述式は、コマンド名やパスをキーボードで入力します（大文字小文字・全角半角は不問）。</li>
+          <li>採点結果はダウンロードして講師に提出してください。氏名が記載されます。</li>
+        </ul>
+        <div class="namewarn" id="briefNameWarn">⚠ 氏名が未入力です。ホームに戻って氏名を入力してください（結果ファイルに必要です）。</div>
+      </div>
+      <div class="actions">
+        <button class="btn pri lg" id="startBtn">試験を開始する</button>
+        <button class="btn ghost" id="briefBack">← 戻る</button>
+        <span style="font-size:.82rem;color:var(--mute)">開始を押すと5秒後にスタートします</span>
+      </div>
+    </div>
+    <div class="brief hidden" id="countBody">
+      <div class="count">
+        <div class="lead">まもなく開始します</div>
+        <div class="n" id="countNum">5</div>
+        <div class="who" id="countWho"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EXAM ===== -->
+<div id="vExam" class="hidden">
+  <div class="exambar">
+    <div class="in">
+      <span class="rd" id="exRound"></span>
+      <span class="qn" id="exQn"></span>
+      <div class="clock">
+        <span class="lb">残り時間</span>
+        <span class="t" id="exClock">50:00</span>
+      </div>
+    </div>
+    <div class="pbar"><span id="exPbar"></span></div>
+  </div>
+  <div class="wrap">
+    <div class="qwrap">
+      <div class="qmain">
+        <div class="qcard" id="qCard"></div>
+        <div class="qnav">
+          <button class="btn" id="prevBtn">← 前へ</button>
+          <button class="btn pri" id="nextBtn">次へ →</button>
+          <span class="mid" id="navMid"></span>
+        </div>
+      </div>
+      <aside class="palette">
+        <h3>問題一覧</h3>
+        <div class="pgrid" id="pGrid"></div>
+        <div class="plegend">
+          <span><i class="sw a"></i>回答済み</span>
+          <span><i class="sw f"></i>フラグ</span>
+        </div>
+        <div class="fin"><button class="btn pri" id="toReviewBtn">解答を終えて見直しへ</button></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REVIEW BEFORE SUBMIT ===== -->
+<div id="vSubmit" class="hidden">
+  <div class="exambar"><div class="in">
+    <span class="rd" id="subRound"></span>
+    <div class="clock"><span class="lb">残り時間</span><span class="t" id="subClock">50:00</span></div>
+  </div><div class="pbar"><span id="subPbar"></span></div></div>
+  <div class="wrap">
+    <div class="submitcard">
+      <h2>提出前の最終確認</h2>
+      <p style="color:var(--ink2);font-size:.9rem">提出すると採点され、後から解答は変更できません。未回答・フラグ付きの問題は下から戻って確認できます。</p>
+      <div class="sumrow">
+        <div class="sumstat"><div class="v" id="subAnswered">0</div><div class="l">回答済み</div></div>
+        <div class="sumstat"><div class="v warn" id="subUnanswered">0</div><div class="l">未回答</div></div>
+        <div class="sumstat"><div class="v" id="subFlagged">0</div><div class="l">フラグ</div></div>
+      </div>
+      <div id="subUnansweredWrap"><h3 style="font-size:.9rem;margin-bottom:6px">未回答の問題</h3><div class="jumplist" id="subUnansweredList"></div></div>
+      <div id="subFlaggedWrap" style="margin-top:14px"><h3 style="font-size:.9rem;margin-bottom:6px">フラグを付けた問題</h3><div class="jumplist" id="subFlaggedList"></div></div>
+      <div class="ractions">
+        <button class="btn pri lg" id="submitBtn">採点して結果を見る</button>
+        <button class="btn ghost" id="backToExamBtn">← 問題に戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div id="vResult" class="hidden">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span><span class="exam-meta" id="resBarMeta"></span>
+  </div></div>
+  <div class="wrap">
+    <div class="result-hero">
+      <div class="band" id="resBand">
+        <div class="verdict" id="resVerdict"></div>
+        <div class="score" id="resScore"></div>
+        <div class="sub" id="resSub"></div>
+      </div>
+      <div class="meta" id="resMeta"></div>
+    </div>
+    <div class="rsec">
+      <h3>分野別スコア</h3>
+      <div id="resChapters"></div>
+    </div>
+    <div class="ractions">
+      <button class="btn pri lg" id="dlBtn">スコアレポートをPDFで保存（講師提出用）</button>
+      <button class="btn" id="retryWrongBtn">間違えた問題を復習</button>
+      <button class="btn ghost" id="resHomeBtn">ホームへ</button>
+    </div>
+    <div class="rsec" style="margin-top:22px">
+      <h3>解答の見直し</h3>
+      <div class="rev-filter">
+        <button class="on" data-filter="all">すべて</button>
+        <button data-filter="wrong">間違いのみ</button>
+        <button data-filter="flag">フラグのみ</button>
+      </div>
+      <div id="resReview"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REVIEW MODE (wrong-answer re-study) ===== -->
+<div id="vStudy" class="hidden">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span><span class="exam-meta">復習モード</span>
+  </div></div>
+  <div class="wrap">
+    <div class="home-hd" style="padding:28px 0 8px">
+      <div class="eyebrow">Review</div>
+      <h1 style="font-size:1.7rem" id="studyTitle">間違えた問題の復習</h1>
+      <p class="lead" id="studyLead"></p>
+    </div>
+    <div id="studyBody"></div>
+    <div class="ractions"><button class="btn ghost" id="studyBack">← 結果に戻る</button></div>
+  </div>
+</div>
+
+<!-- ===== HISTORY ===== -->
+<div id="vHistory" class="hidden">
+  <div class="bar"><div class="in">
+    <span class="brand">Hack <span class="mk">×</span> The <span class="mk">×</span> LPIC</span>
+    <span class="spacer"></span><span class="exam-meta">受験履歴</span>
+  </div></div>
+  <div class="wrap">
+    <div class="home-hd" style="padding:28px 0 8px">
+      <div class="eyebrow">History</div>
+      <h1 style="font-size:1.7rem">受験履歴（各回 過去10回）</h1>
+    </div>
+    <div id="histBody"></div>
+    <div class="ractions"><button class="btn ghost" id="histBack">← ホームへ</button></div>
+  </div>
+</div>
+
+<script>
+const EXAMS=[[{"n":54,"c":1,"t":"m","q":"BIOS を使用した PC のブートシーケンスについて正しい記述はどれですか(2つ選択してください)。","o":["ブートプロセスの一部は BIOS から設定できます","Linux はコンピュータを起動するのに BIOS の支援を必要としない","BIOS ブートプロセスは、ハードディスクなどの二次記憶装置が機能している場合にのみ開始されます。","BIOS はコンピュータの電源投入後にブートプロセスを開始します。","BIOS はハードディスクなどの二次記憶装置からハードウェアドライバをロードして起動します。"],"a":"AD","acc":["AD"],"w":["","LinuxもBIOS/UEFIの初期化を必要とする","二次記憶がなくても（PXE等）ブートは開始できる","","HWドライバをロードするのはカーネル"]},{"n":68,"c":3,"t":"s","q":"次の入力ストリームがあるとします:\ntxt1.txt\natxt.txt\ntxtB.txt\n次の正規表現のどれが、この入力ストリームを次の出力ストリームに変換しますか?\ntxt1.bak.txt atxt.bak.txt txtB.bak.txt","o":["s/^.txt/.bak/","s/txt/bak.txt/","s/txt$/bak.txt/","s/^txt$/.bak^/","s/[.txt]/.bak$1/"],"a":"C","acc":["C"],"e":"行末の txt を bak.txt に置換(txt1.txt → txt1.bak.txt)。","w":["^.txtは先頭一致で意図と異なる","最初のtxtが置換され結果が崩れる","","行全体がtxtの場合のみ一致","[.txt]は文字クラスで意味が異なる"]},{"n":46,"c":2,"t":"m","q":"仮想マシンのクローンを作成するときに、Linux システムの次のプロパティのうちどれを変更する必要がありますか?(2つ選択してください。)","o":["パーティションスキーム","ファイルシステム","D-Bus マシン ID","/root/ の権限","SSH ホストキー"],"a":"CE","acc":["CE"],"w":["パーティション構成は複製のままで問題ない","ファイルシステムも変更不要","","/root/の権限は変更不要",""]},{"n":89,"c":3,"t":"s","q":"正規表現 s/[ABC][abc]/xx/ を次の文字列に適用した場合の出力はどうなるでしょうか?\nABCabc","o":["ABxxbc","xxCxxc","xxxxxx","ABCabc","Axxaxx"],"a":"A","acc":["A"],"e":"g フラグがないため最初の一致(Ca)のみ置換 → ABxxbc。","w":["","ABは一致しない（2文字目が大文字）","3箇所の一致はあり得ない","「Ca」が一致するため無変化ではない","BC・bcは一致しない（この出力は生成不可能）"]},{"n":25,"c":5,"t":"s","q":"find の出力を xargs コマンドにリダイレクトする場合、ファイル名にスペースが含まれている場合、どの find オプションが役立ちますか?","o":["-rep-space","-printnul","-nospace","-ignore-space","-print0"],"a":"E","acc":["E"],"e":"find -print0 と xargs -0 を組み合わせて使用する。","w":["存在しないオプション","存在しないオプション（-print0が正）","存在しないオプション","存在しないオプション",""]},{"n":66,"c":4,"t":"s","q":"キーボードで Ctrl + C キーの組み合わせが押されたときに、プロセスに送信される信号は次のどれですか。","o":["SIGTERM","SIGCONT","SIGSTOP","SIGKILL","SIGINT"],"a":"E","acc":["E"],"w":["SIGTERMはkillのデフォルト","SIGCONTは再開シグナル","SIGSTOPは一時停止（Ctrl+ZはSIGTSTP）","SIGKILLはkill -9",""]},{"n":116,"c":7,"t":"m","q":"Bash シェルから、サブシェルを起動せずにファイル /usr/local/bin/runme.sh からの命令を直接実行するコマンドはどれですか?(2つ選択してください。)","o":["source /usr/local/bin/runme.sh","/usr/local/bin/runme.sh","/bin/bash /usr/local/bin/runme.sh",". /usr/local/bin/runme.sh","run /usr/local/bin/runme.sh"],"a":"AD","acc":["AD"],"e":"source と .(ドットコマンド)は現在のシェルで実行する。B・C は子プロセスを生成する。","w":["","直接実行はサブシェル（新プロセス）で動く","bash起動もサブシェルになる","","runというコマンドはない"]},{"n":82,"c":3,"t":"s","q":"次のコマンドのうち、すべての一般的なファイルタイプに関する情報を含む定義データベースファイルを使用してファイルの形式を決定するものはどれですか。","o":["type","file","magic","pmagic","hash"],"a":"B","acc":["B"],"e":"file コマンドは magic データベースを使用する。","w":["typeはコマンドの種別表示","","magicはDB名でコマンドではない","存在しない","hashはコマンドパスのキャッシュ"]},{"n":96,"c":1,"t":"s","q":"UEFI システムのハードディスク上のブートローダーはどこに保存されますか?","o":["EFI ブートレコード(EBR)内","マスターブートレコード(MBR)内","EFI システムパーティション(ESP)上","boot というラベルの付いたパーティション上","パーティション番号 127"],"a":"C","acc":["C"],"w":["EBRは拡張パーティションの概念","MBRはBIOS方式","","ラベルではなくESPという専用パーティション","パーティション番号の規則はない"]},{"n":105,"c":2,"t":"s","q":"依存関係が満たされていないため、ローカル Debian パッケージのインストールに失敗しました。不足している依存関係をインストールし、中断されたパッケージのインストールを完了するコマンドはどれですか?","o":["dpkg --fix --all","apt-get autoinstall","dpkg-reconfigure --all","apt-get all","apt-get install -f"],"a":"E","acc":["E"],"e":"-f(--fix-broken)。","w":["dpkgに--fixはない","存在しないサブコマンド","dpkg-reconfigureは設定のやり直し","存在しない",""]},{"n":41,"c":2,"t":"s","q":"次のコマンドのうち、RPM パッケージファイル foo.rpm の依存関係を一覧表示するものはどれですか。","o":["rpm -qpR foo.rpm","rpm -dep foo","rpm -ld foo.rpm","rpm -R foo.rpm","rpm -pD foo"],"a":"A","acc":["A"],"e":"-q(照会) -p(パッケージファイル) -R(依存関係)。","w":["","存在しないオプション","存在しないオプション","-Rは-qと併用が必要","存在しないオプション"]},{"n":100,"c":2,"t":"m","q":"論理ボリュームマネージャ(LVM)は何に使用できますか?(3つ選択してください。)","o":["スナップショットを作成するため。","論理ボリュームのサイズを動的に変更します。","論理ボリュームを動的に作成または削除します。","RAID 9 アレイを作成します。","論理ボリュームを暗号化します。"],"a":"ABC","acc":["ABC"],"e":"RAID 9 は存在しない。LVM 自体は暗号化機能を持たない(dm-crypt が担当)。","w":["","","","RAID 9という規格はない","暗号化はLUKS/dm-cryptの役割"]},{"n":61,"c":3,"t":"s","q":"ファイルが存在しない場合のコマンド ls > files に関して正しいのは何ですか?","o":["ls の出力は端末に印刷されます","ファイルが作成され、ls の出力が含まれます","エラーメッセージが表示され、ls は実行されません","コマンド files が実行され、ls の出力を受け取ります。","ls の出力はすべて破棄される"],"a":"B","acc":["B"],"w":["リダイレクトされるので端末には出ない","","エラーにはならない（新規作成される）","filesは実行されない（出力先ファイル名）","破棄されるのは/dev/nullへ向けた場合"]},{"n":52,"c":1,"t":"m","q":"カーネル リング バッファの内容はいつリセットされますか?(2つ選択してください。)","o":["リングバッファがコマンド dmesg --clear を使用して明示的にリセットされた場合","dmesg を使用して追加パラメータなしでリングバッファを読み取る場合","設定可能な時間(デフォルトでは15分)が経過したとき","カーネルが以前にアンロードされたカーネルモジュールをロードするとき","システムがシャットダウンまたは再起動されたとき"],"a":"AE","acc":["AE"],"w":["","読み取りではリセットされない","時間経過では消えない","モジュールロードでは消えない",""]},{"n":117,"c":4,"t":"s","q":"次のコマンドのうち、実行可能ファイル /bin/foo に SetUID 権限を設定するのはどれですか。","o":["chmod 4755 /bin/foo","chmod 1755 /bin/foo","chmod u-s /bin/foo","chmod 755+s /bin/foo","chmod 2755 /bin/foo"],"a":"A","acc":["A"],"e":"4=SetUID、2=SetGID、1=スティッキービット。","w":["","1755はスティッキービット","u-sはSUIDの削除","無効な構文","2755はSGID"]},{"n":34,"c":5,"t":"x","q":"空欄を埋めてください。\nlocate コマンドによって使用されるデータベースを更新するプログラムはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"updatedb"},{"n":33,"c":2,"t":"m","q":"Linux コンテナと従来の仮想マシン(LXC と KVM など)を比較した場合、正しい記述は次のうちどれですか(3つ選択してください。)","o":["コンテナは、カーネルがプロセスの分離とリソース管理を制御する軽量の仮想化方法です。","完全に仮想化されたマシンでは、仮想マシン内の特定のハードウェア アーキテクチャ用の任意のオペレーティング システムを実行できます。","コンテナーはホスト システムの物理ハードウェアから完全に分離されており、エミュレートされた仮想ハードウェア デバイスのみを使用できます。","完全に仮想化されたマシンのゲスト環境は、仮想およびエミュレートされたハードウェア デバイスを提供するハイパーバイザーによって作成されます。","コンテナ ハイパーバイザーが個別のカーネル実行を作成するため、同じホスト上のコンテナは異なるオペレーティング システムを使用できます。"],"a":"ABD","acc":["ABD"],"e":"コンテナはホストのカーネルを共有するため C・E は誤り。","w":["","","コンテナはホストのHWをそのまま利用できる（分離はプロセス単位）","","コンテナはホストのカーネルを共有するため別OSは動かせない"]},{"n":62,"c":4,"t":"m","q":"システムが稼働している時間を確認するために使用できるコマンドはどれですか?(2つ選択してください。)","o":["uptime","up","time --up","uname -u","top"],"a":"AE","acc":["AE"],"w":["","存在しないコマンド","存在しないオプション","uname -uは存在しない",""]},{"n":74,"c":3,"t":"s","q":"次のコマンドのうち、/etc/passwd からユーザー名とそのログインシェルのリストを生成するものはどれですか。","o":["column -s : 1,7 /etc/passwd","chop -c 1,7 /etc/passwd","colrm 1,7 /etc/passwd","sort -t: -k1,7 /etc/passwd","cut -d: -f1,7 /etc/passwd"],"a":"E","acc":["E"],"e":"ユーザー名は第1フィールド、ログインシェルは第7フィールド。","w":["columnの用法が誤り","chopは存在しない","colrmは文字位置での削除","sortは並べ替え",""]},{"n":57,"c":4,"t":"s","q":"次のコマンドのうち、gzip で圧縮された tar アーカイブの内容を表示するものはどれですか?","o":["gzip archive.tgz | tar xvf -","tar -fzt archive.tgz","gzip -d archive.tgz | tar tvf -","tar cf archive.tgz","tar ztf archive.tgz"],"a":"E","acc":["E"],"e":"z(gzip)t(一覧表示)f(ファイル指定)。","w":["xvfは展開してしまう（tが一覧）","fの直後はファイル名が必要で無効","gzip -dは標準出力に出ず元ファイルを展開してしまう","cfは作成",""]},{"n":101,"c":4,"t":"x","q":"空白を埋めてください。\n現在のシェルで実行されているすべてのバックグラウンドタスクのリストを表示するコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"jobs"},{"n":8,"c":2,"t":"s","q":"RPM パッケージ管理を使用しているときに、現在インストールされているすべてのパッケージを一覧表示するコマンドはどれですか。","o":["yum --query --all","yum --list --installed","rpm --query --list","rpm --list --installed","rpm --query --all"],"a":"E","acc":["E"],"e":"rpm --query --all(= rpm -qa)。","w":["正しくは yum list installed","正しくは yum list installed","-q -lはパッケージ内ファイル一覧","そのようなオプションの組合せはない",""]},{"n":93,"c":1,"t":"m","q":"Linux のブートプロセスに関係する初期 RAM ディスクについて正しい記述はどれですか(2つ選択してください)。","o":["initramfs は圧縮されたファイルシステム アーカイブであり、解凍してその内容を調べることができます。","initramfs ファイルには、MBR、ブートローダー、Linux カーネルが含まれています。","起動が成功すると、initramfs の内容が /run/initramfs/ で利用できるようになります。","カーネルは、実際のルートファイルシステムにアクセスする前に、一時的に initramfs を使用します。","initramfs は特定のカーネルバージョンに依存せず、初期インストール後は変更されません。"],"a":"AD","acc":["AD"],"w":["","MBRやブートローダーは含まれない","通常は起動後に破棄される（保持は設定時のみ）","","カーネルバージョンに依存し更新される"]},{"n":22,"c":4,"t":"s","q":"ハードリンクの使用を検討する際に、ハードリンクを使用しない正当な理由は何ですか?","o":["ハードリンクは、ext4 などの従来のファイルシステムではサポートされていないため、すべての Linux システムで利用できるわけではありません。","各ハードリンクには個別の所有権、権限、ACL があり、ファイルの内容が意図せず公開される可能性があります。","ハードリンクは1つのファイルシステムに固有のものであり、別のファイルシステム上のファイルを指すことはできません。","ルート以外のユーザーがハードリンクを作成できるようにするには、suln をインストールして設定する必要があります。","ハードリンクされたファイルが変更されると、ファイルのコピーが作成され、追加のスペースを消費します。"],"a":"C","acc":["C"],"w":["ext4等はハードリンクをサポートする","ハードリンクは所有権・権限を実体と共有する","","sulnというツールは存在しない","変更してもコピーは作られない（同一実体）"]},{"n":65,"c":3,"t":"s","q":"次のコマンドのうち、foo コマンドの出力を画面に表示し、それを /tmp/foodata というファイルに書き込むものはどれですか。","o":["foo | less /tmp/foodata","foo | cp /tmp/foodata","foo > /tmp/foodata","foo | tee /tmp/foodata","foo > stdout >> /tmp/foodata"],"a":"D","acc":["D"],"w":["lessは表示のみでファイルに書かない","cpの用法が誤り",">では画面に表示されない","","無効な構文"]},{"n":39,"c":5,"t":"m","q":"次のコマンドのうち、/tmp/ ディレクトリとそのサブディレクトリ内にある、ユーザー root が所有するすべてのファイルとディレクトリを一覧表示するものはどれですか。(2つ選択してください。)","o":["find /tmp -user root -print","find -path /tmp -uid root","find /tmp -uid root -print","find /tmp -user root","find -path /tmp -user root -print"],"a":"AD","acc":["AD"],"e":"-uid は数値UIDを取るため C は不可(root は名前)。-print は省略可能。","w":["","-pathは検索パスの指定方法として誤り","-uidは数値UID指定（rootという名前は不可）","","検索パスは引数で渡す（-pathは条件）"]},{"n":72,"c":3,"t":"s","q":"次のコマンドのうち、ファイルを読み取り、ファイルの内容から指定されたサイズの個別のチャンクを作成するものはどれですか。","o":["ar","cat","break","split","parted"],"a":"D","acc":["D"],"w":["arはアーカイブ操作","catは連結・表示","breakはシェルのループ制御","","partedはパーティション操作"]},{"n":19,"c":1,"t":"s","q":"Linux システムで電源管理イベントを処理するデーモンはどれですか?","o":["acpid","batteryd","pwrmgntd","psd","inetd"],"a":"A","acc":["A"],"w":["","存在しないデーモン","存在しないデーモン","存在しないデーモン","inetdはネットワーク接続の待受用"]},{"n":29,"c":4,"t":"s","q":"コマンド ls -i からの次の出力を検討してください。\n525385 -rw-rw-r-- 2 1000 1000 0 Feb 12 19:44 a.txt\n526255 lrwxrwxrwx 1 1000 1000 5 Feb 12 19:44 b/txt -> a.txt\na.txt(inode 525385)と同じ inode 番号を持つ c.txt という名前の新しいファイルはどのように作成されるでしょうか。","o":["ln -h a.txt c.txt","ln c.txt a.txt","ln a.txt c.txt","ln -f c.txt a.txt","ln -i 525385 c.txt"],"a":"C","acc":["C"],"e":"ハードリンク作成。引数順は「ln 既存ファイル 新リンク名」。","w":["-hオプションはない","引数順が逆（存在しないc.txtをソースにできない）","","引数順が逆","inode番号での作成はできない"]},{"n":81,"c":3,"t":"s","q":"xargs コマンドの目的は何ですか?","o":["X サーバーに引数を渡します。","呼び出しごとに異なるパラメータを使用してコマンドの実行を繰り返します。","標準入力を読み取り、実行するコマンドを構築します。","グラフィカルに質問し、その回答をシェルに返します。","通常は短いオプション(-h など)しか受け付けないコマンドに長いオプション(--help など)を指定できるようにする"],"a":"C","acc":["C"],"w":["Xサーバーとは無関係","繰り返し自体ではなく標準入力から引数を作るのが本質","","そのような機能はない","そのような機能はない"]},{"n":90,"c":4,"t":"s","q":"次の umask 設定のうちどれが、新しいファイルにデフォルトの権限 -rw-r----- を持たせることを保証しますか?","o":["0017","0640","0038","0227","0027"],"a":"E","acc":["E"],"e":"新規ファイルの基準 666 に umask 027 を適用 → 640(rw-r-----)。","w":["666-017=660で不一致","0640はパーミッション値でありumaskではない","8進数として不正ではないが666-038は計算不可（8は不正）","666-227=440で不一致",""]},{"n":32,"c":3,"t":"s","q":"次のコマンドのうち、シェルに test を出力するのはどれですか?","o":["cat test EOT","cat <|EOT test EOT","cat !test EOT","cat &test EOT","cat <<EOT test EOT"],"a":"E","acc":["E"],"e":"ヒアドキュメント(<<EOT ... EOT)。原本スキャンでは「<<」が判読困難だが、E は cat <<EOT が正しい形。","w":["<<がなくヒアドキュメントにならない","<|という演算子はない","!は履歴展開で別機能","&は別の意味",""]},{"n":38,"c":3,"t":"m","q":"次のうち、Bash 内で有効なストリーム リダイレクト演算子はどれですか(2つ選択してください)。","o":["<","#>","%>",">>>","2>&1"],"a":"AE","acc":["AE"],"e":"原本の「2>&l」は「2>&1」(数字の1)の誤認識のため修正。","w":["","存在しない演算子","存在しない演算子","存在しない演算子",""]},{"n":88,"c":5,"t":"s","q":"コマンド mount --bind は何をしますか?","o":["あるディレクトリの内容を別のディレクトリで利用できるようにする","利用可能なすべてのファイルシステムを現在のディレクトリにマウントします","ユーザーがマウント可能なすべてのファイルシステムをユーザーのホームディレクトリにマウントします。","/etc/fstab にリストされ、オプション userbind が設定されているすべてのファイルシステムをマウントします。","通常のファイルをディレクトリに永続的にマウントする"],"a":"A","acc":["A"],"w":["","そのような機能はない","そのような機能はない","userbindオプションは存在しない","通常ファイルのマウントの説明ではない"]},{"n":111,"c":1,"t":"m","q":"UEFI ファームウェアに関して正しいのは次のうちどれですか?(2つ選択してください。)","o":["パーティションテーブルを読み取って解釈できる","特定のファイルシステムの使用と読み取りが可能","全ての設定を /boot/ パーティションに保存する","GPT メタデータ内の特別な領域に保存されます","固定されたブートディスクの位置からロードされます"],"a":"AB","acc":["AB"],"e":"UEFI は GPT を解釈し、FAT(ESP)を読み取れる。","w":["","","設定はNVRAMに保存される","GPTメタデータには保存されない","固定位置ではなくESP内のファイルから"]},{"n":36,"c":1,"t":"m","q":"lspci コマンドは、システムハードウェアについてどのような情報を表示できますか?(3つ選択してください。)","o":["システムバッテリーの種類","デバイスの IRQ 設定","PCI バス速度","イーサネット MAC アドレス","デバイスベンダーの識別"],"a":"BCE","acc":["BCE"],"w":["バッテリー情報はlspciでは見えない（ACPI側）","","","MACアドレスはip/ifconfigで確認",""]},{"n":26,"c":3,"t":"s","q":"次のコマンドのうち、テキストファイル userlist.txt 内のすべての CR-LF 改行を Linux 標準の LF 改行に変更し、その結果を newlist.txt に保存するものはどれですか。","o":["tr -d '\\r' < userlist.txt > newlist.txt","tr -c '\\n\\r' '' userlist.txt","tr '\\r\\n' '' newlist.txt","tr '\\r' '\\n' userlist.txt newlist.txt","tr -s '/^M/^J/' userlist.txt newlist.txt"],"a":"A","acc":["A"],"e":"CR(\\r)を削除すれば LF のみが残る。tr はファイル引数を取らないためリダイレクトが必要。","w":["","-cは補集合指定で用法が誤り","trは引数にファイルを取らない（標準入力）","trは引数にファイルを取らない","そのような構文はない"]},{"n":27,"c":5,"t":"s","q":"ブロックデバイス名のみを指定し、追加のパラメータを指定せずに mkfs を実行すると、どのタイプのファイルシステムが作成されますか。","o":["XFS","VFAT","ext2","ext3","ext4"],"a":"C","acc":["C"],"e":"mkfs のデフォルトは ext2。","w":["明示指定が必要（mkfs.xfs）","明示指定が必要","","明示指定が必要","明示指定が必要"]},{"n":78,"c":7,"t":"s","q":"実行中の Bash シェル内でオプションと位置パラメータを変更するために使用されるコマンドはどれですか?","o":["history","setsh","bashconf","set","envsetup"],"a":"D","acc":["D"],"w":["historyは履歴表示","存在しないコマンド","存在しないコマンド","","存在しないコマンド"]},{"n":11,"c":5,"t":"s","q":"次のコマンドのうち、起動時に /dev/sda1 上の ext3 ファイルシステムが完全なファイルシステムチェックを実行するまでの日数を変更するものはどれですか。","o":["tune2fs -d 200 /dev/sda1","tune2fs -i 200 /dev/sda1","tune2fs -c 200 /dev/sda1","tune2fs -n 200 /dev/sda1","tune2fs --days 200 /dev/sda1"],"a":"B","acc":["B"],"e":"-i はチェック間隔(既定単位は日)。-c はマウント回数。","w":["-dはデバッグレベル","","-cはマウント回数の上限設定","-nは存在しない","--daysは存在しない"]},{"n":119,"c":4,"t":"x","q":"空欄を埋めてください。\nすでに実行中のプロセスの優先度を変更するにはどのコマンドを使用しますか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"renice"},{"n":51,"c":2,"t":"s","q":"Debian パッケージはインストール中に複数のファイルを作成します。次のコマンドのうち、/etc/debian_version ファイルを所有するパッケージを検索するものはどれですか?","o":["apt-get search /etc/debian_version","apt -r /etc/debian_version","find /etc/debian_version -dpkg","dpkg -S /etc/debian_version","apt-file /etc/debian_version"],"a":"D","acc":["D"],"e":"dpkg -S(--search)でファイルの所属パッケージを検索。","w":["検索はapt-cache search（ファイル所属は不可）","apt -rは存在しない","findに-dpkgはない","","apt-fileは別途導入が必要で構文も異なる"]},{"n":69,"c":3,"t":"s","q":"vi で3行のテキストを削除し、カーソルを別の行に移動した直後に、削除した内容を現在の行の下に挿入する1文字のコマンドはどれですか。","o":["i (lowercase)","p (lowercase)","P (uppercase)","U (uppercase)","u (lowercase)"],"a":"B","acc":["B"],"e":"p は現在行の下に貼り付け、P は上に貼り付け。","w":["iは挿入モード開始","","Pはカーソル行の上に貼り付け","Uは行の変更を戻す","uはアンドゥ"]},{"n":42,"c":2,"t":"s","q":"パッケージをアンインストールするが、パッケージが再インストールされた場合に備えて構成ファイルを保持するコマンドはどれですか?","o":["dpkg -s pkgname","dpkg -L pkgname","dpkg -P pkgname","dpkg -v pkgname","dpkg -r pkgname"],"a":"E","acc":["E"],"e":"-r(remove)は設定ファイルを残す。-P(purge)は設定ファイルも削除。","w":["-sは状態表示","-Lはファイル一覧","-Pは設定ファイルごと完全削除","-vは存在しない",""]},{"n":21,"c":5,"t":"s","q":"FHS に準拠して、マニュアルページはどのディレクトリにありますか?","o":["/opt/man/","/usr/doc/","/usr/share/man/","/var/pkg/man","/var/man/"],"a":"C","acc":["C"],"e":"問題文の「HS」はOCR誤りで「FHS」に修正。","w":["FHSに規定なし","FHSに規定なし","","FHSに規定なし","FHSに規定なし"]},{"n":95,"c":3,"t":"s","q":"ユーザーが誤ってホームディレクトリにサブディレクトリ \\dir を作成しました。そのディレクトリを削除するには、次のコマンドのうちどれを使用しますか?","o":["rmdir ~/\\\\dir","rmdir \"~/\\dir\"","rmdir ~/'dir'","rmdir ~/\\dir","rmdir '~/\\dir'"],"a":"A","acc":["A"],"e":"~ の展開にはクォート外である必要があり、\\ 自体は \\\\ でエスケープする。問題文の「リモート操作」はOCR/翻訳誤りで「削除」の意。","w":["\\\\は\\自体のエスケープで~/が展開されない位置","ダブルクォート内では~が展開されない","'dir'では\\が含まれない","","クォート内では~が展開されない"]},{"n":20,"c":2,"t":"s","q":"次のコマンドのうち、GRUB ブートファイルを現在アクティブなファイルシステムにインストールし、ブートローダーを最初のディスクの最初のパーティションにインストールするものはどれですか。","o":["grub-install /dev/sda","grub-install /dev/sda1","grub-install current /dev/sda0","grub-install /dev/sda0","grub-install current /dev/sda1"],"a":"B","acc":["B"],"e":"最初のディスクの最初のパーティション = /dev/sda1。","w":["/dev/sdaはディスク全体（MBR）への導入","","sda0やcurrent指定は存在しない","sda0というデバイスはない","そのような構文はない"]},{"n":102,"c":4,"t":"s","q":"gzip 圧縮された tar アーカイブ texts.tgz にファイル a.txt と b.txt が含まれている場合、gunzip texts.tgz を実行した後、現在のディレクトリにはどのファイルが存在するでしょうか。","o":["a.txt、b.txt、texts.tgz のみ","texts.tar と texts.tgz のみ","a.txt.gz と b.txt.gz のみ","a.txt と b.txt のみ","texts.tar のみ"],"a":"E","acc":["E"],"e":"gunzip は圧縮のみを解除し(tar は展開しない)、元の .tgz は削除される → texts.tar のみが残る。","w":["gunzipで.tgzは.tarになる（展開はされない）","","gunzipはtarの中身までは取り出さない","tarの展開まではしない","正しいがファイル名はtexts.tar（.tgzは残らない）"]},{"n":94,"c":1,"t":"s","q":"ハードディスクからの起動時に、コンピュータは Linux カーネルと initramfs を正常にロードしますが、その後の起動タスクでハングします。問題を調査するため、Linux ベースのレスキューCDを使用してシステムを起動します。問題の根本原因を特定するのに役立つ方法は次のうちどれですか?","o":["レスキューCDのシェルから dmesg コマンドを使用して、元のシステムのブートログを表示する","コンピュータのハードディスク上のファイル /proc/kmsg にエラーがないか調査します。","コンピュータのハードディスク上のファイル /var/log を調べてエラーの可能性を調べます。","chroot を使用してハードディスク上のファイルシステムに切り替え、dmesg を使用してログを表示します。","システムがレスキューCDから正常に起動したため、ハードドライブから再度再起動します。"],"a":"C","acc":["C"],"e":"dmesg は現在起動中(レスキュー)のカーネルのログしか表示できない。/proc は仮想 FS でディスク上に存在しない。","w":["dmesgはレスキューCD側のログを表示してしまう","/proc/kmsgは実行中カーネルの仮想ファイル（ディスク上にない）","/var/logはディレクトリで、マウントして中のファイルを見る必要がある","","原因調査にならない"]},{"n":85,"c":5,"t":"m","q":"次の Linux ファイルシステムのうち、必要に応じて生成するのではなく、新しいファイルシステムを作成するときに固定数の inode を事前に割り当てるものはどれですか。(2つ選択してください。)","o":["JFS","ext3","XFS","ext2","procfs"],"a":"BD","acc":["BD"],"e":"ext2/ext3 は作成時に inode 数が固定される。XFS/JFS は動的割り当て。","w":["JFSは動的割当","","XFSは動的割当","","procfsは仮想FSでinodeの概念が異なる"]}],[{"n":17,"c":4,"t":"s","q":"どの umask 値が、新しいディレクトリが所有ユーザーによって読み取り、書き込み、一覧表示され、所有グループによって読み取りおよび一覧表示され、他のすべてのユーザーによってまったくアクセスできないことを保証しますか?","o":["0750","0027","0036","7640","0029"],"a":"B","acc":["B"],"e":"目的の権限 750 = 777 - 027。","w":["0750はパーミッション値でありumaskではない","","777-036=741で要件と不一致","umaskとして不正な値","8進数に9は使えない"]},{"n":12,"c":4,"t":"m","q":"バックアップソフトウェアは、2回のバックアップ実行間で変更されていないファイル間のハードリンクを頻繁に使用します。これらのハードリンクによってどのような利点が得られますか?(2つ選択してください。)","o":["古いバックアップは、新しいバックアップのハードリンク ターゲットとして機能しながら、テープなどの低速のバックアップ メディアに移動できます。","ハードリンクは非同期操作であり、コピー操作が後の時点に延期されるため、バックアップの実行速度が速くなります。","ハードリンクされたファイルは作成後に変更できないため、バックアップは無傷であることが保証されます。","ハードリンクは冗長コピーを保存するのではなく、ディスク上の同じデータを指すため、バックアップの消費スペースが少なくなります。","ハードリンクは各ファイルのデータをコピーするのではなく、ファイルシステムのメタデータのみを変更するため、バックアップの実行速度が速くなります。"],"a":"DE","acc":["DE"],"w":["別メディアへ移動するとハードリンクは維持できない","ハードリンクは遅延コピーではない","ハードリンク先も変更可能","",""]},{"n":99,"c":1,"t":"s","q":"デフォルトの systemd ブートターゲットをマルチユーザーに設定する正しい方法は何ですか?","o":["systemctl isolate multi-user.target","systemctl set-runlevel multi-user.target","systemctl set-boot multi-user.target","systemctl set-default multi-user.target","systemctl boot -p multi-user.target"],"a":"D","acc":["D"],"e":"isolate は現在のターゲットの即時切替であり、デフォルト設定ではない。","w":["isolateは今すぐ切り替えるだけ（次回起動に影響しない）","存在しないサブコマンド","存在しない","","存在しない"]},{"n":102,"c":4,"t":"s","q":"gzip 圧縮された tar アーカイブ texts.tgz にファイル a.txt と b.txt が含まれている場合、gunzip texts.tgz を実行した後、現在のディレクトリにはどのファイルが存在するでしょうか。","o":["a.txt、b.txt、texts.tgz のみ","texts.tar と texts.tgz のみ","a.txt.gz と b.txt.gz のみ","a.txt と b.txt のみ","texts.tar のみ"],"a":"E","acc":["E"],"e":"gunzip は圧縮のみを解除し(tar は展開しない)、元の .tgz は削除される → texts.tar のみが残る。","w":["gunzipで.tgzは.tarになる（展開はされない）","","gunzipはtarの中身までは取り出さない","tarの展開まではしない","正しいがファイル名はtexts.tar（.tgzは残らない）"]},{"n":63,"c":5,"t":"s","q":"次のコマンドのうち、コマンド foo が呼び出されたときに実行される実行可能ファイルへのパスを表示するものはどれですか。","o":["lsattr foo","apropos foo","locate foo","whatis foo","which foo"],"a":"E","acc":["E"],"w":["lsattrは拡張属性の表示","aproposはmanページの検索","locateはDB検索で実行対象とは限らない","whatisはmanの1行説明",""]},{"n":52,"c":1,"t":"m","q":"カーネル リング バッファの内容はいつリセットされますか?(2つ選択してください。)","o":["リングバッファがコマンド dmesg --clear を使用して明示的にリセットされた場合","dmesg を使用して追加パラメータなしでリングバッファを読み取る場合","設定可能な時間(デフォルトでは15分)が経過したとき","カーネルが以前にアンロードされたカーネルモジュールをロードするとき","システムがシャットダウンまたは再起動されたとき"],"a":"AE","acc":["AE"],"w":["","読み取りではリセットされない","時間経過では消えない","モジュールロードでは消えない",""]},{"n":113,"c":5,"t":"s","q":"/etc/fstab の構文的に正しい行にはフィールドがいくつありますか?","o":["3","4","5","6","7"],"a":"D","acc":["D"],"e":"デバイス、マウントポイント、FS種別、オプション、dump、fsck順序の6フィールド。","w":["6フィールドが正","6フィールドが正","6フィールドが正","","6フィールドが正"]},{"n":115,"c":1,"t":"m","q":"/boot/ ファイルシステムにあるファイルは次のどれですか?(2つ選択してください。)","o":["Linux カーネルイメージ","Bash シェルバイナリ","systemd ターゲットとサービスユニット","初期 RAM ディスクイメージ","fsck バイナリ"],"a":"AD","acc":["AD"],"w":["","シェルは/bin配下","ユニットは/usr/lib/systemd等","","fsckは/sbin配下"]},{"n":67,"c":3,"t":"s","q":"現在のファイルを filea.txt として保存するには、vi を終了する前にどのコマンドを入力する必要がありますか?","o":["%s filea.txt","%w filea.txt",":save filea.txt",":w filea.txt",":s filea.txt"],"a":"D","acc":["D"],"w":["%sは置換コマンド","無効なコマンド","vimでは:saveasが相当（:saveはない）","",":sは置換"]},{"n":1,"c":4,"t":"m","q":"特定のファイルの inode 番号を表示するために使用できるコマンドはどれですか?(2つ選択してください。)","o":["inode","ln","ls","cp","stat"],"a":"CE","acc":["CE"],"e":"ls -i と stat で inode 番号を表示できる。","w":["存在しないコマンド","lnはリンクの作成用","","cpはコピー用",""]},{"n":103,"c":2,"t":"s","q":"ldd コマンドの目的は何ですか?","o":["バイナリを実行するために必要な共有ライブラリをリストします。","インストールされている共有ライブラリをインストールおよび更新します。","動的にリンクされたバイナリを静的バイナリに変換します。","デフォルトで使用するライブラリのバージョンを定義します。","代替ライブラリ検索パスを使用してバイナリを実行します。"],"a":"A","acc":["A"],"w":["","インストール・更新はしない","変換機能はない","バージョン定義はしない","実行機能はない"]},{"n":33,"c":2,"t":"m","q":"Linux コンテナと従来の仮想マシン(LXC と KVM など)を比較した場合、正しい記述は次のうちどれですか(3つ選択してください。)","o":["コンテナは、カーネルがプロセスの分離とリソース管理を制御する軽量の仮想化方法です。","完全に仮想化されたマシンでは、仮想マシン内の特定のハードウェア アーキテクチャ用の任意のオペレーティング システムを実行できます。","コンテナーはホスト システムの物理ハードウェアから完全に分離されており、エミュレートされた仮想ハードウェア デバイスのみを使用できます。","完全に仮想化されたマシンのゲスト環境は、仮想およびエミュレートされたハードウェア デバイスを提供するハイパーバイザーによって作成されます。","コンテナ ハイパーバイザーが個別のカーネル実行を作成するため、同じホスト上のコンテナは異なるオペレーティング システムを使用できます。"],"a":"ABD","acc":["ABD"],"e":"コンテナはホストのカーネルを共有するため C・E は誤り。","w":["","","コンテナはホストのHWをそのまま利用できる（分離はプロセス単位）","","コンテナはホストのカーネルを共有するため別OSは動かせない"]},{"n":78,"c":7,"t":"s","q":"実行中の Bash シェル内でオプションと位置パラメータを変更するために使用されるコマンドはどれですか?","o":["history","setsh","bashconf","set","envsetup"],"a":"D","acc":["D"],"w":["historyは履歴表示","存在しないコマンド","存在しないコマンド","","存在しないコマンド"]},{"n":6,"c":1,"t":"m","q":"System V init 構成に次の2つのシンボリックリンクがあるとします:\n/etc/rc1.d/K01apache2\n/etc/rc2.d/S02apache2\nこれらのリンクによって参照されるスクリプトはいつ実行されますか?(2つ選択してください。)","o":["ランレベル2に入ると、S02apache2 が実行されます。","ランレベル2を離れると S02apache2 が実行されます。","K は非アクティブ化されたサービスを示しているため、K01apache2 は実行されません。","システムのシャットダウン中に、S02apache2 と K01apache2 の両方が実行されます。","ランレベル1に入ると、K01apache2 が実行されます。"],"a":"AE","acc":["AE"],"e":"S=start(ランレベル進入時に起動)、K=kill(ランレベル進入時に停止)。","w":["","Sスクリプトはランレベル進入時に実行される","KはそのRLに入るときに停止処理として実行される","シャットダウン時の動作の説明ではない",""]},{"n":81,"c":3,"t":"s","q":"xargs コマンドの目的は何ですか?","o":["X サーバーに引数を渡します。","呼び出しごとに異なるパラメータを使用してコマンドの実行を繰り返します。","標準入力を読み取り、実行するコマンドを構築します。","グラフィカルに質問し、その回答をシェルに返します。","通常は短いオプション(-h など)しか受け付けないコマンドに長いオプション(--help など)を指定できるようにする"],"a":"C","acc":["C"],"w":["Xサーバーとは無関係","繰り返し自体ではなく標準入力から引数を作るのが本質","","そのような機能はない","そのような機能はない"]},{"n":20,"c":2,"t":"s","q":"次のコマンドのうち、GRUB ブートファイルを現在アクティブなファイルシステムにインストールし、ブートローダーを最初のディスクの最初のパーティションにインストールするものはどれですか。","o":["grub-install /dev/sda","grub-install /dev/sda1","grub-install current /dev/sda0","grub-install /dev/sda0","grub-install current /dev/sda1"],"a":"B","acc":["B"],"e":"最初のディスクの最初のパーティション = /dev/sda1。","w":["/dev/sdaはディスク全体（MBR）への導入","","sda0やcurrent指定は存在しない","sda0というデバイスはない","そのような構文はない"]},{"n":18,"c":5,"t":"m","q":"完全なパスを指定せずにコマンドを開始したときに、現在のシェルが実行する実行可能ファイルの完全なパスを表示できるツールはどれですか。(2つ選択してください。)","o":["find","pwd","which","locate","type"],"a":"CE","acc":["CE"],"e":"【解答を修正】locate はファイル名データベースの検索であり、シェルが実際に実行するコマンドのパスを示すものではない。which と type(シェルビルトイン)が正解。","w":["findは名前・属性での検索","pwdはカレントディレクトリ表示","","locateはDB検索でシェルの解決とは別",""]},{"n":3,"c":1,"t":"s","q":"System V init を使用する場合、Linux カーネルがブート時に最初に起動するプログラムは何ですか?","o":["/lib/init.so","/proc/sys/kernel/init","/etc/rc.d/rcinit","/sbin/init","/boot/init"],"a":"D","acc":["D"],"w":["存在しないパス","カーネルパラメータ用のパス","存在しないパス","","存在しないパス"]},{"n":80,"c":3,"t":"s","q":"vi の通常モードでは、テキストの逆方向の検索を開始するためにどの文字を使用できますか?","o":["r","/","F","?","s"],"a":"D","acc":["D"],"e":"/ は前方検索、? は後方検索。","w":["rは1文字置換","/は前方検索","Fは行内の後方文字検索","","sは1文字削除して挿入"]},{"n":116,"c":7,"t":"m","q":"Bash シェルから、サブシェルを起動せずにファイル /usr/local/bin/runme.sh からの命令を直接実行するコマンドはどれですか?(2つ選択してください。)","o":["source /usr/local/bin/runme.sh","/usr/local/bin/runme.sh","/bin/bash /usr/local/bin/runme.sh",". /usr/local/bin/runme.sh","run /usr/local/bin/runme.sh"],"a":"AD","acc":["AD"],"e":"source と .(ドットコマンド)は現在のシェルで実行する。B・C は子プロセスを生成する。","w":["","直接実行はサブシェル（新プロセス）で動く","bash起動もサブシェルになる","","runというコマンドはない"]},{"n":71,"c":3,"t":"s","q":"次のコマンドのうち、/etc/passwd ファイルからユーザー名(最初の列)とそのプライマリグループ(4番目の列)のリストを出力するものはどれですか。","o":["fmt -f 1,4 /etc/passwd","cut -d : -f 1,4 /etc/passwd","sort -t : -k 1,4 /etc/passwd","paste -f 1,4 /etc/passwd","split -c 1,4 /etc/passwd"],"a":"B","acc":["B"],"w":["fmtは整形コマンド","","sortは並べ替え","pasteは行の連結","splitはファイル分割"]},{"n":27,"c":5,"t":"s","q":"ブロックデバイス名のみを指定し、追加のパラメータを指定せずに mkfs を実行すると、どのタイプのファイルシステムが作成されますか。","o":["XFS","VFAT","ext2","ext3","ext4"],"a":"C","acc":["C"],"e":"mkfs のデフォルトは ext2。","w":["明示指定が必要（mkfs.xfs）","明示指定が必要","","明示指定が必要","明示指定が必要"]},{"n":94,"c":1,"t":"s","q":"ハードディスクからの起動時に、コンピュータは Linux カーネルと initramfs を正常にロードしますが、その後の起動タスクでハングします。問題を調査するため、Linux ベースのレスキューCDを使用してシステムを起動します。問題の根本原因を特定するのに役立つ方法は次のうちどれですか?","o":["レスキューCDのシェルから dmesg コマンドを使用して、元のシステムのブートログを表示する","コンピュータのハードディスク上のファイル /proc/kmsg にエラーがないか調査します。","コンピュータのハードディスク上のファイル /var/log を調べてエラーの可能性を調べます。","chroot を使用してハードディスク上のファイルシステムに切り替え、dmesg を使用してログを表示します。","システムがレスキューCDから正常に起動したため、ハードドライブから再度再起動します。"],"a":"C","acc":["C"],"e":"dmesg は現在起動中(レスキュー)のカーネルのログしか表示できない。/proc は仮想 FS でディスク上に存在しない。","w":["dmesgはレスキューCD側のログを表示してしまう","/proc/kmsgは実行中カーネルの仮想ファイル（ディスク上にない）","/var/logはディレクトリで、マウントして中のファイルを見る必要がある","","原因調査にならない"]},{"n":104,"c":2,"t":"m","q":"GRUB 2 構成ファイルで有効なコマンドはどれですか?(2つ選択してください。)","o":["menuentry","uefi","pxe-ifconfig","insmod","kpartx"],"a":"AD","acc":["AD"],"w":["","存在しないコマンド","存在しない","","kpartxは別のツール"]},{"n":49,"c":2,"t":"m","q":"64ビット Linux システムの次のディレクトリのうち、通常共有ライブラリが含まれるのはどれですか(2つ選択してください)。","o":["~/.lib64/","/usr/lib64/","/var/lib64/","/lib64/","/opt/lib64/"],"a":"BD","acc":["BD"],"w":["標準の場所ではない","","/var/lib64は存在しない","","標準の場所ではない"]},{"n":10,"c":3,"t":"s","q":"次のコマンドのうち、セクション1のマニュアルページ command を表示するものはどれですか。","o":["man command(1)","man command@1","man 1 command","man 1.command","man -s 1 command"],"a":"C","acc":["C"],"e":"GNU man では E(man -s 1 command)も動作するが、試験の想定解答は C。","w":["()での指定はできない","@での指定はできない","","ピリオド区切りは無効","標準的なLinuxのman構文はC（man 1 command）"]},{"n":79,"c":3,"t":"s","q":"次のコマンドのうち、ls の出力で data というファイルを作成するか、または既に存在する場合は上書きするコマンドはどれですか。","o":["ls 3> data","ls >& data","ls > data","ls >> data","ls >>> data"],"a":"C","acc":["C"],"e":">> は追記。> が新規作成/上書き。","w":["3>はFD3への出力",">&はFD複製で用途が異なる","",">>は追記（上書きしない）",">>>という演算子はない"]},{"n":37,"c":3,"t":"s","q":"次の vi コマンドのうち、現在の行と次の行の2行を削除するものはどれですか。","o":["d2","2d","2dd","dd2","de12"],"a":"C","acc":["C"],"w":["無効なコマンド","無効なコマンド（数字はddの前）","","無効なコマンド","無効なコマンド"]},{"n":105,"c":2,"t":"s","q":"依存関係が満たされていないため、ローカル Debian パッケージのインストールに失敗しました。不足している依存関係をインストールし、中断されたパッケージのインストールを完了するコマンドはどれですか?","o":["dpkg --fix --all","apt-get autoinstall","dpkg-reconfigure --all","apt-get all","apt-get install -f"],"a":"E","acc":["E"],"e":"-f(--fix-broken)。","w":["dpkgに--fixはない","存在しないサブコマンド","dpkg-reconfigureは設定のやり直し","存在しない",""]},{"n":26,"c":3,"t":"s","q":"次のコマンドのうち、テキストファイル userlist.txt 内のすべての CR-LF 改行を Linux 標準の LF 改行に変更し、その結果を newlist.txt に保存するものはどれですか。","o":["tr -d '\\r' < userlist.txt > newlist.txt","tr -c '\\n\\r' '' userlist.txt","tr '\\r\\n' '' newlist.txt","tr '\\r' '\\n' userlist.txt newlist.txt","tr -s '/^M/^J/' userlist.txt newlist.txt"],"a":"A","acc":["A"],"e":"CR(\\r)を削除すれば LF のみが残る。tr はファイル引数を取らないためリダイレクトが必要。","w":["","-cは補集合指定で用法が誤り","trは引数にファイルを取らない（標準入力）","trは引数にファイルを取らない","そのような構文はない"]},{"n":19,"c":1,"t":"s","q":"Linux システムで電源管理イベントを処理するデーモンはどれですか?","o":["acpid","batteryd","pwrmgntd","psd","inetd"],"a":"A","acc":["A"],"w":["","存在しないデーモン","存在しないデーモン","存在しないデーモン","inetdはネットワーク接続の待受用"]},{"n":89,"c":3,"t":"s","q":"正規表現 s/[ABC][abc]/xx/ を次の文字列に適用した場合の出力はどうなるでしょうか?\nABCabc","o":["ABxxbc","xxCxxc","xxxxxx","ABCabc","Axxaxx"],"a":"A","acc":["A"],"e":"g フラグがないため最初の一致(Ca)のみ置換 → ABxxbc。","w":["","ABは一致しない（2文字目が大文字）","3箇所の一致はあり得ない","「Ca」が一致するため無変化ではない","BC・bcは一致しない（この出力は生成不可能）"]},{"n":22,"c":4,"t":"s","q":"ハードリンクの使用を検討する際に、ハードリンクを使用しない正当な理由は何ですか?","o":["ハードリンクは、ext4 などの従来のファイルシステムではサポートされていないため、すべての Linux システムで利用できるわけではありません。","各ハードリンクには個別の所有権、権限、ACL があり、ファイルの内容が意図せず公開される可能性があります。","ハードリンクは1つのファイルシステムに固有のものであり、別のファイルシステム上のファイルを指すことはできません。","ルート以外のユーザーがハードリンクを作成できるようにするには、suln をインストールして設定する必要があります。","ハードリンクされたファイルが変更されると、ファイルのコピーが作成され、追加のスペースを消費します。"],"a":"C","acc":["C"],"w":["ext4等はハードリンクをサポートする","ハードリンクは所有権・権限を実体と共有する","","sulnというツールは存在しない","変更してもコピーは作られない（同一実体）"]},{"n":109,"c":1,"t":"s","q":"次のコマンドのうち、必要な依存モジュールとともにカーネルモジュールをロードするものはどれですか。","o":["depmod","modprobe","module_install","insmod","loadmod"],"a":"B","acc":["B"],"e":"insmod は依存関係を解決しない。","w":["depmodは依存関係DBの更新","","存在しない","insmodは依存を解決しない","存在しない"]},{"n":48,"c":2,"t":"m","q":"標準の GRUB 2 インストールには、次のどのファイルが存在しますか?(2つ選択してください。)","o":["/boot/grub/stages/stage0","/boot/grub/i386-pc/lvm.mod","/boot/grub/fstab","/boot/grub/grub.cfg","/boot/grub/linux/vmlinuz"],"a":"BD","acc":["BD"],"e":"stage 構造は GRUB Legacy のもの。GRUB 2 はモジュール(*.mod)と grub.cfg を使用。","w":["stage0はGRUB Legacyの概念","","fstabはGRUB配下にない","","カーネルは/boot直下（grubディレクトリ内ではない）"]},{"n":74,"c":3,"t":"s","q":"次のコマンドのうち、/etc/passwd からユーザー名とそのログインシェルのリストを生成するものはどれですか。","o":["column -s : 1,7 /etc/passwd","chop -c 1,7 /etc/passwd","colrm 1,7 /etc/passwd","sort -t: -k1,7 /etc/passwd","cut -d: -f1,7 /etc/passwd"],"a":"E","acc":["E"],"e":"ユーザー名は第1フィールド、ログインシェルは第7フィールド。","w":["columnの用法が誤り","chopは存在しない","colrmは文字位置での削除","sortは並べ替え",""]},{"n":31,"c":5,"t":"m","q":"マウント用に /etc/fstab に明示的なデバイスを指定する代わりに、目的のパーティションを識別するために使用できる他のオプションは何ですか?(2つ選択してください。)","o":["LABEL","ID","FIND","NAME","UUID"],"a":"AE","acc":["AE"],"e":"LABEL= と UUID= が使用可能。","w":["","ID=という指定子は使えない","存在しない指定子","存在しない指定子",""]},{"n":4,"c":4,"t":"s","q":"dbmaint & コマンドを使用して、dbmaint をバックグラウンドで実行しました。しかし、システムからログアウトすると dbmaint は終了します。プログラムを実行しているユーザーがログアウトした後も dbmaint の実行を継続するには、どの dbmaint 呼び出し方法がありますか?","o":["job -b dbmaint","dbmaint &>/dev/pts/null","nohup dbmaint &","bg dbmaint","wait dbmaint"],"a":"C","acc":["C"],"e":"原文の「dmaint」等の表記ゆれは dbmaint に統一。","w":["jobsに-bはない","リダイレクトではHUPシグナルを防げない","","bgは停止中ジョブの再開用","waitは終了を待つコマンド"]},{"n":44,"c":5,"t":"s","q":"ハードディスク ドライブをパーティション分割するときに、Linux スワップ領域に使用されるパーティション タイプは次のどれですか。","o":["7","82","83","8e","fd"],"a":"B","acc":["B"],"e":"82=Linux swap、83=Linux、8e=LVM、fd=RAID。","w":["7=NTFS/HPFS","","83=Linux標準パーティション","8e=Linux LVM","fd=RAID自動検出"]},{"n":7,"c":3,"t":"m","q":"Bash シェルを使用しているときに現在の作業ディレクトリを出力するコマンドはどれですか?(2つ選択してください。)","o":["echo \"${PWD}\"","echo \"${WD}\"","printwd","pwd","echo \"${pwd}\""],"a":"AD","acc":["AD"],"e":"環境変数 PWD は大文字。E の ${pwd} は未定義変数。","w":["","WDという変数はない","printwdは存在しない","","変数名は大文字のPWD（$pwdは未定義）"]},{"n":83,"c":4,"t":"s","q":"既存のファイルを指すハードリンクが作成されると、次のどのプロパティが変更されますか?","o":["File size(ファイルサイズ)","Link count(リンク数)","Modify timestamp(更新タイムスタンプ)","Inode number(inode 番号)","Permissions(パーミッション)"],"a":"B","acc":["B"],"w":["サイズは不変（実体共有）","","更新時刻は不変","inode番号は同じものを共有","パーミッションは共有"]},{"n":119,"c":4,"t":"x","q":"空欄を埋めてください。\nすでに実行中のプロセスの優先度を変更するにはどのコマンドを使用しますか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"renice"},{"n":57,"c":4,"t":"s","q":"次のコマンドのうち、gzip で圧縮された tar アーカイブの内容を表示するものはどれですか?","o":["gzip archive.tgz | tar xvf -","tar -fzt archive.tgz","gzip -d archive.tgz | tar tvf -","tar cf archive.tgz","tar ztf archive.tgz"],"a":"E","acc":["E"],"e":"z(gzip)t(一覧表示)f(ファイル指定)。","w":["xvfは展開してしまう（tが一覧）","fの直後はファイル名が必要で無効","gzip -dは標準出力に出ず元ファイルを展開してしまう","cfは作成",""]},{"n":2,"c":3,"t":"s","q":"Bash では、コマンドの後に 1>&2 を挿入すると「なに」が「どこ」へリダイレクトされますか?","o":["標準エラーを標準入力に出力します。","標準出力を標準エラーに出力します。","標準入力を標準エラーに変換します。","標準エラーを標準出力に出力します。","標準出力を標準入力に。"],"a":"B","acc":["B"],"w":["標準入力へのリダイレクトはできない","","標準入力は変換できない","2>&1（逆方向）の説明","標準入力への出力は不可"]},{"n":91,"c":5,"t":"m","q":"パーティションの最大数とサイズに関して、GPT パーティションテーブルと MBR パーティションテーブルの主な違いは何ですか?(2つ選択してください。)","o":["MBR は最大 4TB のパーティションサイズを処理できますが、GPT は最大 128ZB のパーティションサイズをサポートします。","デフォルトでは、GPT は最大 128 個のパーティションを管理できますが、MBR は4つのプライマリパーティションのみをサポートします。","デフォルトでは、GPT は最大 64 個のパーティションを管理できますが、MBR は 16 個のプライマリパーティションのみをサポートします。","MBR は最大 2.2TB のパーティションサイズを処理できますが、GPT は最大 9.4ZB のサイズをサポートします。","GPT と MBR はどちらも最大4つのプライマリパーティションをサポートし、各パーティションの最大容量は 4096TB です。"],"a":"BD","acc":["BD"],"w":["MBRの上限は2.2TB","","GPTは128個・MBRは4個が正","","GPTは128個まで管理できる"]},{"n":120,"c":4,"t":"m","q":"次のコマンドのうち、root が所有するすべてのプロセスの ID を表示するものはどれですか(2つ選択してください)。","o":["pgrep -c root","pgrep -u root","pgrep -f root","pgrep -U 0","pgrep -c 0"],"a":"BD","acc":["BD"],"e":"-u は実効ユーザー名、-U は実UID(root=0)。","w":["-cは一致数のカウント","","-fはコマンドライン全体との一致","","-cはカウントで対象指定ではない"]},{"n":92,"c":2,"t":"s","q":"yum リポジトリは関連するパッケージのセットを宣言できます。admintools グループに属するすべてのパッケージをインストールする yum コマンドはどれですか?","o":["yum pkgsel --install admintools","yum install admintools/*","yum groupinstall admintools","yum taskinstall admintools","yum collection install admintools"],"a":"C","acc":["C"],"w":["存在しないコマンド","そのような指定はできない","","存在しない","存在しない"]},{"n":112,"c":3,"t":"s","q":"次のコマンドのうち、シェルが特定のコマンドを処理する方法を示すものはどれですか。","o":["where","type","stat","case","fileinfo"],"a":"B","acc":["B"],"e":"type はエイリアス/ビルトイン/外部コマンド等の種別を表示する。","w":["whereは存在しない（whichが近い）","","statはファイル情報","caseはシェル構文","存在しない"]},{"n":41,"c":2,"t":"s","q":"次のコマンドのうち、RPM パッケージファイル foo.rpm の依存関係を一覧表示するものはどれですか。","o":["rpm -qpR foo.rpm","rpm -dep foo","rpm -ld foo.rpm","rpm -R foo.rpm","rpm -pD foo"],"a":"A","acc":["A"],"e":"-q(照会) -p(パッケージファイル) -R(依存関係)。","w":["","存在しないオプション","存在しないオプション","-Rは-qと併用が必要","存在しないオプション"]},{"n":11,"c":5,"t":"s","q":"次のコマンドのうち、起動時に /dev/sda1 上の ext3 ファイルシステムが完全なファイルシステムチェックを実行するまでの日数を変更するものはどれですか。","o":["tune2fs -d 200 /dev/sda1","tune2fs -i 200 /dev/sda1","tune2fs -c 200 /dev/sda1","tune2fs -n 200 /dev/sda1","tune2fs --days 200 /dev/sda1"],"a":"B","acc":["B"],"e":"-i はチェック間隔(既定単位は日)。-c はマウント回数。","w":["-dはデバッグレベル","","-cはマウント回数の上限設定","-nは存在しない","--daysは存在しない"]}],[{"n":63,"c":5,"t":"s","q":"次のコマンドのうち、コマンド foo が呼び出されたときに実行される実行可能ファイルへのパスを表示するものはどれですか。","o":["lsattr foo","apropos foo","locate foo","whatis foo","which foo"],"a":"E","acc":["E"],"w":["lsattrは拡張属性の表示","aproposはmanページの検索","locateはDB検索で実行対象とは限らない","whatisはmanの1行説明",""]},{"n":36,"c":1,"t":"m","q":"lspci コマンドは、システムハードウェアについてどのような情報を表示できますか?(3つ選択してください。)","o":["システムバッテリーの種類","デバイスの IRQ 設定","PCI バス速度","イーサネット MAC アドレス","デバイスベンダーの識別"],"a":"BCE","acc":["BCE"],"w":["バッテリー情報はlspciでは見えない（ACPI側）","","","MACアドレスはip/ifconfigで確認",""]},{"n":67,"c":3,"t":"s","q":"現在のファイルを filea.txt として保存するには、vi を終了する前にどのコマンドを入力する必要がありますか?","o":["%s filea.txt","%w filea.txt",":save filea.txt",":w filea.txt",":s filea.txt"],"a":"D","acc":["D"],"w":["%sは置換コマンド","無効なコマンド","vimでは:saveasが相当（:saveはない）","",":sは置換"]},{"n":23,"c":5,"t":"x","q":"空白を埋めてください。\nマウントされたすべてのファイルシステムの現在のディスク領域使用量を表示するコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"df"},{"n":42,"c":2,"t":"s","q":"パッケージをアンインストールするが、パッケージが再インストールされた場合に備えて構成ファイルを保持するコマンドはどれですか?","o":["dpkg -s pkgname","dpkg -L pkgname","dpkg -P pkgname","dpkg -v pkgname","dpkg -r pkgname"],"a":"E","acc":["E"],"e":"-r(remove)は設定ファイルを残す。-P(purge)は設定ファイルも削除。","w":["-sは状態表示","-Lはファイル一覧","-Pは設定ファイルごと完全削除","-vは存在しない",""]},{"n":107,"c":2,"t":"s","q":"dpkg パッケージ管理を使用してシステム上のパッケージを削除する場合、どの dpkg オプションによって構成ファイルも確実に削除されますか?","o":["--clean","--purge","--vacuum","--remove","--declare"],"a":"B","acc":["B"],"w":["存在しない","","存在しない","--removeは設定を残す","存在しない"]},{"n":115,"c":1,"t":"m","q":"/boot/ ファイルシステムにあるファイルは次のどれですか?(2つ選択してください。)","o":["Linux カーネルイメージ","Bash シェルバイナリ","systemd ターゲットとサービスユニット","初期 RAM ディスクイメージ","fsck バイナリ"],"a":"AD","acc":["AD"],"w":["","シェルは/bin配下","ユニットは/usr/lib/systemd等","","fsckは/sbin配下"]},{"n":77,"c":3,"t":"s","q":"grep コマンドの -v オプションの効果は何ですか?","o":["一致する部分を色で強調表示できるようになります。","コマンドのバージョン情報を表示します。","一致しない行のみを出力します。","最後に一致した行を最初に表示するように出力順序を変更します。","すべての行を出力し、一致する行の前に a+ を付けます。"],"a":"C","acc":["C"],"w":["色付けは--color","バージョン表示は-V（大文字）","","そのような機能はない","そのような機能はない"]},{"n":75,"c":5,"t":"s","q":"ネストされたディレクトリ構造では、特定の数のサブディレクトリを検索するようにコマンドを制限するには、どの find コマンドライン オプションを使用しますか?","o":["-maxdepth","-dirmax","-maxlevels","-s","-n"],"a":"A","acc":["A"],"w":["","存在しないオプション","存在しないオプション","-sは別の意味","存在しないオプション"]},{"n":116,"c":7,"t":"m","q":"Bash シェルから、サブシェルを起動せずにファイル /usr/local/bin/runme.sh からの命令を直接実行するコマンドはどれですか?(2つ選択してください。)","o":["source /usr/local/bin/runme.sh","/usr/local/bin/runme.sh","/bin/bash /usr/local/bin/runme.sh",". /usr/local/bin/runme.sh","run /usr/local/bin/runme.sh"],"a":"AD","acc":["AD"],"e":"source と .(ドットコマンド)は現在のシェルで実行する。B・C は子プロセスを生成する。","w":["","直接実行はサブシェル（新プロセス）で動く","bash起動もサブシェルになる","","runというコマンドはない"]},{"n":33,"c":2,"t":"m","q":"Linux コンテナと従来の仮想マシン(LXC と KVM など)を比較した場合、正しい記述は次のうちどれですか(3つ選択してください。)","o":["コンテナは、カーネルがプロセスの分離とリソース管理を制御する軽量の仮想化方法です。","完全に仮想化されたマシンでは、仮想マシン内の特定のハードウェア アーキテクチャ用の任意のオペレーティング システムを実行できます。","コンテナーはホスト システムの物理ハードウェアから完全に分離されており、エミュレートされた仮想ハードウェア デバイスのみを使用できます。","完全に仮想化されたマシンのゲスト環境は、仮想およびエミュレートされたハードウェア デバイスを提供するハイパーバイザーによって作成されます。","コンテナ ハイパーバイザーが個別のカーネル実行を作成するため、同じホスト上のコンテナは異なるオペレーティング システムを使用できます。"],"a":"ABD","acc":["ABD"],"e":"コンテナはホストのカーネルを共有するため C・E は誤り。","w":["","","コンテナはホストのHWをそのまま利用できる（分離はプロセス単位）","","コンテナはホストのカーネルを共有するため別OSは動かせない"]},{"n":12,"c":4,"t":"m","q":"バックアップソフトウェアは、2回のバックアップ実行間で変更されていないファイル間のハードリンクを頻繁に使用します。これらのハードリンクによってどのような利点が得られますか?(2つ選択してください。)","o":["古いバックアップは、新しいバックアップのハードリンク ターゲットとして機能しながら、テープなどの低速のバックアップ メディアに移動できます。","ハードリンクは非同期操作であり、コピー操作が後の時点に延期されるため、バックアップの実行速度が速くなります。","ハードリンクされたファイルは作成後に変更できないため、バックアップは無傷であることが保証されます。","ハードリンクは冗長コピーを保存するのではなく、ディスク上の同じデータを指すため、バックアップの消費スペースが少なくなります。","ハードリンクは各ファイルのデータをコピーするのではなく、ファイルシステムのメタデータのみを変更するため、バックアップの実行速度が速くなります。"],"a":"DE","acc":["DE"],"w":["別メディアへ移動するとハードリンクは維持できない","ハードリンクは遅延コピーではない","ハードリンク先も変更可能","",""]},{"n":60,"c":3,"t":"s","q":"ユーザーのホームディレクトリにある次のファイルのうち、Bash 履歴が含まれているのはどれですか?","o":[".bashrc_history",".bash_histfile",".history",".bash_history",".history_bash"],"a":"D","acc":["D"],"w":["存在しないファイル名","存在しないファイル名","存在しないファイル名","","存在しないファイル名"]},{"n":1,"c":4,"t":"m","q":"特定のファイルの inode 番号を表示するために使用できるコマンドはどれですか?(2つ選択してください。)","o":["inode","ln","ls","cp","stat"],"a":"CE","acc":["CE"],"e":"ls -i と stat で inode 番号を表示できる。","w":["存在しないコマンド","lnはリンクの作成用","","cpはコピー用",""]},{"n":93,"c":1,"t":"m","q":"Linux のブートプロセスに関係する初期 RAM ディスクについて正しい記述はどれですか(2つ選択してください)。","o":["initramfs は圧縮されたファイルシステム アーカイブであり、解凍してその内容を調べることができます。","initramfs ファイルには、MBR、ブートローダー、Linux カーネルが含まれています。","起動が成功すると、initramfs の内容が /run/initramfs/ で利用できるようになります。","カーネルは、実際のルートファイルシステムにアクセスする前に、一時的に initramfs を使用します。","initramfs は特定のカーネルバージョンに依存せず、初期インストール後は変更されません。"],"a":"AD","acc":["AD"],"w":["","MBRやブートローダーは含まれない","通常は起動後に破棄される（保持は設定時のみ）","","カーネルバージョンに依存し更新される"]},{"n":30,"c":4,"t":"m","q":"次のディレクトリについて考えてみましょう:\ndrwxrwxr-x 2 root sales 4096 Jan 1 15:21 sales\nディレクトリ sales 内に作成された新しいファイルがグループ sales によって所有されることを保証するコマンドはどれですか?(2つ選択してください。)","o":["chmod g+s sales","setpol -R newgroup=sales sales","chgrp -p sales sales","chown --persistent *.sales sales","chmod 2775 sales"],"a":"AE","acc":["AE"],"e":"SGID ビット(g+s / 2xxx)により新規ファイルがディレクトリのグループを継承する。","w":["","setpolは存在しない","chgrpに-pはない","chownに--persistentはない",""]},{"n":114,"c":4,"t":"s","q":"キーボードで Ctrl + Z キーの組み合わせが押されたときに、プロセスに送信される信号は次のどれですか。","o":["SIGTERM","SIGCONT","SIGSTOP","SIGKILL","SIGINT"],"a":"C","acc":["C"],"e":"厳密には Ctrl+Z は SIGTSTP を送るが、選択肢に無いため試験の想定解答は C(SIGSTOP)。","w":["SIGTERMは終了要求","SIGCONTは再開","","SIGKILLは強制終了","SIGINTはCtrl+C"]},{"n":37,"c":3,"t":"s","q":"次の vi コマンドのうち、現在の行と次の行の2行を削除するものはどれですか。","o":["d2","2d","2dd","dd2","de12"],"a":"C","acc":["C"],"w":["無効なコマンド","無効なコマンド（数字はddの前）","","無効なコマンド","無効なコマンド"]},{"n":34,"c":5,"t":"x","q":"空欄を埋めてください。\nlocate コマンドによって使用されるデータベースを更新するプログラムはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"updatedb"},{"n":13,"c":3,"t":"m","q":"vi エディタで開いているドキュメントを保存してエディタを終了するシーケンスは次のどれですか?(2つ選択してください。)","o":["Ctrl + XX","Ctrl + W","Esc zz","Esc :wq","Esc ZZ"],"a":"DE","acc":["DE"],"e":"ZZ は大文字のみ有効(zz は無効)。","w":["そのようなキー操作はない","そのようなキー操作はない","zz小文字では保存されない（ZZ大文字が正）","",""]},{"n":73,"c":4,"t":"s","q":"& 文字で終わるコマンドについて正しい記述は次のどれですか。","o":["コマンドの出力は /dev/null にリダイレクトされます。","コマンドは現在のシェルのバックグラウンドで実行されます。","コマンドの出力はシェルによって実行されます。","コマンドは init プロセスの直接の子として実行されます。","コマンドの入力は /dev/null から読み取られます。"],"a":"B","acc":["B"],"w":["/dev/nullへのリダイレクトは行われない","","出力がコマンドとして実行されることはない","親は現在のシェルのまま","入力の付け替えは行われない"]},{"n":48,"c":2,"t":"m","q":"標準の GRUB 2 インストールには、次のどのファイルが存在しますか?(2つ選択してください。)","o":["/boot/grub/stages/stage0","/boot/grub/i386-pc/lvm.mod","/boot/grub/fstab","/boot/grub/grub.cfg","/boot/grub/linux/vmlinuz"],"a":"BD","acc":["BD"],"e":"stage 構造は GRUB Legacy のもの。GRUB 2 はモジュール(*.mod)と grub.cfg を使用。","w":["stage0はGRUB Legacyの概念","","fstabはGRUB配下にない","","カーネルは/boot直下（grubディレクトリ内ではない）"]},{"n":99,"c":1,"t":"s","q":"デフォルトの systemd ブートターゲットをマルチユーザーに設定する正しい方法は何ですか?","o":["systemctl isolate multi-user.target","systemctl set-runlevel multi-user.target","systemctl set-boot multi-user.target","systemctl set-default multi-user.target","systemctl boot -p multi-user.target"],"a":"D","acc":["D"],"e":"isolate は現在のターゲットの即時切替であり、デフォルト設定ではない。","w":["isolateは今すぐ切り替えるだけ（次回起動に影響しない）","存在しないサブコマンド","存在しない","","存在しない"]},{"n":55,"c":1,"t":"s","q":"System V init ベースのシステム上の init プロセスのプロセス ID 番号は何ですか?","o":["-1","0","1","再起動するたびに異なります","現在の実行レベルに設定されます"],"a":"C","acc":["C"],"w":["PIDに負数はない","PID 0はスケジューラ（アイドル）","","initは常にPID 1","ランレベルとPIDは無関係"]},{"n":54,"c":1,"t":"m","q":"BIOS を使用した PC のブートシーケンスについて正しい記述はどれですか(2つ選択してください)。","o":["ブートプロセスの一部は BIOS から設定できます","Linux はコンピュータを起動するのに BIOS の支援を必要としない","BIOS ブートプロセスは、ハードディスクなどの二次記憶装置が機能している場合にのみ開始されます。","BIOS はコンピュータの電源投入後にブートプロセスを開始します。","BIOS はハードディスクなどの二次記憶装置からハードウェアドライバをロードして起動します。"],"a":"AD","acc":["AD"],"w":["","LinuxもBIOS/UEFIの初期化を必要とする","二次記憶がなくても（PXE等）ブートは開始できる","","HWドライバをロードするのはカーネル"]},{"n":102,"c":4,"t":"s","q":"gzip 圧縮された tar アーカイブ texts.tgz にファイル a.txt と b.txt が含まれている場合、gunzip texts.tgz を実行した後、現在のディレクトリにはどのファイルが存在するでしょうか。","o":["a.txt、b.txt、texts.tgz のみ","texts.tar と texts.tgz のみ","a.txt.gz と b.txt.gz のみ","a.txt と b.txt のみ","texts.tar のみ"],"a":"E","acc":["E"],"e":"gunzip は圧縮のみを解除し(tar は展開しない)、元の .tgz は削除される → texts.tar のみが残る。","w":["gunzipで.tgzは.tarになる（展開はされない）","","gunzipはtarの中身までは取り出さない","tarの展開まではしない","正しいがファイル名はtexts.tar（.tgzは残らない）"]},{"n":47,"c":2,"t":"s","q":"次のコマンドのうち、名前が文字列 foo で終わるすべてのパッケージをインストールするのはどれですか?","o":["zypper get '*foo'","zypper update '*foo?'","zypper force 'foo*'","zypper install '*foo'","zypper add '.*foo'"],"a":"D","acc":["D"],"w":["getサブコマンドはない","updateは更新用","forceはない","","addはリポジトリ追加用"]},{"n":5,"c":2,"t":"m","q":"yum の設定に関して正しいのは次のうちどれですか?(2つ選択してください。)","o":["リポジトリ設定の変更は、yum confupdate の実行後に有効になります。","yum 設定の変更は yumd サービスの再起動後に有効になります。","パッケージリポジトリの設定は複数のファイルに分割できる。","リポジトリ設定には $basearch や $releasever などの変数を含めることができます。","/etc/yum.repos.d/ にファイルが含まれている場合、/etc/yum.conf は無視されます。"],"a":"CD","acc":["CD"],"w":["yum confupdateは存在しない","yumdというサービスはない","","","yum.confは無視されず併用される"]},{"n":39,"c":5,"t":"m","q":"次のコマンドのうち、/tmp/ ディレクトリとそのサブディレクトリ内にある、ユーザー root が所有するすべてのファイルとディレクトリを一覧表示するものはどれですか。(2つ選択してください。)","o":["find /tmp -user root -print","find -path /tmp -uid root","find /tmp -uid root -print","find /tmp -user root","find -path /tmp -user root -print"],"a":"AD","acc":["AD"],"e":"-uid は数値UIDを取るため C は不可(root は名前)。-print は省略可能。","w":["","-pathは検索パスの指定方法として誤り","-uidは数値UID指定（rootという名前は不可）","","検索パスは引数で渡す（-pathは条件）"]},{"n":120,"c":4,"t":"m","q":"次のコマンドのうち、root が所有するすべてのプロセスの ID を表示するものはどれですか(2つ選択してください)。","o":["pgrep -c root","pgrep -u root","pgrep -f root","pgrep -U 0","pgrep -c 0"],"a":"BD","acc":["BD"],"e":"-u は実効ユーザー名、-U は実UID(root=0)。","w":["-cは一致数のカウント","","-fはコマンドライン全体との一致","","-cはカウントで対象指定ではない"]},{"n":49,"c":2,"t":"m","q":"64ビット Linux システムの次のディレクトリのうち、通常共有ライブラリが含まれるのはどれですか(2つ選択してください)。","o":["~/.lib64/","/usr/lib64/","/var/lib64/","/lib64/","/opt/lib64/"],"a":"BD","acc":["BD"],"w":["標準の場所ではない","","/var/lib64は存在しない","","標準の場所ではない"]},{"n":32,"c":3,"t":"s","q":"次のコマンドのうち、シェルに test を出力するのはどれですか?","o":["cat test EOT","cat <|EOT test EOT","cat !test EOT","cat &test EOT","cat <<EOT test EOT"],"a":"E","acc":["E"],"e":"ヒアドキュメント(<<EOT ... EOT)。原本スキャンでは「<<」が判読困難だが、E は cat <<EOT が正しい形。","w":["<<がなくヒアドキュメントにならない","<|という演算子はない","!は履歴展開で別機能","&は別の意味",""]},{"n":79,"c":3,"t":"s","q":"次のコマンドのうち、ls の出力で data というファイルを作成するか、または既に存在する場合は上書きするコマンドはどれですか。","o":["ls 3> data","ls >& data","ls > data","ls >> data","ls >>> data"],"a":"C","acc":["C"],"e":">> は追記。> が新規作成/上書き。","w":["3>はFD3への出力",">&はFD複製で用途が異なる","",">>は追記（上書きしない）",">>>という演算子はない"]},{"n":68,"c":3,"t":"s","q":"次の入力ストリームがあるとします:\ntxt1.txt\natxt.txt\ntxtB.txt\n次の正規表現のどれが、この入力ストリームを次の出力ストリームに変換しますか?\ntxt1.bak.txt atxt.bak.txt txtB.bak.txt","o":["s/^.txt/.bak/","s/txt/bak.txt/","s/txt$/bak.txt/","s/^txt$/.bak^/","s/[.txt]/.bak$1/"],"a":"C","acc":["C"],"e":"行末の txt を bak.txt に置換(txt1.txt → txt1.bak.txt)。","w":["^.txtは先頭一致で意図と異なる","最初のtxtが置換され結果が崩れる","","行全体がtxtの場合のみ一致","[.txt]は文字クラスで意味が異なる"]},{"n":15,"c":4,"t":"s","q":"どの chown コマンドが、data.txt というファイルの所有権を dave に、グループを staff に変更しますか?","o":["chown dave/staff data.txt","chown -u dave -g staff data.txt","chown --user dave --group staff data.txt","chown dave+staff data.txt","chown dave:staff data.txt"],"a":"E","acc":["E"],"w":["区切りは/ではなく:","-u/-gオプションはない","--user/--groupオプションはない","+では区切れない",""]},{"n":78,"c":7,"t":"s","q":"実行中の Bash シェル内でオプションと位置パラメータを変更するために使用されるコマンドはどれですか?","o":["history","setsh","bashconf","set","envsetup"],"a":"D","acc":["D"],"w":["historyは履歴表示","存在しないコマンド","存在しないコマンド","","存在しないコマンド"]},{"n":61,"c":3,"t":"s","q":"ファイルが存在しない場合のコマンド ls > files に関して正しいのは何ですか?","o":["ls の出力は端末に印刷されます","ファイルが作成され、ls の出力が含まれます","エラーメッセージが表示され、ls は実行されません","コマンド files が実行され、ls の出力を受け取ります。","ls の出力はすべて破棄される"],"a":"B","acc":["B"],"w":["リダイレクトされるので端末には出ない","","エラーにはならない（新規作成される）","filesは実行されない（出力先ファイル名）","破棄されるのは/dev/nullへ向けた場合"]},{"n":82,"c":3,"t":"s","q":"次のコマンドのうち、すべての一般的なファイルタイプに関する情報を含む定義データベースファイルを使用してファイルの形式を決定するものはどれですか。","o":["type","file","magic","pmagic","hash"],"a":"B","acc":["B"],"e":"file コマンドは magic データベースを使用する。","w":["typeはコマンドの種別表示","","magicはDB名でコマンドではない","存在しない","hashはコマンドパスのキャッシュ"]},{"n":104,"c":2,"t":"m","q":"GRUB 2 構成ファイルで有効なコマンドはどれですか?(2つ選択してください。)","o":["menuentry","uefi","pxe-ifconfig","insmod","kpartx"],"a":"AD","acc":["AD"],"w":["","存在しないコマンド","存在しない","","kpartxは別のツール"]},{"n":95,"c":3,"t":"s","q":"ユーザーが誤ってホームディレクトリにサブディレクトリ \\dir を作成しました。そのディレクトリを削除するには、次のコマンドのうちどれを使用しますか?","o":["rmdir ~/\\\\dir","rmdir \"~/\\dir\"","rmdir ~/'dir'","rmdir ~/\\dir","rmdir '~/\\dir'"],"a":"A","acc":["A"],"e":"~ の展開にはクォート外である必要があり、\\ 自体は \\\\ でエスケープする。問題文の「リモート操作」はOCR/翻訳誤りで「削除」の意。","w":["\\\\は\\自体のエスケープで~/が展開されない位置","ダブルクォート内では~が展開されない","'dir'では\\が含まれない","","クォート内では~が展開されない"]},{"n":20,"c":2,"t":"s","q":"次のコマンドのうち、GRUB ブートファイルを現在アクティブなファイルシステムにインストールし、ブートローダーを最初のディスクの最初のパーティションにインストールするものはどれですか。","o":["grub-install /dev/sda","grub-install /dev/sda1","grub-install current /dev/sda0","grub-install /dev/sda0","grub-install current /dev/sda1"],"a":"B","acc":["B"],"e":"最初のディスクの最初のパーティション = /dev/sda1。","w":["/dev/sdaはディスク全体（MBR）への導入","","sda0やcurrent指定は存在しない","sda0というデバイスはない","そのような構文はない"]},{"n":58,"c":3,"t":"s","q":"次のコマンドのうち、ls の出力を標準エラーにリダイレクトするものはどれですか?","o":["ls >-1","ls <","ls >&2","ls >>2","ls |error"],"a":"C","acc":["C"],"w":["3>はFD3への出力","<は入力リダイレクト","","「2」という名前のファイルへ追記される","errorというコマンドへのパイプになる"]},{"n":109,"c":1,"t":"s","q":"次のコマンドのうち、必要な依存モジュールとともにカーネルモジュールをロードするものはどれですか。","o":["depmod","modprobe","module_install","insmod","loadmod"],"a":"B","acc":["B"],"e":"insmod は依存関係を解決しない。","w":["depmodは依存関係DBの更新","","存在しない","insmodは依存を解決しない","存在しない"]},{"n":56,"c":1,"t":"x","q":"空欄を埋めてください。\n/proc ファイルシステム内のどのファイルに、ブートローダからカーネルに渡されるパラメータがリストされていますか?(パスなしでファイル名のみを指定してください。)","o":[],"ax":"cmdline","axa":["/proc/cmdline"],"e":"/proc/cmdline(設問はファイル名のみ)。"},{"n":89,"c":3,"t":"s","q":"正規表現 s/[ABC][abc]/xx/ を次の文字列に適用した場合の出力はどうなるでしょうか?\nABCabc","o":["ABxxbc","xxCxxc","xxxxxx","ABCabc","Axxaxx"],"a":"A","acc":["A"],"e":"g フラグがないため最初の一致(Ca)のみ置換 → ABxxbc。","w":["","ABは一致しない（2文字目が大文字）","3箇所の一致はあり得ない","「Ca」が一致するため無変化ではない","BC・bcは一致しない（この出力は生成不可能）"]},{"n":110,"c":4,"t":"x","q":"空白を埋めてください。\n特定の nice レベルで別のコマンドを開始するために使用されるコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"nice"},{"n":18,"c":5,"t":"m","q":"完全なパスを指定せずにコマンドを開始したときに、現在のシェルが実行する実行可能ファイルの完全なパスを表示できるツールはどれですか。(2つ選択してください。)","o":["find","pwd","which","locate","type"],"a":"CE","acc":["CE"],"e":"【解答を修正】locate はファイル名データベースの検索であり、シェルが実際に実行するコマンドのパスを示すものではない。which と type(シェルビルトイン)が正解。","w":["findは名前・属性での検索","pwdはカレントディレクトリ表示","","locateはDB検索でシェルの解決とは別",""]},{"n":88,"c":5,"t":"s","q":"コマンド mount --bind は何をしますか?","o":["あるディレクトリの内容を別のディレクトリで利用できるようにする","利用可能なすべてのファイルシステムを現在のディレクトリにマウントします","ユーザーがマウント可能なすべてのファイルシステムをユーザーのホームディレクトリにマウントします。","/etc/fstab にリストされ、オプション userbind が設定されているすべてのファイルシステムをマウントします。","通常のファイルをディレクトリに永続的にマウントする"],"a":"A","acc":["A"],"w":["","そのような機能はない","そのような機能はない","userbindオプションは存在しない","通常ファイルのマウントの説明ではない"]},{"n":40,"c":4,"t":"s","q":"通常のユーザーが新しいプロセスを実行するときに nice コマンドを使用してプロセスに割り当てることができる最大の nice 値はどれくらいですか?","o":["9","15","19","49","99"],"a":"C","acc":["C"],"w":["最大は19","最大は19","","nice値は-20〜19の範囲","nice値は-20〜19の範囲"]},{"n":98,"c":5,"t":"x","q":"空欄を埋めてください。\nファイルシステム階層標準(FHS)に従って、システム管理者がコンパイルしたバイナリをシステム上のすべてのユーザーが利用できるようにするためには、どこに配置する必要がありますか?(ディレクトリへのフルパスを指定します。)","o":[],"ax":"/usr/local/bin/","axa":["/usr/local/bin","usr/local/bin"]}],[{"n":97,"c":5,"t":"s","q":"新しい ext4 ファイルシステム上の root ユーザー用に予約された領域のデフォルトのパーセンテージはどれくらいですか?","o":["10%","3%","15%","0%","5%"],"a":"E","acc":["E"],"w":["デフォルトは5%","デフォルトは5%","デフォルトは5%","予約は0ではない",""]},{"n":22,"c":4,"t":"s","q":"ハードリンクの使用を検討する際に、ハードリンクを使用しない正当な理由は何ですか?","o":["ハードリンクは、ext4 などの従来のファイルシステムではサポートされていないため、すべての Linux システムで利用できるわけではありません。","各ハードリンクには個別の所有権、権限、ACL があり、ファイルの内容が意図せず公開される可能性があります。","ハードリンクは1つのファイルシステムに固有のものであり、別のファイルシステム上のファイルを指すことはできません。","ルート以外のユーザーがハードリンクを作成できるようにするには、suln をインストールして設定する必要があります。","ハードリンクされたファイルが変更されると、ファイルのコピーが作成され、追加のスペースを消費します。"],"a":"C","acc":["C"],"w":["ext4等はハードリンクをサポートする","ハードリンクは所有権・権限を実体と共有する","","sulnというツールは存在しない","変更してもコピーは作られない（同一実体）"]},{"n":100,"c":2,"t":"m","q":"論理ボリュームマネージャ(LVM)は何に使用できますか?(3つ選択してください。)","o":["スナップショットを作成するため。","論理ボリュームのサイズを動的に変更します。","論理ボリュームを動的に作成または削除します。","RAID 9 アレイを作成します。","論理ボリュームを暗号化します。"],"a":"ABC","acc":["ABC"],"e":"RAID 9 は存在しない。LVM 自体は暗号化機能を持たない(dm-crypt が担当)。","w":["","","","RAID 9という規格はない","暗号化はLUKS/dm-cryptの役割"]},{"n":29,"c":4,"t":"s","q":"コマンド ls -i からの次の出力を検討してください。\n525385 -rw-rw-r-- 2 1000 1000 0 Feb 12 19:44 a.txt\n526255 lrwxrwxrwx 1 1000 1000 5 Feb 12 19:44 b/txt -> a.txt\na.txt(inode 525385)と同じ inode 番号を持つ c.txt という名前の新しいファイルはどのように作成されるでしょうか。","o":["ln -h a.txt c.txt","ln c.txt a.txt","ln a.txt c.txt","ln -f c.txt a.txt","ln -i 525385 c.txt"],"a":"C","acc":["C"],"e":"ハードリンク作成。引数順は「ln 既存ファイル 新リンク名」。","w":["-hオプションはない","引数順が逆（存在しないc.txtをソースにできない）","","引数順が逆","inode番号での作成はできない"]},{"n":82,"c":3,"t":"s","q":"次のコマンドのうち、すべての一般的なファイルタイプに関する情報を含む定義データベースファイルを使用してファイルの形式を決定するものはどれですか。","o":["type","file","magic","pmagic","hash"],"a":"B","acc":["B"],"e":"file コマンドは magic データベースを使用する。","w":["typeはコマンドの種別表示","","magicはDB名でコマンドではない","存在しない","hashはコマンドパスのキャッシュ"]},{"n":115,"c":1,"t":"m","q":"/boot/ ファイルシステムにあるファイルは次のどれですか?(2つ選択してください。)","o":["Linux カーネルイメージ","Bash シェルバイナリ","systemd ターゲットとサービスユニット","初期 RAM ディスクイメージ","fsck バイナリ"],"a":"AD","acc":["AD"],"w":["","シェルは/bin配下","ユニットは/usr/lib/systemd等","","fsckは/sbin配下"]},{"n":80,"c":3,"t":"s","q":"vi の通常モードでは、テキストの逆方向の検索を開始するためにどの文字を使用できますか?","o":["r","/","F","?","s"],"a":"D","acc":["D"],"e":"/ は前方検索、? は後方検索。","w":["rは1文字置換","/は前方検索","Fは行内の後方文字検索","","sは1文字削除して挿入"]},{"n":8,"c":2,"t":"s","q":"RPM パッケージ管理を使用しているときに、現在インストールされているすべてのパッケージを一覧表示するコマンドはどれですか。","o":["yum --query --all","yum --list --installed","rpm --query --list","rpm --list --installed","rpm --query --all"],"a":"E","acc":["E"],"e":"rpm --query --all(= rpm -qa)。","w":["正しくは yum list installed","正しくは yum list installed","-q -lはパッケージ内ファイル一覧","そのようなオプションの組合せはない",""]},{"n":106,"c":2,"t":"s","q":"Debian パッケージマネージャーがソフトウェアパッケージをダウンロードするネットワークの場所を定義するファイルはどれですか?","o":["/etc/dpkg/dpkg.cfg","/etc/apt/apt.conf.d","/etc/apt/apt.conf","/etc/dpkg/dselect.cfg","/etc/apt/sources.list"],"a":"E","acc":["E"],"w":["dpkg自体の設定","aptの動作設定ディレクトリ","aptの動作設定","dselectの設定",""]},{"n":43,"c":2,"t":"s","q":"次の apt-get サブコマンドのうち、現在インストールされているすべてのパッケージの最新バージョンをインストールするものはどれですか。","o":["auto-update","dist-upgrade","full-upgrade","install","update"],"a":"B","acc":["B"],"e":"update はパッケージ索引の更新のみ。full-upgrade は apt のサブコマンド。","w":["存在しないサブコマンド","","full-upgradeはaptコマンド側の名称","installは個別パッケージ用","updateはパッケージリストの更新のみ"]},{"n":105,"c":2,"t":"s","q":"依存関係が満たされていないため、ローカル Debian パッケージのインストールに失敗しました。不足している依存関係をインストールし、中断されたパッケージのインストールを完了するコマンドはどれですか?","o":["dpkg --fix --all","apt-get autoinstall","dpkg-reconfigure --all","apt-get all","apt-get install -f"],"a":"E","acc":["E"],"e":"-f(--fix-broken)。","w":["dpkgに--fixはない","存在しないサブコマンド","dpkg-reconfigureは設定のやり直し","存在しない",""]},{"n":110,"c":4,"t":"x","q":"空白を埋めてください。\n特定の nice レベルで別のコマンドを開始するために使用されるコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"nice"},{"n":118,"c":4,"t":"s","q":"nice コマンドを使用してプロセスを開始するときのデフォルトの nice レベルは何ですか?","o":["-10","0","10","15","20"],"a":"C","acc":["C"],"e":"nice を引数なしで使うと調整値 +10 が適用される。","w":["デフォルトは0からの相対+10=10（niceなし実行は0）","nice経由のデフォルトは10","","デフォルトは10","デフォルトは10"]},{"n":69,"c":3,"t":"s","q":"vi で3行のテキストを削除し、カーソルを別の行に移動した直後に、削除した内容を現在の行の下に挿入する1文字のコマンドはどれですか。","o":["i (lowercase)","p (lowercase)","P (uppercase)","U (uppercase)","u (lowercase)"],"a":"B","acc":["B"],"e":"p は現在行の下に貼り付け、P は上に貼り付け。","w":["iは挿入モード開始","","Pはカーソル行の上に貼り付け","Uは行の変更を戻す","uはアンドゥ"]},{"n":67,"c":3,"t":"s","q":"現在のファイルを filea.txt として保存するには、vi を終了する前にどのコマンドを入力する必要がありますか?","o":["%s filea.txt","%w filea.txt",":save filea.txt",":w filea.txt",":s filea.txt"],"a":"D","acc":["D"],"w":["%sは置換コマンド","無効なコマンド","vimでは:saveasが相当（:saveはない）","",":sは置換"]},{"n":101,"c":4,"t":"x","q":"空白を埋めてください。\n現在のシェルで実行されているすべてのバックグラウンドタスクのリストを表示するコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"jobs"},{"n":42,"c":2,"t":"s","q":"パッケージをアンインストールするが、パッケージが再インストールされた場合に備えて構成ファイルを保持するコマンドはどれですか?","o":["dpkg -s pkgname","dpkg -L pkgname","dpkg -P pkgname","dpkg -v pkgname","dpkg -r pkgname"],"a":"E","acc":["E"],"e":"-r(remove)は設定ファイルを残す。-P(purge)は設定ファイルも削除。","w":["-sは状態表示","-Lはファイル一覧","-Pは設定ファイルごと完全削除","-vは存在しない",""]},{"n":60,"c":3,"t":"s","q":"ユーザーのホームディレクトリにある次のファイルのうち、Bash 履歴が含まれているのはどれですか?","o":[".bashrc_history",".bash_histfile",".history",".bash_history",".history_bash"],"a":"D","acc":["D"],"w":["存在しないファイル名","存在しないファイル名","存在しないファイル名","","存在しないファイル名"]},{"n":96,"c":1,"t":"s","q":"UEFI システムのハードディスク上のブートローダーはどこに保存されますか?","o":["EFI ブートレコード(EBR)内","マスターブートレコード(MBR)内","EFI システムパーティション(ESP)上","boot というラベルの付いたパーティション上","パーティション番号 127"],"a":"C","acc":["C"],"w":["EBRは拡張パーティションの概念","MBRはBIOS方式","","ラベルではなくESPという専用パーティション","パーティション番号の規則はない"]},{"n":26,"c":3,"t":"s","q":"次のコマンドのうち、テキストファイル userlist.txt 内のすべての CR-LF 改行を Linux 標準の LF 改行に変更し、その結果を newlist.txt に保存するものはどれですか。","o":["tr -d '\\r' < userlist.txt > newlist.txt","tr -c '\\n\\r' '' userlist.txt","tr '\\r\\n' '' newlist.txt","tr '\\r' '\\n' userlist.txt newlist.txt","tr -s '/^M/^J/' userlist.txt newlist.txt"],"a":"A","acc":["A"],"e":"CR(\\r)を削除すれば LF のみが残る。tr はファイル引数を取らないためリダイレクトが必要。","w":["","-cは補集合指定で用法が誤り","trは引数にファイルを取らない（標準入力）","trは引数にファイルを取らない","そのような構文はない"]},{"n":21,"c":5,"t":"s","q":"FHS に準拠して、マニュアルページはどのディレクトリにありますか?","o":["/opt/man/","/usr/doc/","/usr/share/man/","/var/pkg/man","/var/man/"],"a":"C","acc":["C"],"e":"問題文の「HS」はOCR誤りで「FHS」に修正。","w":["FHSに規定なし","FHSに規定なし","","FHSに規定なし","FHSに規定なし"]},{"n":95,"c":3,"t":"s","q":"ユーザーが誤ってホームディレクトリにサブディレクトリ \\dir を作成しました。そのディレクトリを削除するには、次のコマンドのうちどれを使用しますか?","o":["rmdir ~/\\\\dir","rmdir \"~/\\dir\"","rmdir ~/'dir'","rmdir ~/\\dir","rmdir '~/\\dir'"],"a":"A","acc":["A"],"e":"~ の展開にはクォート外である必要があり、\\ 自体は \\\\ でエスケープする。問題文の「リモート操作」はOCR/翻訳誤りで「削除」の意。","w":["\\\\は\\自体のエスケープで~/が展開されない位置","ダブルクォート内では~が展開されない","'dir'では\\が含まれない","","クォート内では~が展開されない"]},{"n":112,"c":3,"t":"s","q":"次のコマンドのうち、シェルが特定のコマンドを処理する方法を示すものはどれですか。","o":["where","type","stat","case","fileinfo"],"a":"B","acc":["B"],"e":"type はエイリアス/ビルトイン/外部コマンド等の種別を表示する。","w":["whereは存在しない（whichが近い）","","statはファイル情報","caseはシェル構文","存在しない"]},{"n":41,"c":2,"t":"s","q":"次のコマンドのうち、RPM パッケージファイル foo.rpm の依存関係を一覧表示するものはどれですか。","o":["rpm -qpR foo.rpm","rpm -dep foo","rpm -ld foo.rpm","rpm -R foo.rpm","rpm -pD foo"],"a":"A","acc":["A"],"e":"-q(照会) -p(パッケージファイル) -R(依存関係)。","w":["","存在しないオプション","存在しないオプション","-Rは-qと併用が必要","存在しないオプション"]},{"n":116,"c":7,"t":"m","q":"Bash シェルから、サブシェルを起動せずにファイル /usr/local/bin/runme.sh からの命令を直接実行するコマンドはどれですか?(2つ選択してください。)","o":["source /usr/local/bin/runme.sh","/usr/local/bin/runme.sh","/bin/bash /usr/local/bin/runme.sh",". /usr/local/bin/runme.sh","run /usr/local/bin/runme.sh"],"a":"AD","acc":["AD"],"e":"source と .(ドットコマンド)は現在のシェルで実行する。B・C は子プロセスを生成する。","w":["","直接実行はサブシェル（新プロセス）で動く","bash起動もサブシェルになる","","runというコマンドはない"]},{"n":75,"c":5,"t":"s","q":"ネストされたディレクトリ構造では、特定の数のサブディレクトリを検索するようにコマンドを制限するには、どの find コマンドライン オプションを使用しますか?","o":["-maxdepth","-dirmax","-maxlevels","-s","-n"],"a":"A","acc":["A"],"w":["","存在しないオプション","存在しないオプション","-sは別の意味","存在しないオプション"]},{"n":51,"c":2,"t":"s","q":"Debian パッケージはインストール中に複数のファイルを作成します。次のコマンドのうち、/etc/debian_version ファイルを所有するパッケージを検索するものはどれですか?","o":["apt-get search /etc/debian_version","apt -r /etc/debian_version","find /etc/debian_version -dpkg","dpkg -S /etc/debian_version","apt-file /etc/debian_version"],"a":"D","acc":["D"],"e":"dpkg -S(--search)でファイルの所属パッケージを検索。","w":["検索はapt-cache search（ファイル所属は不可）","apt -rは存在しない","findに-dpkgはない","","apt-fileは別途導入が必要で構文も異なる"]},{"n":65,"c":3,"t":"s","q":"次のコマンドのうち、foo コマンドの出力を画面に表示し、それを /tmp/foodata というファイルに書き込むものはどれですか。","o":["foo | less /tmp/foodata","foo | cp /tmp/foodata","foo > /tmp/foodata","foo | tee /tmp/foodata","foo > stdout >> /tmp/foodata"],"a":"D","acc":["D"],"w":["lessは表示のみでファイルに書かない","cpの用法が誤り",">では画面に表示されない","","無効な構文"]},{"n":44,"c":5,"t":"s","q":"ハードディスク ドライブをパーティション分割するときに、Linux スワップ領域に使用されるパーティション タイプは次のどれですか。","o":["7","82","83","8e","fd"],"a":"B","acc":["B"],"e":"82=Linux swap、83=Linux、8e=LVM、fd=RAID。","w":["7=NTFS/HPFS","","83=Linux標準パーティション","8e=Linux LVM","fd=RAID自動検出"]},{"n":109,"c":1,"t":"s","q":"次のコマンドのうち、必要な依存モジュールとともにカーネルモジュールをロードするものはどれですか。","o":["depmod","modprobe","module_install","insmod","loadmod"],"a":"B","acc":["B"],"e":"insmod は依存関係を解決しない。","w":["depmodは依存関係DBの更新","","存在しない","insmodは依存を解決しない","存在しない"]},{"n":24,"c":1,"t":"x","q":"空欄を埋めてください。\nデフォルトの実行レベルを設定するために一般的に使用される System V init 構成ファイルはどれですか?(パスを含むファイルの完全な名前を指定してください。)","o":[],"ax":"/etc/inittab","axa":["inittab"]},{"n":64,"c":3,"t":"s","q":"ユーザー fred が次のコマンドを実行すると、どのような出力が表示されますか。\necho 'fred $USER'","o":["fred fred","fred /home/fred/","'fred $USER'","fred $USER","'fred fred'"],"a":"D","acc":["D"],"e":"シングルクォート内では変数展開されず、クォート自体は出力されない。","w":["シングルクォートは$USERを展開しない","展開されない","クォート自体は出力されない","","クォートは出力されず展開もされない"]},{"n":89,"c":3,"t":"s","q":"正規表現 s/[ABC][abc]/xx/ を次の文字列に適用した場合の出力はどうなるでしょうか?\nABCabc","o":["ABxxbc","xxCxxc","xxxxxx","ABCabc","Axxaxx"],"a":"A","acc":["A"],"e":"g フラグがないため最初の一致(Ca)のみ置換 → ABxxbc。","w":["","ABは一致しない（2文字目が大文字）","3箇所の一致はあり得ない","「Ca」が一致するため無変化ではない","BC・bcは一致しない（この出力は生成不可能）"]},{"n":78,"c":7,"t":"s","q":"実行中の Bash シェル内でオプションと位置パラメータを変更するために使用されるコマンドはどれですか?","o":["history","setsh","bashconf","set","envsetup"],"a":"D","acc":["D"],"w":["historyは履歴表示","存在しないコマンド","存在しないコマンド","","存在しないコマンド"]},{"n":30,"c":4,"t":"m","q":"次のディレクトリについて考えてみましょう:\ndrwxrwxr-x 2 root sales 4096 Jan 1 15:21 sales\nディレクトリ sales 内に作成された新しいファイルがグループ sales によって所有されることを保証するコマンドはどれですか?(2つ選択してください。)","o":["chmod g+s sales","setpol -R newgroup=sales sales","chgrp -p sales sales","chown --persistent *.sales sales","chmod 2775 sales"],"a":"AE","acc":["AE"],"e":"SGID ビット(g+s / 2xxx)により新規ファイルがディレクトリのグループを継承する。","w":["","setpolは存在しない","chgrpに-pはない","chownに--persistentはない",""]},{"n":14,"c":5,"t":"x","q":"空欄を埋めてください。\n/proc/ ファイルシステムのどのファイルに、現在マウントされているすべてのデバイスのリストが含まれていますか?(パスを含むファイルの完全な名前を指定してください。)","o":[],"ax":"/proc/mounts","axa":["mounts","/proc/self/mounts"]},{"n":57,"c":4,"t":"s","q":"次のコマンドのうち、gzip で圧縮された tar アーカイブの内容を表示するものはどれですか?","o":["gzip archive.tgz | tar xvf -","tar -fzt archive.tgz","gzip -d archive.tgz | tar tvf -","tar cf archive.tgz","tar ztf archive.tgz"],"a":"E","acc":["E"],"e":"z(gzip)t(一覧表示)f(ファイル指定)。","w":["xvfは展開してしまう（tが一覧）","fの直後はファイル名が必要で無効","gzip -dは標準出力に出ず元ファイルを展開してしまう","cfは作成",""]},{"n":55,"c":1,"t":"s","q":"System V init ベースのシステム上の init プロセスのプロセス ID 番号は何ですか?","o":["-1","0","1","再起動するたびに異なります","現在の実行レベルに設定されます"],"a":"C","acc":["C"],"w":["PIDに負数はない","PID 0はスケジューラ（アイドル）","","initは常にPID 1","ランレベルとPIDは無関係"]},{"n":6,"c":1,"t":"m","q":"System V init 構成に次の2つのシンボリックリンクがあるとします:\n/etc/rc1.d/K01apache2\n/etc/rc2.d/S02apache2\nこれらのリンクによって参照されるスクリプトはいつ実行されますか?(2つ選択してください。)","o":["ランレベル2に入ると、S02apache2 が実行されます。","ランレベル2を離れると S02apache2 が実行されます。","K は非アクティブ化されたサービスを示しているため、K01apache2 は実行されません。","システムのシャットダウン中に、S02apache2 と K01apache2 の両方が実行されます。","ランレベル1に入ると、K01apache2 が実行されます。"],"a":"AE","acc":["AE"],"e":"S=start(ランレベル進入時に起動)、K=kill(ランレベル進入時に停止)。","w":["","Sスクリプトはランレベル進入時に実行される","KはそのRLに入るときに停止処理として実行される","シャットダウン時の動作の説明ではない",""]},{"n":1,"c":4,"t":"m","q":"特定のファイルの inode 番号を表示するために使用できるコマンドはどれですか?(2つ選択してください。)","o":["inode","ln","ls","cp","stat"],"a":"CE","acc":["CE"],"e":"ls -i と stat で inode 番号を表示できる。","w":["存在しないコマンド","lnはリンクの作成用","","cpはコピー用",""]},{"n":35,"c":5,"t":"s","q":"/etc/fstab にリストされておらず、システムにも認識されていないファイルシステムを手動でマウントする場合、次のどれが当てはまりますか?","o":["systemd は、systemctl マウントコマンドを使用せずに行われた手動マウントを無視します。","コマンド systemctl mountsync は、既存のマウントに基づいてマウントユニットを作成するために使用できます。","systemd はマウントユニットを自動的に生成し、マウントポイントを変更せずに監視します。","systemd マウントユニットが作成されない場合、systemd は短時間でファイルシステムをアンマウントします。","システムがマウントポイント上のファイル記述子を開くため、マウントを解除するには systemctl unmount を使用する必要があります。"],"a":"C","acc":["C"],"w":["systemdは手動マウントも認識する","systemctl mountsyncは存在しない","","勝手にアンマウントはしない","systemctl unmountは存在しない（umountで可）"]},{"n":34,"c":5,"t":"x","q":"空欄を埋めてください。\nlocate コマンドによって使用されるデータベースを更新するプログラムはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"updatedb"},{"n":59,"c":3,"t":"m","q":"次のファイル名 ttyS0 ttyS1 ttyS2 に一致するワイルドカードはどれですか?(2つ選択してください)","o":["ttyS[1-5]","tty?[0-5]","tty*2","tty[A-Z][012]","tty[Ss][02]"],"a":"BD","acc":["BD"],"e":"選択肢DのOCR「tty[AZ][012]」は「tty[A-Z][012]」に修正。A は ttyS0 に、E は ttyS1 に一致しない。","w":["ttyS0に一致しない（1-5）","","ttyS0/S1に一致しない","","[02]はttyS1に一致しない"]},{"n":90,"c":4,"t":"s","q":"次の umask 設定のうちどれが、新しいファイルにデフォルトの権限 -rw-r----- を持たせることを保証しますか?","o":["0017","0640","0038","0227","0027"],"a":"E","acc":["E"],"e":"新規ファイルの基準 666 に umask 027 を適用 → 640(rw-r-----)。","w":["666-017=660で不一致","0640はパーミッション値でありumaskではない","8進数として不正ではないが666-038は計算不可（8は不正）","666-227=440で不一致",""]},{"n":19,"c":1,"t":"s","q":"Linux システムで電源管理イベントを処理するデーモンはどれですか?","o":["acpid","batteryd","pwrmgntd","psd","inetd"],"a":"A","acc":["A"],"w":["","存在しないデーモン","存在しないデーモン","存在しないデーモン","inetdはネットワーク接続の待受用"]},{"n":54,"c":1,"t":"m","q":"BIOS を使用した PC のブートシーケンスについて正しい記述はどれですか(2つ選択してください)。","o":["ブートプロセスの一部は BIOS から設定できます","Linux はコンピュータを起動するのに BIOS の支援を必要としない","BIOS ブートプロセスは、ハードディスクなどの二次記憶装置が機能している場合にのみ開始されます。","BIOS はコンピュータの電源投入後にブートプロセスを開始します。","BIOS はハードディスクなどの二次記憶装置からハードウェアドライバをロードして起動します。"],"a":"AD","acc":["AD"],"w":["","LinuxもBIOS/UEFIの初期化を必要とする","二次記憶がなくても（PXE等）ブートは開始できる","","HWドライバをロードするのはカーネル"]},{"n":9,"c":3,"t":"s","q":"vi エディターでは、カーソルの移動や行をバッファーにコピーするなどのコマンドを複数回発行したり、複数の行に適用するにはどうすればよいですか?","o":[":repeat コマンドに続けて数字とコマンドを入力する","41 や 2yj のように、コマンドの直前に数字を指定します。","コマンドを適用する前に、Shift キーとカーソルキーを使用して影響を受けるすべての行を選択します。",":set repetition=4 などのコマンドを発行すると、後続のコマンドが4回繰り返されます。","14 や yj2 などのコマンドの後に数字を指定して、その後にエスケープキーを押します。"],"a":"B","acc":["B"],"w":[":repeatは存在しない","","Shift+カーソルで選択する機能はない","set repetitionは存在しない","数字はコマンドの前に置く"]},{"n":28,"c":2,"t":"x","q":"空白を記入してください。\n追加の yum リポジトリの構成ファイルはどのディレクトリに保存されていますか?(ディレクトリへのフルパスを指定します。)","o":[],"ax":"/etc/yum.repos.d/","axa":["/etc/yum.repos.d","yum.repos.d"],"e":"【解答を修正】/etc/yum.conf は yum 本体の設定「ファイル」。追加リポジトリの設定ファイルを置く「ディレクトリ」は /etc/yum.repos.d/。"},{"n":83,"c":4,"t":"s","q":"既存のファイルを指すハードリンクが作成されると、次のどのプロパティが変更されますか?","o":["File size(ファイルサイズ)","Link count(リンク数)","Modify timestamp(更新タイムスタンプ)","Inode number(inode 番号)","Permissions(パーミッション)"],"a":"B","acc":["B"],"w":["サイズは不変（実体共有）","","更新時刻は不変","inode番号は同じものを共有","パーミッションは共有"]},{"n":23,"c":5,"t":"x","q":"空白を埋めてください。\nマウントされたすべてのファイルシステムの現在のディスク領域使用量を表示するコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"df"}],[{"n":34,"c":5,"t":"x","q":"空欄を埋めてください。\nlocate コマンドによって使用されるデータベースを更新するプログラムはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"updatedb"},{"n":86,"c":3,"t":"s","q":"DD/MM/YYYY:hh:mm:ss 形式のタイムスタンプを持つログファイル loga.log がある場合、午前 8:00 から午前 8:59 までの期間のすべてのログエントリをフィルター処理するコマンドはどれですか。","o":["grep -E ':08:[09]+:[09]+' loga.log","grep -E ':08:[00]+' loga.log","grep -E loga.log ':08:[0-9]+:[0-9]+'","grep loga.log ':08:[0-9]:[0-9]'","grep -E ':08:[0-9]+:[0-9]+' loga.log"],"a":"E","acc":["E"],"e":"C は引数の順序(パターンとファイル)が逆。","w":["[09]は0と9のみで分秒に一致しない","[00]は0のみ","引数順が逆（パターンが先）","引数順が逆かつ-Eがなく+が使えない",""]},{"n":71,"c":3,"t":"s","q":"次のコマンドのうち、/etc/passwd ファイルからユーザー名(最初の列)とそのプライマリグループ(4番目の列)のリストを出力するものはどれですか。","o":["fmt -f 1,4 /etc/passwd","cut -d : -f 1,4 /etc/passwd","sort -t : -k 1,4 /etc/passwd","paste -f 1,4 /etc/passwd","split -c 1,4 /etc/passwd"],"a":"B","acc":["B"],"w":["fmtは整形コマンド","","sortは並べ替え","pasteは行の連結","splitはファイル分割"]},{"n":18,"c":5,"t":"m","q":"完全なパスを指定せずにコマンドを開始したときに、現在のシェルが実行する実行可能ファイルの完全なパスを表示できるツールはどれですか。(2つ選択してください。)","o":["find","pwd","which","locate","type"],"a":"CE","acc":["CE"],"e":"【解答を修正】locate はファイル名データベースの検索であり、シェルが実際に実行するコマンドのパスを示すものではない。which と type(シェルビルトイン)が正解。","w":["findは名前・属性での検索","pwdはカレントディレクトリ表示","","locateはDB検索でシェルの解決とは別",""]},{"n":41,"c":2,"t":"s","q":"次のコマンドのうち、RPM パッケージファイル foo.rpm の依存関係を一覧表示するものはどれですか。","o":["rpm -qpR foo.rpm","rpm -dep foo","rpm -ld foo.rpm","rpm -R foo.rpm","rpm -pD foo"],"a":"A","acc":["A"],"e":"-q(照会) -p(パッケージファイル) -R(依存関係)。","w":["","存在しないオプション","存在しないオプション","-Rは-qと併用が必要","存在しないオプション"]},{"n":13,"c":3,"t":"m","q":"vi エディタで開いているドキュメントを保存してエディタを終了するシーケンスは次のどれですか?(2つ選択してください。)","o":["Ctrl + XX","Ctrl + W","Esc zz","Esc :wq","Esc ZZ"],"a":"DE","acc":["DE"],"e":"ZZ は大文字のみ有効(zz は無効)。","w":["そのようなキー操作はない","そのようなキー操作はない","zz小文字では保存されない（ZZ大文字が正）","",""]},{"n":82,"c":3,"t":"s","q":"次のコマンドのうち、すべての一般的なファイルタイプに関する情報を含む定義データベースファイルを使用してファイルの形式を決定するものはどれですか。","o":["type","file","magic","pmagic","hash"],"a":"B","acc":["B"],"e":"file コマンドは magic データベースを使用する。","w":["typeはコマンドの種別表示","","magicはDB名でコマンドではない","存在しない","hashはコマンドパスのキャッシュ"]},{"n":22,"c":4,"t":"s","q":"ハードリンクの使用を検討する際に、ハードリンクを使用しない正当な理由は何ですか?","o":["ハードリンクは、ext4 などの従来のファイルシステムではサポートされていないため、すべての Linux システムで利用できるわけではありません。","各ハードリンクには個別の所有権、権限、ACL があり、ファイルの内容が意図せず公開される可能性があります。","ハードリンクは1つのファイルシステムに固有のものであり、別のファイルシステム上のファイルを指すことはできません。","ルート以外のユーザーがハードリンクを作成できるようにするには、suln をインストールして設定する必要があります。","ハードリンクされたファイルが変更されると、ファイルのコピーが作成され、追加のスペースを消費します。"],"a":"C","acc":["C"],"w":["ext4等はハードリンクをサポートする","ハードリンクは所有権・権限を実体と共有する","","sulnというツールは存在しない","変更してもコピーは作られない（同一実体）"]},{"n":61,"c":3,"t":"s","q":"ファイルが存在しない場合のコマンド ls > files に関して正しいのは何ですか?","o":["ls の出力は端末に印刷されます","ファイルが作成され、ls の出力が含まれます","エラーメッセージが表示され、ls は実行されません","コマンド files が実行され、ls の出力を受け取ります。","ls の出力はすべて破棄される"],"a":"B","acc":["B"],"w":["リダイレクトされるので端末には出ない","","エラーにはならない（新規作成される）","filesは実行されない（出力先ファイル名）","破棄されるのは/dev/nullへ向けた場合"]},{"n":57,"c":4,"t":"s","q":"次のコマンドのうち、gzip で圧縮された tar アーカイブの内容を表示するものはどれですか?","o":["gzip archive.tgz | tar xvf -","tar -fzt archive.tgz","gzip -d archive.tgz | tar tvf -","tar cf archive.tgz","tar ztf archive.tgz"],"a":"E","acc":["E"],"e":"z(gzip)t(一覧表示)f(ファイル指定)。","w":["xvfは展開してしまう（tが一覧）","fの直後はファイル名が必要で無効","gzip -dは標準出力に出ず元ファイルを展開してしまう","cfは作成",""]},{"n":90,"c":4,"t":"s","q":"次の umask 設定のうちどれが、新しいファイルにデフォルトの権限 -rw-r----- を持たせることを保証しますか?","o":["0017","0640","0038","0227","0027"],"a":"E","acc":["E"],"e":"新規ファイルの基準 666 に umask 027 を適用 → 640(rw-r-----)。","w":["666-017=660で不一致","0640はパーミッション値でありumaskではない","8進数として不正ではないが666-038は計算不可（8は不正）","666-227=440で不一致",""]},{"n":74,"c":3,"t":"s","q":"次のコマンドのうち、/etc/passwd からユーザー名とそのログインシェルのリストを生成するものはどれですか。","o":["column -s : 1,7 /etc/passwd","chop -c 1,7 /etc/passwd","colrm 1,7 /etc/passwd","sort -t: -k1,7 /etc/passwd","cut -d: -f1,7 /etc/passwd"],"a":"E","acc":["E"],"e":"ユーザー名は第1フィールド、ログインシェルは第7フィールド。","w":["columnの用法が誤り","chopは存在しない","colrmは文字位置での削除","sortは並べ替え",""]},{"n":29,"c":4,"t":"s","q":"コマンド ls -i からの次の出力を検討してください。\n525385 -rw-rw-r-- 2 1000 1000 0 Feb 12 19:44 a.txt\n526255 lrwxrwxrwx 1 1000 1000 5 Feb 12 19:44 b/txt -> a.txt\na.txt(inode 525385)と同じ inode 番号を持つ c.txt という名前の新しいファイルはどのように作成されるでしょうか。","o":["ln -h a.txt c.txt","ln c.txt a.txt","ln a.txt c.txt","ln -f c.txt a.txt","ln -i 525385 c.txt"],"a":"C","acc":["C"],"e":"ハードリンク作成。引数順は「ln 既存ファイル 新リンク名」。","w":["-hオプションはない","引数順が逆（存在しないc.txtをソースにできない）","","引数順が逆","inode番号での作成はできない"]},{"n":116,"c":7,"t":"m","q":"Bash シェルから、サブシェルを起動せずにファイル /usr/local/bin/runme.sh からの命令を直接実行するコマンドはどれですか?(2つ選択してください。)","o":["source /usr/local/bin/runme.sh","/usr/local/bin/runme.sh","/bin/bash /usr/local/bin/runme.sh",". /usr/local/bin/runme.sh","run /usr/local/bin/runme.sh"],"a":"AD","acc":["AD"],"e":"source と .(ドットコマンド)は現在のシェルで実行する。B・C は子プロセスを生成する。","w":["","直接実行はサブシェル（新プロセス）で動く","bash起動もサブシェルになる","","runというコマンドはない"]},{"n":80,"c":3,"t":"s","q":"vi の通常モードでは、テキストの逆方向の検索を開始するためにどの文字を使用できますか?","o":["r","/","F","?","s"],"a":"D","acc":["D"],"e":"/ は前方検索、? は後方検索。","w":["rは1文字置換","/は前方検索","Fは行内の後方文字検索","","sは1文字削除して挿入"]},{"n":96,"c":1,"t":"s","q":"UEFI システムのハードディスク上のブートローダーはどこに保存されますか?","o":["EFI ブートレコード(EBR)内","マスターブートレコード(MBR)内","EFI システムパーティション(ESP)上","boot というラベルの付いたパーティション上","パーティション番号 127"],"a":"C","acc":["C"],"w":["EBRは拡張パーティションの概念","MBRはBIOS方式","","ラベルではなくESPという専用パーティション","パーティション番号の規則はない"]},{"n":75,"c":5,"t":"s","q":"ネストされたディレクトリ構造では、特定の数のサブディレクトリを検索するようにコマンドを制限するには、どの find コマンドライン オプションを使用しますか?","o":["-maxdepth","-dirmax","-maxlevels","-s","-n"],"a":"A","acc":["A"],"w":["","存在しないオプション","存在しないオプション","-sは別の意味","存在しないオプション"]},{"n":78,"c":7,"t":"s","q":"実行中の Bash シェル内でオプションと位置パラメータを変更するために使用されるコマンドはどれですか?","o":["history","setsh","bashconf","set","envsetup"],"a":"D","acc":["D"],"w":["historyは履歴表示","存在しないコマンド","存在しないコマンド","","存在しないコマンド"]},{"n":68,"c":3,"t":"s","q":"次の入力ストリームがあるとします:\ntxt1.txt\natxt.txt\ntxtB.txt\n次の正規表現のどれが、この入力ストリームを次の出力ストリームに変換しますか?\ntxt1.bak.txt atxt.bak.txt txtB.bak.txt","o":["s/^.txt/.bak/","s/txt/bak.txt/","s/txt$/bak.txt/","s/^txt$/.bak^/","s/[.txt]/.bak$1/"],"a":"C","acc":["C"],"e":"行末の txt を bak.txt に置換(txt1.txt → txt1.bak.txt)。","w":["^.txtは先頭一致で意図と異なる","最初のtxtが置換され結果が崩れる","","行全体がtxtの場合のみ一致","[.txt]は文字クラスで意味が異なる"]},{"n":106,"c":2,"t":"s","q":"Debian パッケージマネージャーがソフトウェアパッケージをダウンロードするネットワークの場所を定義するファイルはどれですか?","o":["/etc/dpkg/dpkg.cfg","/etc/apt/apt.conf.d","/etc/apt/apt.conf","/etc/dpkg/dselect.cfg","/etc/apt/sources.list"],"a":"E","acc":["E"],"w":["dpkg自体の設定","aptの動作設定ディレクトリ","aptの動作設定","dselectの設定",""]},{"n":16,"c":4,"t":"m","q":"通常ユーザーとして chmod 640 filea.txt を実行しても、filea.txt のパーミッションが更新されません。chmod でパーミッションを変更できない理由は何でしょうか?(2つ選択してください。)","o":["filea.txt は別のユーザーが所有しており、通常のユーザーは別のユーザーのファイルの権限を変更できません。","filea.txt は、権限が固定値になっており、変更できないシンボリックリンクです。","filea.txt にはスティッキービットが設定されており、通常のユーザーはこの権限を削除できません。","filea.txt は、権限がターゲットから継承され、直接設定できないハードリンクです。","filea.txt には SetUID ビットが設定されており、ルートユーザーのみがファイルを変更できるという制限が課せられます。"],"a":"AB","acc":["AB"],"e":"選択肢BのOCR文字列「課金できない」は「変更できない」の誤認識のため修正。シンボリックリンク自体のパーミッションは変更できない。","w":["","","スティッキービットは削除制限で、変更不可の理由にならない","ハードリンクの権限は実体と共有（継承ではない）","SUIDがあっても所有者なら変更できる"]},{"n":108,"c":3,"t":"s","q":"次の正規表現のうち、単一の大文字を表すものはどれですか?","o":[":UPPER:","[A-Z]","!a-z","%C","(AZ)"],"a":"B","acc":["B"],"e":"POSIX クラスを使う場合は [[:upper:]] の形が必要。","w":["正しくは[[:upper:]]","","無効な表記","無効な表記","()はグループ化"]},{"n":3,"c":1,"t":"s","q":"System V init を使用する場合、Linux カーネルがブート時に最初に起動するプログラムは何ですか?","o":["/lib/init.so","/proc/sys/kernel/init","/etc/rc.d/rcinit","/sbin/init","/boot/init"],"a":"D","acc":["D"],"w":["存在しないパス","カーネルパラメータ用のパス","存在しないパス","","存在しないパス"]},{"n":43,"c":2,"t":"s","q":"次の apt-get サブコマンドのうち、現在インストールされているすべてのパッケージの最新バージョンをインストールするものはどれですか。","o":["auto-update","dist-upgrade","full-upgrade","install","update"],"a":"B","acc":["B"],"e":"update はパッケージ索引の更新のみ。full-upgrade は apt のサブコマンド。","w":["存在しないサブコマンド","","full-upgradeはaptコマンド側の名称","installは個別パッケージ用","updateはパッケージリストの更新のみ"]},{"n":117,"c":4,"t":"s","q":"次のコマンドのうち、実行可能ファイル /bin/foo に SetUID 権限を設定するのはどれですか。","o":["chmod 4755 /bin/foo","chmod 1755 /bin/foo","chmod u-s /bin/foo","chmod 755+s /bin/foo","chmod 2755 /bin/foo"],"a":"A","acc":["A"],"e":"4=SetUID、2=SetGID、1=スティッキービット。","w":["","1755はスティッキービット","u-sはSUIDの削除","無効な構文","2755はSGID"]},{"n":72,"c":3,"t":"s","q":"次のコマンドのうち、ファイルを読み取り、ファイルの内容から指定されたサイズの個別のチャンクを作成するものはどれですか。","o":["ar","cat","break","split","parted"],"a":"D","acc":["D"],"w":["arはアーカイブ操作","catは連結・表示","breakはシェルのループ制御","","partedはパーティション操作"]},{"n":2,"c":3,"t":"s","q":"Bash では、コマンドの後に 1>&2 を挿入すると「なに」が「どこ」へリダイレクトされますか?","o":["標準エラーを標準入力に出力します。","標準出力を標準エラーに出力します。","標準入力を標準エラーに変換します。","標準エラーを標準出力に出力します。","標準出力を標準入力に。"],"a":"B","acc":["B"],"w":["標準入力へのリダイレクトはできない","","標準入力は変換できない","2>&1（逆方向）の説明","標準入力への出力は不可"]},{"n":119,"c":4,"t":"x","q":"空欄を埋めてください。\nすでに実行中のプロセスの優先度を変更するにはどのコマンドを使用しますか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"renice"},{"n":53,"c":1,"t":"s","q":"カーネルモジュールの不具合により、ネットワークインターフェースカードに問題が発生しています。システム起動時にこのモジュールが自動的にロードされないようにするには、次のどのアクションを実行すればよいですか?","o":["特定のモジュール名を指定せずに lsmod --remove --autoclean を使用する","modinfo -k に続いて問題のあるモジュールの名前を使用する","modprobe -r に続いて問題のあるモジュールの名前を使用する","問題のあるモジュールの名前を含むブラックリスト行をファイル /etc/modprobe.d/blacklist.conf に追加する","ファイルシステムからカーネルモジュールのディレクトリを削除し、モジュールを含むカーネルを再コンパイルする"],"a":"D","acc":["D"],"e":"modprobe -r は一時的なアンロードであり、起動時のロード防止にはならない。","w":["lsmodは表示専用","modinfoは情報表示のみ","今アンロードするだけで次回起動時は防げない","","過剰な対応で不要"]},{"n":6,"c":1,"t":"m","q":"System V init 構成に次の2つのシンボリックリンクがあるとします:\n/etc/rc1.d/K01apache2\n/etc/rc2.d/S02apache2\nこれらのリンクによって参照されるスクリプトはいつ実行されますか?(2つ選択してください。)","o":["ランレベル2に入ると、S02apache2 が実行されます。","ランレベル2を離れると S02apache2 が実行されます。","K は非アクティブ化されたサービスを示しているため、K01apache2 は実行されません。","システムのシャットダウン中に、S02apache2 と K01apache2 の両方が実行されます。","ランレベル1に入ると、K01apache2 が実行されます。"],"a":"AE","acc":["AE"],"e":"S=start(ランレベル進入時に起動)、K=kill(ランレベル進入時に停止)。","w":["","Sスクリプトはランレベル進入時に実行される","KはそのRLに入るときに停止処理として実行される","シャットダウン時の動作の説明ではない",""]},{"n":46,"c":2,"t":"m","q":"仮想マシンのクローンを作成するときに、Linux システムの次のプロパティのうちどれを変更する必要がありますか?(2つ選択してください。)","o":["パーティションスキーム","ファイルシステム","D-Bus マシン ID","/root/ の権限","SSH ホストキー"],"a":"CE","acc":["CE"],"w":["パーティション構成は複製のままで問題ない","ファイルシステムも変更不要","","/root/の権限は変更不要",""]},{"n":4,"c":4,"t":"s","q":"dbmaint & コマンドを使用して、dbmaint をバックグラウンドで実行しました。しかし、システムからログアウトすると dbmaint は終了します。プログラムを実行しているユーザーがログアウトした後も dbmaint の実行を継続するには、どの dbmaint 呼び出し方法がありますか?","o":["job -b dbmaint","dbmaint &>/dev/pts/null","nohup dbmaint &","bg dbmaint","wait dbmaint"],"a":"C","acc":["C"],"e":"原文の「dmaint」等の表記ゆれは dbmaint に統一。","w":["jobsに-bはない","リダイレクトではHUPシグナルを防げない","","bgは停止中ジョブの再開用","waitは終了を待つコマンド"]},{"n":89,"c":3,"t":"s","q":"正規表現 s/[ABC][abc]/xx/ を次の文字列に適用した場合の出力はどうなるでしょうか?\nABCabc","o":["ABxxbc","xxCxxc","xxxxxx","ABCabc","Axxaxx"],"a":"A","acc":["A"],"e":"g フラグがないため最初の一致(Ca)のみ置換 → ABxxbc。","w":["","ABは一致しない（2文字目が大文字）","3箇所の一致はあり得ない","「Ca」が一致するため無変化ではない","BC・bcは一致しない（この出力は生成不可能）"]},{"n":7,"c":3,"t":"m","q":"Bash シェルを使用しているときに現在の作業ディレクトリを出力するコマンドはどれですか?(2つ選択してください。)","o":["echo \"${PWD}\"","echo \"${WD}\"","printwd","pwd","echo \"${pwd}\""],"a":"AD","acc":["AD"],"e":"環境変数 PWD は大文字。E の ${pwd} は未定義変数。","w":["","WDという変数はない","printwdは存在しない","","変数名は大文字のPWD（$pwdは未定義）"]},{"n":50,"c":1,"t":"s","q":"EFI システムパーティションには何が含まれていますか?","o":["Linux ルートファイルシステム","第一段階ブートローダー","デフォルトのスワップスペースファイル","Linux のデフォルトシェルバイナリ","ユーザーのホームディレクトリ"],"a":"B","acc":["B"],"w":["ルートFSは別パーティション","","スワップは別パーティション","シェルはルートFS内","ホームは別の場所"]},{"n":63,"c":5,"t":"s","q":"次のコマンドのうち、コマンド foo が呼び出されたときに実行される実行可能ファイルへのパスを表示するものはどれですか。","o":["lsattr foo","apropos foo","locate foo","whatis foo","which foo"],"a":"E","acc":["E"],"w":["lsattrは拡張属性の表示","aproposはmanページの検索","locateはDB検索で実行対象とは限らない","whatisはmanの1行説明",""]},{"n":54,"c":1,"t":"m","q":"BIOS を使用した PC のブートシーケンスについて正しい記述はどれですか(2つ選択してください)。","o":["ブートプロセスの一部は BIOS から設定できます","Linux はコンピュータを起動するのに BIOS の支援を必要としない","BIOS ブートプロセスは、ハードディスクなどの二次記憶装置が機能している場合にのみ開始されます。","BIOS はコンピュータの電源投入後にブートプロセスを開始します。","BIOS はハードディスクなどの二次記憶装置からハードウェアドライバをロードして起動します。"],"a":"AD","acc":["AD"],"w":["","LinuxもBIOS/UEFIの初期化を必要とする","二次記憶がなくても（PXE等）ブートは開始できる","","HWドライバをロードするのはカーネル"]},{"n":12,"c":4,"t":"m","q":"バックアップソフトウェアは、2回のバックアップ実行間で変更されていないファイル間のハードリンクを頻繁に使用します。これらのハードリンクによってどのような利点が得られますか?(2つ選択してください。)","o":["古いバックアップは、新しいバックアップのハードリンク ターゲットとして機能しながら、テープなどの低速のバックアップ メディアに移動できます。","ハードリンクは非同期操作であり、コピー操作が後の時点に延期されるため、バックアップの実行速度が速くなります。","ハードリンクされたファイルは作成後に変更できないため、バックアップは無傷であることが保証されます。","ハードリンクは冗長コピーを保存するのではなく、ディスク上の同じデータを指すため、バックアップの消費スペースが少なくなります。","ハードリンクは各ファイルのデータをコピーするのではなく、ファイルシステムのメタデータのみを変更するため、バックアップの実行速度が速くなります。"],"a":"DE","acc":["DE"],"w":["別メディアへ移動するとハードリンクは維持できない","ハードリンクは遅延コピーではない","ハードリンク先も変更可能","",""]},{"n":49,"c":2,"t":"m","q":"64ビット Linux システムの次のディレクトリのうち、通常共有ライブラリが含まれるのはどれですか(2つ選択してください)。","o":["~/.lib64/","/usr/lib64/","/var/lib64/","/lib64/","/opt/lib64/"],"a":"BD","acc":["BD"],"w":["標準の場所ではない","","/var/lib64は存在しない","","標準の場所ではない"]},{"n":92,"c":2,"t":"s","q":"yum リポジトリは関連するパッケージのセットを宣言できます。admintools グループに属するすべてのパッケージをインストールする yum コマンドはどれですか?","o":["yum pkgsel --install admintools","yum install admintools/*","yum groupinstall admintools","yum taskinstall admintools","yum collection install admintools"],"a":"C","acc":["C"],"w":["存在しないコマンド","そのような指定はできない","","存在しない","存在しない"]},{"n":105,"c":2,"t":"s","q":"依存関係が満たされていないため、ローカル Debian パッケージのインストールに失敗しました。不足している依存関係をインストールし、中断されたパッケージのインストールを完了するコマンドはどれですか?","o":["dpkg --fix --all","apt-get autoinstall","dpkg-reconfigure --all","apt-get all","apt-get install -f"],"a":"E","acc":["E"],"e":"-f(--fix-broken)。","w":["dpkgに--fixはない","存在しないサブコマンド","dpkg-reconfigureは設定のやり直し","存在しない",""]},{"n":99,"c":1,"t":"s","q":"デフォルトの systemd ブートターゲットをマルチユーザーに設定する正しい方法は何ですか?","o":["systemctl isolate multi-user.target","systemctl set-runlevel multi-user.target","systemctl set-boot multi-user.target","systemctl set-default multi-user.target","systemctl boot -p multi-user.target"],"a":"D","acc":["D"],"e":"isolate は現在のターゲットの即時切替であり、デフォルト設定ではない。","w":["isolateは今すぐ切り替えるだけ（次回起動に影響しない）","存在しないサブコマンド","存在しない","","存在しない"]},{"n":84,"c":5,"t":"s","q":"停電後、/dev/sda3 の XFS ファイルシステムに不整合が生じています。既存のファイルシステムエラーを修正するにはどうすればよいですか?","o":["mount -f を使用してファイルシステムを強制的にマウントする","ファイルシステム上で xfsck を実行する","xfs_repair オプションを使用してファイルシステムをマウントする","ファイルシステム上で xfsadmin repair を実行する","ファイルシステム上で xfs_repair を実行する"],"a":"E","acc":["E"],"w":["mount -fは修復しない","xfsckは存在しない","repairマウントオプションはない","xfsadminは存在しない",""]},{"n":107,"c":2,"t":"s","q":"dpkg パッケージ管理を使用してシステム上のパッケージを削除する場合、どの dpkg オプションによって構成ファイルも確実に削除されますか?","o":["--clean","--purge","--vacuum","--remove","--declare"],"a":"B","acc":["B"],"w":["存在しない","","存在しない","--removeは設定を残す","存在しない"]},{"n":44,"c":5,"t":"s","q":"ハードディスク ドライブをパーティション分割するときに、Linux スワップ領域に使用されるパーティション タイプは次のどれですか。","o":["7","82","83","8e","fd"],"a":"B","acc":["B"],"e":"82=Linux swap、83=Linux、8e=LVM、fd=RAID。","w":["7=NTFS/HPFS","","83=Linux標準パーティション","8e=Linux LVM","fd=RAID自動検出"]},{"n":23,"c":5,"t":"x","q":"空白を埋めてください。\nマウントされたすべてのファイルシステムの現在のディスク領域使用量を表示するコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"df"},{"n":5,"c":2,"t":"m","q":"yum の設定に関して正しいのは次のうちどれですか?(2つ選択してください。)","o":["リポジトリ設定の変更は、yum confupdate の実行後に有効になります。","yum 設定の変更は yumd サービスの再起動後に有効になります。","パッケージリポジトリの設定は複数のファイルに分割できる。","リポジトリ設定には $basearch や $releasever などの変数を含めることができます。","/etc/yum.repos.d/ にファイルが含まれている場合、/etc/yum.conf は無視されます。"],"a":"CD","acc":["CD"],"w":["yum confupdateは存在しない","yumdというサービスはない","","","yum.confは無視されず併用される"]},{"n":94,"c":1,"t":"s","q":"ハードディスクからの起動時に、コンピュータは Linux カーネルと initramfs を正常にロードしますが、その後の起動タスクでハングします。問題を調査するため、Linux ベースのレスキューCDを使用してシステムを起動します。問題の根本原因を特定するのに役立つ方法は次のうちどれですか?","o":["レスキューCDのシェルから dmesg コマンドを使用して、元のシステムのブートログを表示する","コンピュータのハードディスク上のファイル /proc/kmsg にエラーがないか調査します。","コンピュータのハードディスク上のファイル /var/log を調べてエラーの可能性を調べます。","chroot を使用してハードディスク上のファイルシステムに切り替え、dmesg を使用してログを表示します。","システムがレスキューCDから正常に起動したため、ハードドライブから再度再起動します。"],"a":"C","acc":["C"],"e":"dmesg は現在起動中(レスキュー)のカーネルのログしか表示できない。/proc は仮想 FS でディスク上に存在しない。","w":["dmesgはレスキューCD側のログを表示してしまう","/proc/kmsgは実行中カーネルの仮想ファイル（ディスク上にない）","/var/logはディレクトリで、マウントして中のファイルを見る必要がある","","原因調査にならない"]},{"n":113,"c":5,"t":"s","q":"/etc/fstab の構文的に正しい行にはフィールドがいくつありますか?","o":["3","4","5","6","7"],"a":"D","acc":["D"],"e":"デバイス、マウントポイント、FS種別、オプション、dump、fsck順序の6フィールド。","w":["6フィールドが正","6フィールドが正","6フィールドが正","","6フィールドが正"]},{"n":114,"c":4,"t":"s","q":"キーボードで Ctrl + Z キーの組み合わせが押されたときに、プロセスに送信される信号は次のどれですか。","o":["SIGTERM","SIGCONT","SIGSTOP","SIGKILL","SIGINT"],"a":"C","acc":["C"],"e":"厳密には Ctrl+Z は SIGTSTP を送るが、選択肢に無いため試験の想定解答は C(SIGSTOP)。","w":["SIGTERMは終了要求","SIGCONTは再開","","SIGKILLは強制終了","SIGINTはCtrl+C"]}],[{"n":50,"c":1,"t":"s","q":"EFI システムパーティションには何が含まれていますか?","o":["Linux ルートファイルシステム","第一段階ブートローダー","デフォルトのスワップスペースファイル","Linux のデフォルトシェルバイナリ","ユーザーのホームディレクトリ"],"a":"B","acc":["B"],"w":["ルートFSは別パーティション","","スワップは別パーティション","シェルはルートFS内","ホームは別の場所"]},{"n":92,"c":2,"t":"s","q":"yum リポジトリは関連するパッケージのセットを宣言できます。admintools グループに属するすべてのパッケージをインストールする yum コマンドはどれですか?","o":["yum pkgsel --install admintools","yum install admintools/*","yum groupinstall admintools","yum taskinstall admintools","yum collection install admintools"],"a":"C","acc":["C"],"w":["存在しないコマンド","そのような指定はできない","","存在しない","存在しない"]},{"n":41,"c":2,"t":"s","q":"次のコマンドのうち、RPM パッケージファイル foo.rpm の依存関係を一覧表示するものはどれですか。","o":["rpm -qpR foo.rpm","rpm -dep foo","rpm -ld foo.rpm","rpm -R foo.rpm","rpm -pD foo"],"a":"A","acc":["A"],"e":"-q(照会) -p(パッケージファイル) -R(依存関係)。","w":["","存在しないオプション","存在しないオプション","-Rは-qと併用が必要","存在しないオプション"]},{"n":68,"c":3,"t":"s","q":"次の入力ストリームがあるとします:\ntxt1.txt\natxt.txt\ntxtB.txt\n次の正規表現のどれが、この入力ストリームを次の出力ストリームに変換しますか?\ntxt1.bak.txt atxt.bak.txt txtB.bak.txt","o":["s/^.txt/.bak/","s/txt/bak.txt/","s/txt$/bak.txt/","s/^txt$/.bak^/","s/[.txt]/.bak$1/"],"a":"C","acc":["C"],"e":"行末の txt を bak.txt に置換(txt1.txt → txt1.bak.txt)。","w":["^.txtは先頭一致で意図と異なる","最初のtxtが置換され結果が崩れる","","行全体がtxtの場合のみ一致","[.txt]は文字クラスで意味が異なる"]},{"n":81,"c":3,"t":"s","q":"xargs コマンドの目的は何ですか?","o":["X サーバーに引数を渡します。","呼び出しごとに異なるパラメータを使用してコマンドの実行を繰り返します。","標準入力を読み取り、実行するコマンドを構築します。","グラフィカルに質問し、その回答をシェルに返します。","通常は短いオプション(-h など)しか受け付けないコマンドに長いオプション(--help など)を指定できるようにする"],"a":"C","acc":["C"],"w":["Xサーバーとは無関係","繰り返し自体ではなく標準入力から引数を作るのが本質","","そのような機能はない","そのような機能はない"]},{"n":34,"c":5,"t":"x","q":"空欄を埋めてください。\nlocate コマンドによって使用されるデータベースを更新するプログラムはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"updatedb"},{"n":19,"c":1,"t":"s","q":"Linux システムで電源管理イベントを処理するデーモンはどれですか?","o":["acpid","batteryd","pwrmgntd","psd","inetd"],"a":"A","acc":["A"],"w":["","存在しないデーモン","存在しないデーモン","存在しないデーモン","inetdはネットワーク接続の待受用"]},{"n":23,"c":5,"t":"x","q":"空白を埋めてください。\nマウントされたすべてのファイルシステムの現在のディスク領域使用量を表示するコマンドはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"df"},{"n":48,"c":2,"t":"m","q":"標準の GRUB 2 インストールには、次のどのファイルが存在しますか?(2つ選択してください。)","o":["/boot/grub/stages/stage0","/boot/grub/i386-pc/lvm.mod","/boot/grub/fstab","/boot/grub/grub.cfg","/boot/grub/linux/vmlinuz"],"a":"BD","acc":["BD"],"e":"stage 構造は GRUB Legacy のもの。GRUB 2 はモジュール(*.mod)と grub.cfg を使用。","w":["stage0はGRUB Legacyの概念","","fstabはGRUB配下にない","","カーネルは/boot直下（grubディレクトリ内ではない）"]},{"n":120,"c":4,"t":"m","q":"次のコマンドのうち、root が所有するすべてのプロセスの ID を表示するものはどれですか(2つ選択してください)。","o":["pgrep -c root","pgrep -u root","pgrep -f root","pgrep -U 0","pgrep -c 0"],"a":"BD","acc":["BD"],"e":"-u は実効ユーザー名、-U は実UID(root=0)。","w":["-cは一致数のカウント","","-fはコマンドライン全体との一致","","-cはカウントで対象指定ではない"]},{"n":94,"c":1,"t":"s","q":"ハードディスクからの起動時に、コンピュータは Linux カーネルと initramfs を正常にロードしますが、その後の起動タスクでハングします。問題を調査するため、Linux ベースのレスキューCDを使用してシステムを起動します。問題の根本原因を特定するのに役立つ方法は次のうちどれですか?","o":["レスキューCDのシェルから dmesg コマンドを使用して、元のシステムのブートログを表示する","コンピュータのハードディスク上のファイル /proc/kmsg にエラーがないか調査します。","コンピュータのハードディスク上のファイル /var/log を調べてエラーの可能性を調べます。","chroot を使用してハードディスク上のファイルシステムに切り替え、dmesg を使用してログを表示します。","システムがレスキューCDから正常に起動したため、ハードドライブから再度再起動します。"],"a":"C","acc":["C"],"e":"dmesg は現在起動中(レスキュー)のカーネルのログしか表示できない。/proc は仮想 FS でディスク上に存在しない。","w":["dmesgはレスキューCD側のログを表示してしまう","/proc/kmsgは実行中カーネルの仮想ファイル（ディスク上にない）","/var/logはディレクトリで、マウントして中のファイルを見る必要がある","","原因調査にならない"]},{"n":45,"c":2,"t":"s","q":"次のコマンドのうち、3番目のハードディスクのマスターブートレコードに GRUB 2 をインストールするものはどれですか。","o":["grub2 install /dev/sdc","grub-mkrescue /dev/sdc","grub-mbrinstall /dev/sdc","grub-setup /dev/sdc","grub-install /dev/sdc"],"a":"E","acc":["E"],"w":["grub2 installという形はない","mkrescueはレスキューイメージ作成","存在しないコマンド","grub-setupは旧内部コマンドで用途が異なる",""]},{"n":56,"c":1,"t":"x","q":"空欄を埋めてください。\n/proc ファイルシステム内のどのファイルに、ブートローダからカーネルに渡されるパラメータがリストされていますか?(パスなしでファイル名のみを指定してください。)","o":[],"ax":"cmdline","axa":["/proc/cmdline"],"e":"/proc/cmdline(設問はファイル名のみ)。"},{"n":103,"c":2,"t":"s","q":"ldd コマンドの目的は何ですか?","o":["バイナリを実行するために必要な共有ライブラリをリストします。","インストールされている共有ライブラリをインストールおよび更新します。","動的にリンクされたバイナリを静的バイナリに変換します。","デフォルトで使用するライブラリのバージョンを定義します。","代替ライブラリ検索パスを使用してバイナリを実行します。"],"a":"A","acc":["A"],"w":["","インストール・更新はしない","変換機能はない","バージョン定義はしない","実行機能はない"]},{"n":15,"c":4,"t":"s","q":"どの chown コマンドが、data.txt というファイルの所有権を dave に、グループを staff に変更しますか?","o":["chown dave/staff data.txt","chown -u dave -g staff data.txt","chown --user dave --group staff data.txt","chown dave+staff data.txt","chown dave:staff data.txt"],"a":"E","acc":["E"],"w":["区切りは/ではなく:","-u/-gオプションはない","--user/--groupオプションはない","+では区切れない",""]},{"n":37,"c":3,"t":"s","q":"次の vi コマンドのうち、現在の行と次の行の2行を削除するものはどれですか。","o":["d2","2d","2dd","dd2","de12"],"a":"C","acc":["C"],"w":["無効なコマンド","無効なコマンド（数字はddの前）","","無効なコマンド","無効なコマンド"]},{"n":97,"c":5,"t":"s","q":"新しい ext4 ファイルシステム上の root ユーザー用に予約された領域のデフォルトのパーセンテージはどれくらいですか?","o":["10%","3%","15%","0%","5%"],"a":"E","acc":["E"],"w":["デフォルトは5%","デフォルトは5%","デフォルトは5%","予約は0ではない",""]},{"n":87,"c":5,"t":"m","q":"現在マウントされているすべてのファイルシステムを表示するには、次のコマンドのどれを使用できますか?(2つ選択してください。)","o":["cat /proc/self/mounts","free","lsmounts","mount","cat /proc/filesystems"],"a":"AD","acc":["AD"],"e":"/proc/filesystems はカーネルが対応する FS の一覧であり、マウント状況ではない。","w":["","freeはメモリ表示","存在しないコマンド","","/proc/filesystemsは対応FS種別の一覧"]},{"n":51,"c":2,"t":"s","q":"Debian パッケージはインストール中に複数のファイルを作成します。次のコマンドのうち、/etc/debian_version ファイルを所有するパッケージを検索するものはどれですか?","o":["apt-get search /etc/debian_version","apt -r /etc/debian_version","find /etc/debian_version -dpkg","dpkg -S /etc/debian_version","apt-file /etc/debian_version"],"a":"D","acc":["D"],"e":"dpkg -S(--search)でファイルの所属パッケージを検索。","w":["検索はapt-cache search（ファイル所属は不可）","apt -rは存在しない","findに-dpkgはない","","apt-fileは別途導入が必要で構文も異なる"]},{"n":88,"c":5,"t":"s","q":"コマンド mount --bind は何をしますか?","o":["あるディレクトリの内容を別のディレクトリで利用できるようにする","利用可能なすべてのファイルシステムを現在のディレクトリにマウントします","ユーザーがマウント可能なすべてのファイルシステムをユーザーのホームディレクトリにマウントします。","/etc/fstab にリストされ、オプション userbind が設定されているすべてのファイルシステムをマウントします。","通常のファイルをディレクトリに永続的にマウントする"],"a":"A","acc":["A"],"w":["","そのような機能はない","そのような機能はない","userbindオプションは存在しない","通常ファイルのマウントの説明ではない"]},{"n":22,"c":4,"t":"s","q":"ハードリンクの使用を検討する際に、ハードリンクを使用しない正当な理由は何ですか?","o":["ハードリンクは、ext4 などの従来のファイルシステムではサポートされていないため、すべての Linux システムで利用できるわけではありません。","各ハードリンクには個別の所有権、権限、ACL があり、ファイルの内容が意図せず公開される可能性があります。","ハードリンクは1つのファイルシステムに固有のものであり、別のファイルシステム上のファイルを指すことはできません。","ルート以外のユーザーがハードリンクを作成できるようにするには、suln をインストールして設定する必要があります。","ハードリンクされたファイルが変更されると、ファイルのコピーが作成され、追加のスペースを消費します。"],"a":"C","acc":["C"],"w":["ext4等はハードリンクをサポートする","ハードリンクは所有権・権限を実体と共有する","","sulnというツールは存在しない","変更してもコピーは作られない（同一実体）"]},{"n":27,"c":5,"t":"s","q":"ブロックデバイス名のみを指定し、追加のパラメータを指定せずに mkfs を実行すると、どのタイプのファイルシステムが作成されますか。","o":["XFS","VFAT","ext2","ext3","ext4"],"a":"C","acc":["C"],"e":"mkfs のデフォルトは ext2。","w":["明示指定が必要（mkfs.xfs）","明示指定が必要","","明示指定が必要","明示指定が必要"]},{"n":107,"c":2,"t":"s","q":"dpkg パッケージ管理を使用してシステム上のパッケージを削除する場合、どの dpkg オプションによって構成ファイルも確実に削除されますか?","o":["--clean","--purge","--vacuum","--remove","--declare"],"a":"B","acc":["B"],"w":["存在しない","","存在しない","--removeは設定を残す","存在しない"]},{"n":116,"c":7,"t":"m","q":"Bash シェルから、サブシェルを起動せずにファイル /usr/local/bin/runme.sh からの命令を直接実行するコマンドはどれですか?(2つ選択してください。)","o":["source /usr/local/bin/runme.sh","/usr/local/bin/runme.sh","/bin/bash /usr/local/bin/runme.sh",". /usr/local/bin/runme.sh","run /usr/local/bin/runme.sh"],"a":"AD","acc":["AD"],"e":"source と .(ドットコマンド)は現在のシェルで実行する。B・C は子プロセスを生成する。","w":["","直接実行はサブシェル（新プロセス）で動く","bash起動もサブシェルになる","","runというコマンドはない"]},{"n":53,"c":1,"t":"s","q":"カーネルモジュールの不具合により、ネットワークインターフェースカードに問題が発生しています。システム起動時にこのモジュールが自動的にロードされないようにするには、次のどのアクションを実行すればよいですか?","o":["特定のモジュール名を指定せずに lsmod --remove --autoclean を使用する","modinfo -k に続いて問題のあるモジュールの名前を使用する","modprobe -r に続いて問題のあるモジュールの名前を使用する","問題のあるモジュールの名前を含むブラックリスト行をファイル /etc/modprobe.d/blacklist.conf に追加する","ファイルシステムからカーネルモジュールのディレクトリを削除し、モジュールを含むカーネルを再コンパイルする"],"a":"D","acc":["D"],"e":"modprobe -r は一時的なアンロードであり、起動時のロード防止にはならない。","w":["lsmodは表示専用","modinfoは情報表示のみ","今アンロードするだけで次回起動時は防げない","","過剰な対応で不要"]},{"n":98,"c":5,"t":"x","q":"空欄を埋めてください。\nファイルシステム階層標準(FHS)に従って、システム管理者がコンパイルしたバイナリをシステム上のすべてのユーザーが利用できるようにするためには、どこに配置する必要がありますか?(ディレクトリへのフルパスを指定します。)","o":[],"ax":"/usr/local/bin/","axa":["/usr/local/bin","usr/local/bin"]},{"n":95,"c":3,"t":"s","q":"ユーザーが誤ってホームディレクトリにサブディレクトリ \\dir を作成しました。そのディレクトリを削除するには、次のコマンドのうちどれを使用しますか?","o":["rmdir ~/\\\\dir","rmdir \"~/\\dir\"","rmdir ~/'dir'","rmdir ~/\\dir","rmdir '~/\\dir'"],"a":"A","acc":["A"],"e":"~ の展開にはクォート外である必要があり、\\ 自体は \\\\ でエスケープする。問題文の「リモート操作」はOCR/翻訳誤りで「削除」の意。","w":["\\\\は\\自体のエスケープで~/が展開されない位置","ダブルクォート内では~が展開されない","'dir'では\\が含まれない","","クォート内では~が展開されない"]},{"n":40,"c":4,"t":"s","q":"通常のユーザーが新しいプロセスを実行するときに nice コマンドを使用してプロセスに割り当てることができる最大の nice 値はどれくらいですか?","o":["9","15","19","49","99"],"a":"C","acc":["C"],"w":["最大は19","最大は19","","nice値は-20〜19の範囲","nice値は-20〜19の範囲"]},{"n":67,"c":3,"t":"s","q":"現在のファイルを filea.txt として保存するには、vi を終了する前にどのコマンドを入力する必要がありますか?","o":["%s filea.txt","%w filea.txt",":save filea.txt",":w filea.txt",":s filea.txt"],"a":"D","acc":["D"],"w":["%sは置換コマンド","無効なコマンド","vimでは:saveasが相当（:saveはない）","",":sは置換"]},{"n":112,"c":3,"t":"s","q":"次のコマンドのうち、シェルが特定のコマンドを処理する方法を示すものはどれですか。","o":["where","type","stat","case","fileinfo"],"a":"B","acc":["B"],"e":"type はエイリアス/ビルトイン/外部コマンド等の種別を表示する。","w":["whereは存在しない（whichが近い）","","statはファイル情報","caseはシェル構文","存在しない"]},{"n":114,"c":4,"t":"s","q":"キーボードで Ctrl + Z キーの組み合わせが押されたときに、プロセスに送信される信号は次のどれですか。","o":["SIGTERM","SIGCONT","SIGSTOP","SIGKILL","SIGINT"],"a":"C","acc":["C"],"e":"厳密には Ctrl+Z は SIGTSTP を送るが、選択肢に無いため試験の想定解答は C(SIGSTOP)。","w":["SIGTERMは終了要求","SIGCONTは再開","","SIGKILLは強制終了","SIGINTはCtrl+C"]},{"n":47,"c":2,"t":"s","q":"次のコマンドのうち、名前が文字列 foo で終わるすべてのパッケージをインストールするのはどれですか?","o":["zypper get '*foo'","zypper update '*foo?'","zypper force 'foo*'","zypper install '*foo'","zypper add '.*foo'"],"a":"D","acc":["D"],"w":["getサブコマンドはない","updateは更新用","forceはない","","addはリポジトリ追加用"]},{"n":66,"c":4,"t":"s","q":"キーボードで Ctrl + C キーの組み合わせが押されたときに、プロセスに送信される信号は次のどれですか。","o":["SIGTERM","SIGCONT","SIGSTOP","SIGKILL","SIGINT"],"a":"E","acc":["E"],"w":["SIGTERMはkillのデフォルト","SIGCONTは再開シグナル","SIGSTOPは一時停止（Ctrl+ZはSIGTSTP）","SIGKILLはkill -9",""]},{"n":93,"c":1,"t":"m","q":"Linux のブートプロセスに関係する初期 RAM ディスクについて正しい記述はどれですか(2つ選択してください)。","o":["initramfs は圧縮されたファイルシステム アーカイブであり、解凍してその内容を調べることができます。","initramfs ファイルには、MBR、ブートローダー、Linux カーネルが含まれています。","起動が成功すると、initramfs の内容が /run/initramfs/ で利用できるようになります。","カーネルは、実際のルートファイルシステムにアクセスする前に、一時的に initramfs を使用します。","initramfs は特定のカーネルバージョンに依存せず、初期インストール後は変更されません。"],"a":"AD","acc":["AD"],"w":["","MBRやブートローダーは含まれない","通常は起動後に破棄される（保持は設定時のみ）","","カーネルバージョンに依存し更新される"]},{"n":46,"c":2,"t":"m","q":"仮想マシンのクローンを作成するときに、Linux システムの次のプロパティのうちどれを変更する必要がありますか?(2つ選択してください。)","o":["パーティションスキーム","ファイルシステム","D-Bus マシン ID","/root/ の権限","SSH ホストキー"],"a":"CE","acc":["CE"],"w":["パーティション構成は複製のままで問題ない","ファイルシステムも変更不要","","/root/の権限は変更不要",""]},{"n":76,"c":3,"t":"s","q":"正規表現を使用してファイルの内容を検索できるコマンドはどれですか?","o":["find","locate","grep","reggrep","pgrep"],"a":"C","acc":["C"],"w":["findはファイル名・属性の検索","locateは名前DBの検索","","reggrepは存在しない","pgrepはプロセス名の検索"]},{"n":64,"c":3,"t":"s","q":"ユーザー fred が次のコマンドを実行すると、どのような出力が表示されますか。\necho 'fred $USER'","o":["fred fred","fred /home/fred/","'fred $USER'","fred $USER","'fred fred'"],"a":"D","acc":["D"],"e":"シングルクォート内では変数展開されず、クォート自体は出力されない。","w":["シングルクォートは$USERを展開しない","展開されない","クォート自体は出力されない","","クォートは出力されず展開もされない"]},{"n":24,"c":1,"t":"x","q":"空欄を埋めてください。\nデフォルトの実行レベルを設定するために一般的に使用される System V init 構成ファイルはどれですか?(パスを含むファイルの完全な名前を指定してください。)","o":[],"ax":"/etc/inittab","axa":["inittab"]},{"n":12,"c":4,"t":"m","q":"バックアップソフトウェアは、2回のバックアップ実行間で変更されていないファイル間のハードリンクを頻繁に使用します。これらのハードリンクによってどのような利点が得られますか?(2つ選択してください。)","o":["古いバックアップは、新しいバックアップのハードリンク ターゲットとして機能しながら、テープなどの低速のバックアップ メディアに移動できます。","ハードリンクは非同期操作であり、コピー操作が後の時点に延期されるため、バックアップの実行速度が速くなります。","ハードリンクされたファイルは作成後に変更できないため、バックアップは無傷であることが保証されます。","ハードリンクは冗長コピーを保存するのではなく、ディスク上の同じデータを指すため、バックアップの消費スペースが少なくなります。","ハードリンクは各ファイルのデータをコピーするのではなく、ファイルシステムのメタデータのみを変更するため、バックアップの実行速度が速くなります。"],"a":"DE","acc":["DE"],"w":["別メディアへ移動するとハードリンクは維持できない","ハードリンクは遅延コピーではない","ハードリンク先も変更可能","",""]},{"n":109,"c":1,"t":"s","q":"次のコマンドのうち、必要な依存モジュールとともにカーネルモジュールをロードするものはどれですか。","o":["depmod","modprobe","module_install","insmod","loadmod"],"a":"B","acc":["B"],"e":"insmod は依存関係を解決しない。","w":["depmodは依存関係DBの更新","","存在しない","insmodは依存を解決しない","存在しない"]},{"n":65,"c":3,"t":"s","q":"次のコマンドのうち、foo コマンドの出力を画面に表示し、それを /tmp/foodata というファイルに書き込むものはどれですか。","o":["foo | less /tmp/foodata","foo | cp /tmp/foodata","foo > /tmp/foodata","foo | tee /tmp/foodata","foo > stdout >> /tmp/foodata"],"a":"D","acc":["D"],"w":["lessは表示のみでファイルに書かない","cpの用法が誤り",">では画面に表示されない","","無効な構文"]},{"n":73,"c":4,"t":"s","q":"& 文字で終わるコマンドについて正しい記述は次のどれですか。","o":["コマンドの出力は /dev/null にリダイレクトされます。","コマンドは現在のシェルのバックグラウンドで実行されます。","コマンドの出力はシェルによって実行されます。","コマンドは init プロセスの直接の子として実行されます。","コマンドの入力は /dev/null から読み取られます。"],"a":"B","acc":["B"],"w":["/dev/nullへのリダイレクトは行われない","","出力がコマンドとして実行されることはない","親は現在のシェルのまま","入力の付け替えは行われない"]},{"n":57,"c":4,"t":"s","q":"次のコマンドのうち、gzip で圧縮された tar アーカイブの内容を表示するものはどれですか?","o":["gzip archive.tgz | tar xvf -","tar -fzt archive.tgz","gzip -d archive.tgz | tar tvf -","tar cf archive.tgz","tar ztf archive.tgz"],"a":"E","acc":["E"],"e":"z(gzip)t(一覧表示)f(ファイル指定)。","w":["xvfは展開してしまう（tが一覧）","fの直後はファイル名が必要で無効","gzip -dは標準出力に出ず元ファイルを展開してしまう","cfは作成",""]},{"n":70,"c":4,"t":"x","q":"空白を埋めてください。\n特定の間隔でコマンドを実行し、プログラムの出力の表示を更新するプログラムはどれですか?(パスやパラメータを指定せずにコマンドのみを指定します。)","o":[],"ax":"watch"},{"n":38,"c":3,"t":"m","q":"次のうち、Bash 内で有効なストリーム リダイレクト演算子はどれですか(2つ選択してください)。","o":["<","#>","%>",">>>","2>&1"],"a":"AE","acc":["AE"],"e":"原本の「2>&l」は「2>&1」(数字の1)の誤認識のため修正。","w":["","存在しない演算子","存在しない演算子","存在しない演算子",""]},{"n":58,"c":3,"t":"s","q":"次のコマンドのうち、ls の出力を標準エラーにリダイレクトするものはどれですか?","o":["ls >-1","ls <","ls >&2","ls >>2","ls |error"],"a":"C","acc":["C"],"w":["3>はFD3への出力","<は入力リダイレクト","","「2」という名前のファイルへ追記される","errorというコマンドへのパイプになる"]},{"n":78,"c":7,"t":"s","q":"実行中の Bash シェル内でオプションと位置パラメータを変更するために使用されるコマンドはどれですか?","o":["history","setsh","bashconf","set","envsetup"],"a":"D","acc":["D"],"w":["historyは履歴表示","存在しないコマンド","存在しないコマンド","","存在しないコマンド"]},{"n":7,"c":3,"t":"m","q":"Bash シェルを使用しているときに現在の作業ディレクトリを出力するコマンドはどれですか?(2つ選択してください。)","o":["echo \"${PWD}\"","echo \"${WD}\"","printwd","pwd","echo \"${pwd}\""],"a":"AD","acc":["AD"],"e":"環境変数 PWD は大文字。E の ${pwd} は未定義変数。","w":["","WDという変数はない","printwdは存在しない","","変数名は大文字のPWD（$pwdは未定義）"]},{"n":39,"c":5,"t":"m","q":"次のコマンドのうち、/tmp/ ディレクトリとそのサブディレクトリ内にある、ユーザー root が所有するすべてのファイルとディレクトリを一覧表示するものはどれですか。(2つ選択してください。)","o":["find /tmp -user root -print","find -path /tmp -uid root","find /tmp -uid root -print","find /tmp -user root","find -path /tmp -user root -print"],"a":"AD","acc":["AD"],"e":"-uid は数値UIDを取るため C は不可(root は名前)。-print は省略可能。","w":["","-pathは検索パスの指定方法として誤り","-uidは数値UID指定（rootという名前は不可）","","検索パスは引数で渡す（-pathは条件）"]},{"n":82,"c":3,"t":"s","q":"次のコマンドのうち、すべての一般的なファイルタイプに関する情報を含む定義データベースファイルを使用してファイルの形式を決定するものはどれですか。","o":["type","file","magic","pmagic","hash"],"a":"B","acc":["B"],"e":"file コマンドは magic データベースを使用する。","w":["typeはコマンドの種別表示","","magicはDB名でコマンドではない","存在しない","hashはコマンドパスのキャッシュ"]}]];
+const CH={1:"システムアーキテクチャ",2:"インストールとパッケージ管理",3:"GNUとUNIXコマンド",4:"ファイルとプロセスの管理",5:"デバイスとLinuxFS",7:"シェルとシェルスクリプト"};
+const KEYS="ABCDE";
+const DURATION=50*60; // sec
+const PASS=65;
+
+/* ---- storage ---- */
+let canStore=true; try{localStorage.setItem("__t","1");localStorage.removeItem("__t");}catch(e){canStore=false;}
+function lget(k,d){ if(!canStore)return d; try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;} }
+function lset(k,v){ if(!canStore)return; try{localStorage.setItem(k,JSON.stringify(v));}catch(e){} }
+let NAME=lget("lpicExamName","")||"";
+let HIST=lget("lpicExamHist",{}); // {round: [ {name,score,ok,total,ts,pass}... ]}
+
+/* ---- views ---- */
+const V={home:vHome,brief:vBrief,exam:vExam,submit:vSubmit,result:vResult,study:vStudy,history:vHistory};
+let cur="home";
+function show(v){ for(const k in V)V[k].classList.toggle("hidden",k!==v); cur=v; window.scrollTo(0,0); }
+
+/* ---- helpers ---- */
+function esc(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function fmt(sec){const m=Math.floor(sec/60),s=sec%60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;}
+function normAns(t){t=String(t||"").normalize("NFKC").trim().toLowerCase();t=t.replace(/\s+/g," ").replace(/^['"`]+|['"`]+$/g,"");if(t.length>1)t=t.replace(/\/+$/,"");return t;}
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function dispOrder(q){ return q.ord || q.o.map((_,i)=>i); }
+function dispLetterOf(q,origLetter){ const oi=KEYS.indexOf(origLetter); if(oi<0)return origLetter; const p=dispOrder(q).indexOf(oi); return p<0?origLetter:KEYS[p]; }
+function toast(m){let t=document.querySelector(".toast");if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t);}t.textContent=m;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(()=>t.style.display="none",2400);}
+
+/* ---- home ---- */
+nameInput.value=NAME;
+nameInput.addEventListener("input",()=>{ NAME=nameInput.value.trim(); lset("lpicExamName",NAME);
+  nameSaved.classList.toggle("hidden",!NAME); });
+function renderHome(){
+  nameInput.value=NAME;
+  roundGrid.innerHTML="";
+  EXAMS.forEach((qs,i)=>{
+    const r=i+1; const h=(HIST[r]||[]);
+    const best=h.length?Math.max(...h.map(x=>x.score)):null;
+    const nx=qs.filter(q=>q.t==="x").length, nm=qs.filter(q=>q.t==="m").length;
+    const card=document.createElement("button"); card.className="round";
+    card.innerHTML=`<span class="rnum"><small>Round</small>${r}</span>
+      <span class="rmeta">50問 / 50分 · 記述${nx}・複数選択${nm}</span>
+      <span class="rbest">${best==null?'<span class="none">未受験</span>':`最高 <span class="${best>=PASS?'pass':'fail'}">${best}%</span> · ${h.length}回受験`}</span>
+      <span class="go">この回を受験 →</span>`;
+    card.onclick=()=>openBrief(i);
+    roundGrid.appendChild(card);
+  });
+  const total=EXAMS.reduce((a,q)=>a+q.length,0);
+  footInfo.textContent=`模試101（LPIC_a）全120問 · 6回×50問=${total}スロット（回をまたぐ重複あり／各回は重複なし）`;
+}
+histBtn.onclick=()=>{renderHistory();show("history");};
+histBack.onclick=()=>{renderHome();show("home");};
+resetBtn.onclick=()=>{ if(confirm("すべての受験履歴を削除します。よろしいですか？")){HIST={};lset("lpicExamHist",HIST);renderHome();toast("履歴を削除しました");}};
+
+/* ---- session ---- */
+let S=null, timer=null;
+function openBrief(idx){
+  S={idx:idx,round:idx+1};
+  briefTitle.textContent=`第${S.round}回 模擬試験`;
+  briefBarMeta.textContent=`第${S.round}回 / 全6回`;
+  const h=HIST[S.round]||[]; const best=h.length?Math.max(...h.map(x=>x.score))+"%":"—";
+  briefRetake.textContent=best;
+  briefNameWarn.classList.toggle("hidden",!!NAME);
+  briefBody.classList.remove("hidden"); countBody.classList.add("hidden");
+  show("brief");
+}
+briefBack.onclick=()=>{renderHome();show("home");};
+startBtn.onclick=()=>{
+  if(!NAME){ toast("先に氏名を入力してください"); briefNameWarn.classList.remove("hidden"); return; }
+  briefBody.classList.add("hidden"); countBody.classList.remove("hidden");
+  countWho.textContent=NAME+" さん";
+  let n=5; countNum.textContent=n; countNum.classList.remove("go");
+  const ci=setInterval(()=>{
+    n--;
+    if(n>0){countNum.textContent=n;}
+    else if(n===0){countNum.textContent="START";countNum.classList.add("go");}
+    else{clearInterval(ci);beginExam();}
+  },1000);
+};
+
+function beginExam(){
+  const qs=EXAMS[S.idx].map(q=>{const c={...q}; if(c.t!=="x"&&c.o&&c.o.length) c.ord=shuffleArr(c.o.map((_,i)=>i)); return c;});
+  S.qs=qs; S.pos=0;
+  S.answers=qs.map(()=>({sel:new Set(),text:""}));
+  S.flags=qs.map(()=>false);
+  S.remain=DURATION; S.startedAt=new Date();
+  show("exam"); renderQ(); startTimer();
+}
+function startTimer(){
+  stopTimer();
+  timer=setInterval(()=>{
+    S.remain--;
+    updateClock();
+    if(S.remain<=0){ stopTimer(); toast("時間切れです。採点します"); doSubmit(true); }
+  },1000);
+  updateClock();
+}
+function stopTimer(){ if(timer){clearInterval(timer);timer=null;} }
+function updateClock(){
+  const t=fmt(Math.max(0,S.remain));
+  [exClock,subClock].forEach(el=>{ el.textContent=t;
+    el.className="t"+(S.remain<=60?" crit":S.remain<=300?" warn":""); });
+  const pct=(1-S.remain/DURATION)*100;
+  exPbar.style.width=pct+"%"; subPbar.style.width=pct+"%";
+}
+
+/* ---- render question ---- */
+function renderQ(){
+  const i=S.pos, q=S.qs[i], ans=S.answers[i];
+  exRound.textContent=`第${S.round}回`;
+  exQn.textContent=`問 ${i+1} / ${S.qs.length}`;
+  const typeTag=q.t==="m"?'<span class="tag multi">複数選択</span>':q.t==="x"?'<span class="tag text">記述式</span>':'<span class="tag">単一選択</span>';
+  const flagOn=S.flags[i];
+  let h=`<div class="qhd"><span class="idx">Q${i+1}</span>${typeTag}
+     <span class="tag">第${q.c}章</span>
+     <button class="flag${flagOn?' on':''}" id="flagBtn">${flagOn?'★ フラグ中':'☆ フラグ'}</button></div>
+    <div class="qbody"><div class="qtext">${esc(q.q)}</div>`;
+  if(q.t==="x"){
+    h+=`<div class="qhint">コマンド名・パスなどを入力してください</div>
+      <input class="txtin" id="txtIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="答えを入力" value="${esc(ans.text)}">`;
+  }else{
+    const multi=q.t==="m";
+    if(multi){const need=q.a.length; h+=`<div class="qhint">${need}つ選択してください</div>`;}
+    h+='<div class="opts">'+dispOrder(q).map((oi,p)=>{
+      const L=KEYS[oi], DL=KEYS[p], seld=ans.sel.has(L);
+      return `<button class="opt ${multi?'multi':'single'}${seld?' sel':''}" data-k="${L}"><span class="box">${seld?(multi?'✓':DL):DL}</span><span>${esc(q.o[oi])}</span></button>`;
+    }).join("")+'</div>';
+  }
+  h+='</div>';
+  qCard.innerHTML=h;
+  document.getElementById("flagBtn").onclick=()=>{ S.flags[i]=!S.flags[i]; renderQ(); renderPalette(); };
+  if(q.t==="x"){
+    const inp=document.getElementById("txtIn");
+    inp.oninput=()=>{ ans.text=inp.value; renderPalette(); };
+    inp.onkeydown=e=>{ if(e.key==="Enter"){e.preventDefault(); go(1);} };
+  }else{
+    const multi=q.t==="m";
+    qCard.querySelectorAll(".opt").forEach(b=>{
+      b.onclick=()=>{
+        const L=b.dataset.k;
+        if(multi){ ans.sel.has(L)?ans.sel.delete(L):ans.sel.add(L); }
+        else{ ans.sel=new Set([L]); }
+        renderQ(); renderPalette();
+        if(!multi){ setTimeout(()=>go(1),180); }
+      };
+    });
+  }
+  prevBtn.disabled=(i===0); prevBtn.style.opacity=i===0?.4:1;
+  nextBtn.textContent=(i===S.qs.length-1)?"見直しへ →":"次へ →";
+  navMid.textContent=`回答済み ${answeredCount()} / ${S.qs.length}`;
+  renderPalette();
+}
+function answered(i){ const q=S.qs[i],a=S.answers[i]; return q.t==="x"? a.text.trim()!=="" : a.sel.size>0; }
+function answeredCount(){ let n=0; for(let i=0;i<S.qs.length;i++) if(answered(i))n++; return n; }
+function renderPalette(){
+  pGrid.innerHTML="";
+  S.qs.forEach((q,i)=>{
+    const c=document.createElement("button"); c.className="pcell";
+    if(answered(i))c.classList.add("answered");
+    if(S.flags[i])c.classList.add("flagged");
+    if(i===S.pos)c.classList.add("current");
+    c.textContent=i+1; c.onclick=()=>{S.pos=i;renderQ();};
+    pGrid.appendChild(c);
+  });
+}
+function go(d){ const n=S.pos+d;
+  if(n<0)return;
+  if(n>=S.qs.length){ openSubmit(); return; }
+  S.pos=n; renderQ();
+}
+prevBtn.onclick=()=>go(-1);
+nextBtn.onclick=()=>go(1);
+toReviewBtn.onclick=()=>openSubmit();
+
+/* ---- submit review ---- */
+function openSubmit(){
+  subRound.textContent=`第${S.round}回`;
+  const un=[],fl=[];
+  S.qs.forEach((q,i)=>{ if(!answered(i))un.push(i); if(S.flags[i])fl.push(i); });
+  subAnswered.textContent=answeredCount();
+  subUnanswered.textContent=un.length;
+  subFlagged.textContent=fl.length;
+  const mk=(arr,cls)=>arr.length?arr.map(i=>`<button class="${cls}" data-i="${i}">問${i+1}</button>`).join(""):'<span style="color:var(--faint);font-size:.85rem">なし</span>';
+  subUnansweredList.innerHTML=mk(un,"unanswered");
+  subFlaggedList.innerHTML=mk(fl,"flagged");
+  subUnansweredWrap.style.display=un.length?"":"none";
+  document.querySelectorAll("#subUnansweredList button,#subFlaggedList button").forEach(b=>{
+    b.onclick=()=>{ S.pos=+b.dataset.i; show("exam"); renderQ(); };
+  });
+  show("submit");
+}
+backToExamBtn.onclick=()=>{ show("exam"); renderQ(); };
+submitBtn.onclick=()=>{
+  const un=S.qs.filter((q,i)=>!answered(i)).length;
+  if(un>0 && !confirm(`未回答が${un}問あります。このまま採点しますか？`))return;
+  doSubmit(false);
+};
+
+/* ---- grading ---- */
+function isCorrect(q,ans){
+  if(q.t==="x"){ const cands=[q.ax].concat(q.axa||[]).map(normAns); return cands.includes(normAns(ans.text)); }
+  if(q.t==="m"){ return [...ans.sel].sort().join("")===q.a; }
+  return q.acc.includes([...ans.sel][0]);
+}
+function doSubmit(timeUp){
+  stopTimer();
+  const detail=S.qs.map((q,i)=>({q,ans:S.answers[i],ok:isCorrect(q,S.answers[i]),flag:S.flags[i]}));
+  const ok=detail.filter(d=>d.ok).length;
+  const score=Math.round(ok/S.qs.length*100);
+  const pass=score>=PASS;
+  // 章別
+  const bych={};
+  detail.forEach(d=>{ const c=d.q.c; (bych[c]=bych[c]||{ok:0,t:0}).t++; if(d.ok)bych[c].ok++; });
+  const rec={ name:NAME||"（無記名）", round:S.round, score, ok, total:S.qs.length, pass,
+    ts:new Date().toISOString(), timeUp, durationUsed:DURATION-Math.max(0,S.remain), bych };
+  // 履歴保存（各回10件）
+  HIST[S.round]=HIST[S.round]||[];
+  const wrongSave=detail.map((d,i)=>({d,i})).filter(x=>!x.d.ok)
+    .map(x=>({n:x.d.q.n,i:x.i,sel:[...x.d.ans.sel],text:x.d.ans.text||"",ord:x.d.q.ord||null}));
+  HIST[S.round].unshift({name:rec.name,score,ok,total:rec.total,ts:rec.ts,pass,wrong:wrongSave});
+  HIST[S.round]=HIST[S.round].slice(0,10);
+  lset("lpicExamHist",HIST);
+  S.detail=detail; S.result=rec;
+  renderResult();
+}
+
+function renderResult(){
+  const r=S.result;
+  resBarMeta.textContent=`第${r.round}回 結果`;
+  resBand.className="band "+(r.pass?"pass":"fail");
+  resVerdict.textContent=r.pass?"合格ライン到達":"合格ライン未満";
+  resScore.textContent=r.score+"%";
+  resSub.textContent=`${r.ok} / ${r.total} 問正解（合格ライン目安 ${PASS}%）`;
+  const used=r.durationUsed, um=Math.floor(used/60), us=used%60;
+  resMeta.innerHTML=`<span>受験者: <b>${esc(r.name)}</b></span><span>第 <b>${r.round}</b> 回</span>
+    <span>所要時間: <b>${um}分${us}秒</b>${r.timeUp?"（時間切れ）":""}</span>
+    <span>受験日時: <b>${new Date(r.ts).toLocaleString("ja-JP")}</b></span>`;
+  // 章別
+  resChapters.innerHTML=Object.keys(r.bych).map(Number).sort((a,b)=>a-b).map(c=>{
+    const v=r.bych[c],p=Math.round(v.ok/v.t*100);
+    const col=p>=PASS?"var(--ok)":p>=40?"var(--flag)":"var(--ng)";
+    return `<div class="chrow"><span class="cn">第${c}章 ${CH[c]}</span>
+      <span class="cbar"><span style="width:${p}%;background:${col}"></span></span>
+      <span class="cv">${v.ok}/${v.t}</span></div>`;
+  }).join("");
+  renderReviewList("all");
+  show("result");
+}
+document.querySelectorAll("#vResult .rev-filter button").forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll("#vResult .rev-filter button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); renderReviewList(b.dataset.filter); };
+});
+function renderReviewList(filter){
+  let items=S.detail.map((d,i)=>({...d,i}));
+  if(filter==="wrong")items=items.filter(d=>!d.ok);
+  if(filter==="flag")items=items.filter(d=>d.flag);
+  if(!items.length){ resReview.innerHTML='<div class="empty">該当する問題はありません</div>'; return; }
+  resReview.innerHTML=items.map(d=>revHtml(d,d.i)).join("");
+  resReview.querySelectorAll(".rev .rvhd").forEach(h=>{ h.onclick=()=>h.parentElement.classList.toggle("open"); });
+}
+function revHtml(d,i){
+  const q=d.q, ans=d.ans;
+  let inner="";
+  if(q.t==="x"){
+    const your=ans.text.trim()||"（未回答）";
+    inner=`<div class="yourans">あなたの回答: <span class="${d.ok?'ok':'ng'}">${esc(your)}</span></div>
+      <div class="ro correct"><span class="k">正解</span><span>${esc(q.ax)}${q.axa&&q.axa.length?`　（別解: ${q.axa.map(esc).join(" / ")}）`:""}</span></div>`;
+  }else{
+    const correct=q.t==="m"?new Set(q.a.split("")):new Set(q.acc);
+    inner='<div>'+dispOrder(q).map((oi,p)=>{
+      const L=KEYS[oi], DL=KEYS[p], isC=correct.has(L), chosen=ans.sel.has(L);
+      let cls=""; if(isC)cls="correct"; else if(chosen)cls="chosen-wrong";
+      const why=q.w&&q.w[oi];
+      return `<div class="ro ${cls}"><span class="k">${DL}${chosen?" ●":""}</span><span>${esc(q.o[oi])}${why?`<div class="why">${esc(why)}</div>`:""}</span></div>`;
+    }).join("")+'</div>';
+  }
+  if(q.e)inner+=`<div class="expl">${esc(q.e)}</div>`;
+  return `<div class="rev"><div class="rvhd"><span class="mk ${d.ok?'ok':'ng'}">${d.ok?'○':'×'}</span>
+    <span class="qx">Q${i+1}. ${esc(q.q.split("\\n")[0]).slice(0,72)}</span>
+    <span class="ch">第${q.c}章</span></div><div class="rvbody">${inner}</div></div>`;
+}
+
+/* ---- download PDF score report ---- */
+function chapterRows(r){
+  return Object.keys(r.bych).map(Number).sort((a,b)=>a-b).map(c=>{
+    const v=r.bych[c],p=Math.round(v.ok/v.t*100);
+    const col=p>=PASS?"#1B7A4B":p>=40?"#B8860B":"#C0392B";
+    return `<tr><td class="cn">第${c}章　${CH[c]}</td>
+      <td class="cbarcell"><div class="cbar"><span style="width:${p}%;background:${col}"></span></div></td>
+      <td class="cvv">${v.ok} / ${v.t}</td><td class="cpp" style="color:${col}">${p}%</td></tr>`;
+  }).join("");
+}
+function questionRows(){
+  return S.detail.map((d,i)=>{
+    let your,correct;
+    if(d.q.t==="x"){ your=d.ans.text.trim()||"—"; correct=d.q.ax; }
+    else if(d.q.t==="m"){ your=[...d.ans.sel].map(L=>dispLetterOf(d.q,L)).sort().join("")||"—"; correct=d.q.a.split("").map(L=>dispLetterOf(d.q,L)).sort().join(""); }
+    else{ const s0=[...d.ans.sel][0]; your=s0?dispLetterOf(d.q,s0):"—"; correct=d.q.a.split("").map(L=>dispLetterOf(d.q,L)).join(""); }
+    const typ=d.q.t==="x"?"記述":d.q.t==="m"?"複数":"単一";
+    return `<tr class="${d.ok?'':'wrongrow'}"><td>${i+1}</td><td>第${d.q.c}章</td><td>${typ}</td>
+      <td class="mono">${esc(your)}</td><td class="mono">${esc(correct)}</td>
+      <td class="jc ${d.ok?'okc':'ngc'}">${d.ok?'○':'×'}</td></tr>`;
+  }).join("");
+}
+function buildReportHTML(r){
+  const used=r.durationUsed,um=Math.floor(used/60),us=used%60;
+  const wrong=r.total-r.ok;
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>LPIC101模試 第${r.round}回 スコアレポート ${esc(r.name)}</title>
+<style>
+@page{size:A4;margin:14mm 14mm 16mm}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;color:#182430;font-size:10.5pt;line-height:1.6}
+.mono{font-family:"SFMono-Regular",Menlo,Consolas,monospace}
+.head{border-bottom:3px solid #0B4F6C;padding-bottom:10px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end}
+.head .ttl{font-size:16pt;font-weight:800;color:#0B4F6C}
+.head .ttl small{display:block;font-size:8.5pt;font-weight:700;letter-spacing:.15em;color:#0E6E93}
+.head .brand{font-size:8.5pt;color:#6B7B8B;text-align:right}
+.meta{width:100%;border-collapse:collapse;margin-bottom:14px}
+.meta td{padding:5px 8px;border:1px solid #D5DEE6;font-size:9.5pt}
+.meta td.k{background:#E4EFF4;font-weight:700;color:#0B4F6C;width:22%;white-space:nowrap}
+.scorebox{display:flex;gap:12px;margin-bottom:16px}
+.scorebox .big{flex:1;border:2px solid #0B4F6C;border-radius:8px;padding:12px 16px;text-align:center}
+.scorebox .big .s{font-size:30pt;font-weight:800;line-height:1;color:#0B4F6C}
+.scorebox .big.pass{border-color:#1B7A4B}.scorebox .big.pass .s{color:#1B7A4B}
+.scorebox .big.fail{border-color:#C0392B}.scorebox .big.fail .s{color:#C0392B}
+.scorebox .big .l{font-size:9pt;color:#3E4E5E;margin-top:4px}
+.scorebox .verdict{flex:1;border-radius:8px;padding:12px 16px;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.scorebox .verdict.pass{background:#1B7A4B}.scorebox .verdict.fail{background:#C0392B}
+.scorebox .verdict .v{font-size:15pt;font-weight:800}
+.scorebox .verdict .sub{font-size:8.5pt;opacity:.92;margin-top:2px}
+h2{font-size:11pt;color:#0B4F6C;border-left:4px solid #0E6E93;padding-left:8px;margin:16px 0 8px}
+table.ch{width:100%;border-collapse:collapse}
+table.ch td{padding:5px 6px;font-size:9.5pt;border-bottom:1px solid #E5ECF1;vertical-align:middle}
+table.ch td.cn{width:40%;font-weight:600}
+table.ch td.cbarcell{width:38%}
+table.ch .cbar{height:9px;background:#E5ECF1;border-radius:99px;overflow:hidden}
+table.ch .cbar span{display:block;height:100%;border-radius:99px}
+table.ch td.cvv{width:12%;text-align:right;font-family:monospace}
+table.ch td.cpp{width:10%;text-align:right;font-weight:700;font-family:monospace}
+table.q{width:100%;border-collapse:collapse;font-size:8.5pt;margin-top:4px}
+table.q th{background:#0B4F6C;color:#fff;padding:4px 5px;font-size:8pt;font-weight:700}
+table.q td{padding:3px 5px;border:1px solid #D5DEE6;text-align:center}
+table.q td.mono{font-family:monospace;text-align:left;max-width:130px;word-break:break-all}
+table.q td.jc{font-weight:800}table.q td.okc{color:#1B7A4B}table.q td.ngc{color:#C0392B}
+table.q tr.wrongrow td{background:#FBE6E4}
+.sig{margin-top:22px;display:flex;gap:20px}
+.sig .box{flex:1;border:1px solid #B0BFCB;border-radius:6px;height:52px;position:relative}
+.sig .box .lb{position:absolute;top:4px;left:8px;font-size:8pt;color:#6B7B8B}
+.foot{margin-top:14px;font-size:8pt;color:#9AA8B4;text-align:center;border-top:1px solid #D5DEE6;padding-top:6px}
+.note{font-size:8.5pt;color:#6B7B8B;margin-top:4px}
+@media print{.noprint{display:none}}
+.noprint{position:fixed;top:10px;right:12px;background:#0B4F6C;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:11pt;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+</style></head><body>
+<button class="noprint" onclick="window.print()">PDFとして保存 / 印刷</button>
+<div class="head"><div class="ttl"><small>LPIC-1 EXAM 101 · MOCK TEST</small>101試験 模擬試験 スコアレポート</div>
+  <div class="brand">Hack × The × LPIC<br>発行: ${new Date(r.ts).toLocaleString("ja-JP")}</div></div>
+<table class="meta">
+  <tr><td class="k">受験者氏名</td><td style="font-size:12pt;font-weight:700">${esc(r.name)}</td>
+      <td class="k">受験した回</td><td>第 ${r.round} 回 / 全6回</td></tr>
+  <tr><td class="k">受験日時</td><td>${new Date(r.ts).toLocaleString("ja-JP")}</td>
+      <td class="k">所要時間</td><td>${um}分${us}秒${r.timeUp?"（時間切れ）":""}</td></tr>
+</table>
+<div class="scorebox">
+  <div class="big ${r.pass?'pass':'fail'}"><div class="s">${r.score}%</div><div class="l">${r.ok} / ${r.total} 問正解（誤答 ${wrong}問）</div></div>
+  <div class="verdict ${r.pass?'pass':'fail'}"><div class="v">${r.pass?'合格ライン到達':'合格ライン未満'}</div><div class="sub">合格ライン目安 ${PASS}%</div></div>
+</div>
+<h2>分野別スコア</h2>
+<table class="ch"><tbody>${chapterRows(r)}</tbody></table>
+<div class="note">※本番LPIC-1 101試験の出題分野に準拠した章構成です。40%未満の分野は重点的な復習を推奨します。</div>
+<h2>問題別の正誤</h2>
+<table class="q"><thead><tr><th>No</th><th>章</th><th>形式</th><th>あなたの回答</th><th>正解</th><th>判定</th></tr></thead>
+<tbody>${questionRows()}</tbody></table>
+<div class="sig"><div class="box"><span class="lb">受験者確認</span></div><div class="box"><span class="lb">講師確認</span></div></div>
+<div class="foot">このスコアレポートを講師に提出してください。　Hack × The × LPIC — LPIC-1 101 模擬試験プログラム</div>
+</body></html>`;
+}
+dlBtn.onclick=()=>{
+  const r=S.result;
+  const win=window.open("","_blank");
+  if(!win){ toast("ポップアップがブロックされました。許可してください"); return; }
+  win.document.write(buildReportHTML(r));
+  win.document.close();
+  win.focus();
+  setTimeout(()=>{ try{win.print();}catch(e){} },500);
+  toast("印刷ダイアログから「PDFとして保存」を選んでください");
+};
+
+/* ---- wrong-answer study ---- */
+function studyItemHtml(d,i){
+  const q=d.q;
+  let inner="";
+    if(q.t==="x"){
+      inner=`<div class="yourans">あなたの回答: <span class="ng">${esc(d.ans.text.trim()||"未回答")}</span></div>
+        <div class="ro correct"><span class="k">正解</span><span>${esc(q.ax)}${q.axa&&q.axa.length?`　（別解: ${q.axa.map(esc).join(" / ")}）`:""}</span></div>`;
+    }else{
+      const correct=q.t==="m"?new Set(q.a.split("")):new Set(q.acc);
+      inner=dispOrder(q).map((oi,p)=>{const L=KEYS[oi],DL=KEYS[p],isC=correct.has(L),chosen=d.ans.sel.has(L);
+        let cls=isC?"correct":(chosen?"chosen-wrong":"");const why=q.w&&q.w[oi];
+        return `<div class="ro ${cls}"><span class="k">${DL}${chosen?" ●":""}</span><span>${esc(q.o[oi])}${why?`<div class="why">${esc(why)}</div>`:""}</span></div>`;
+      }).join("");
+    }
+    if(q.e)inner+=`<div class="expl">${esc(q.e)}</div>`;
+    return `<div class="rev open"><div class="rvhd"><span class="mk ng">×</span><span class="qx">Q${i+1}. ${esc(q.q.split("\\n")[0]).slice(0,72)}</span><span class="ch">第${q.c}章</span></div><div class="rvbody">${inner}</div></div>`;
+}
+let studyReturn="result";
+function openStudy(title,lead,items,returnTo){
+  studyReturn=returnTo||"result";
+  studyBack.textContent=studyReturn==="history"?"← 受験履歴に戻る":"← 結果に戻る";
+  studyTitle.textContent=title;
+  studyLead.textContent=lead;
+  studyBody.innerHTML=items.map(x=>studyItemHtml(x,x.i)).join("");
+  show("study");
+}
+retryWrongBtn.onclick=()=>{
+  const wrong=S.detail.map((d,i)=>({...d,i})).filter(d=>!d.ok);
+  if(!wrong.length){ toast("全問正解です。復習は不要です"); return; }
+  openStudy(`第${S.round}回 間違えた問題の復習`,
+    `${wrong.length}問を間違えました。正解と解説を確認しましょう。`, wrong, "result");
+};
+studyBack.onclick=()=>{ if(studyReturn==="history"){ renderHistory(); show("history"); } else { renderResult(); } };
+resHomeBtn.onclick=()=>{ renderHome(); show("home"); };
+
+/* ---- history ---- */
+function renderHistory(){
+  let any=false; let html="";
+  for(let r=1;r<=EXAMS.length;r++){
+    const h=HIST[r]||[]; if(!h.length)continue; any=true;
+    html+=`<div class="rsec"><h3>第${r}回（過去${h.length}回）</h3>
+      <table class="htable"><thead><tr><th>#</th><th>氏名</th><th>スコア</th><th>正解数</th><th>判定</th><th>受験日時</th><th>復習</th></tr></thead><tbody>`;
+    h.forEach((x,idx)=>{
+      let rv;
+      if(x.wrong&&x.wrong.length) rv=`<button class="hrev" data-r="${r}" data-i="${idx}">×${x.wrong.length}問を復習</button>`;
+      else if(x.wrong) rv='<span class="hrev-none">全問正解</span>';
+      else rv='<span class="hrev-none" title="この記録には復習データがありません">—</span>';
+      html+=`<tr><td>${idx+1}</td><td class="name">${esc(x.name)}</td>
+      <td class="${x.pass?'pass':'fail'}">${x.score}%</td><td>${x.ok}/${x.total}</td>
+      <td class="${x.pass?'pass':'fail'}">${x.pass?"合格":"不合格"}</td>
+      <td>${new Date(x.ts).toLocaleString("ja-JP")}</td><td>${rv}</td></tr>`; });
+    html+="</tbody></table></div>";
+  }
+  histBody.innerHTML=any?html:'<div class="empty">まだ受験履歴はありません。</div>';
+  histBody.querySelectorAll(".hrev").forEach(b=>{
+    b.onclick=()=>openHistoryStudy(+b.dataset.r,+b.dataset.i);
+  });
+}
+function openHistoryStudy(round,idx){
+  const rec=(HIST[round]||[])[idx];
+  if(!rec||!rec.wrong||!rec.wrong.length){ toast("この記録には復習データがありません"); return; }
+  const bank=EXAMS[round-1];
+  const items=rec.wrong.map(w=>{
+    const base=bank.find(q=>q.n===w.n);
+    if(!base)return null;
+    const q={...base}; if(w.ord)q.ord=w.ord;
+    return { q, ans:{sel:new Set(w.sel||[]),text:w.text||""}, i:(typeof w.i==="number"?w.i:0) };
+  }).filter(Boolean);
+  if(!items.length){ toast("この記録には復習データがありません"); return; }
+  openStudy(`第${round}回 間違えた問題の復習（${new Date(rec.ts).toLocaleString("ja-JP")} 受験分）`,
+    `この回では${items.length}問を間違えました。正解と解説を確認しましょう。`, items, "history");
+}
+
+/* ---- guard: leaving exam ---- */
+window.addEventListener("beforeunload",e=>{ if(cur==="exam"||cur==="submit"){ e.preventDefault(); e.returnValue=""; } });
+
+renderHome();
+</script>
+</body>
+</html>
